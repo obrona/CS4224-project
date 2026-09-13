@@ -13,7 +13,7 @@
 \set inventory_change random(:INVENTORY_CHANGE_MIN, :INVENTORY_CHANGE_MAX)
 \endif
 
-BEGIN;
+
 
 UPDATE inventory
 SET quantity = quantity + (:inventory_change)::integer,
@@ -23,4 +23,3 @@ WHERE inventory_id = (:product_id)::bigint
   AND product_id = (:product_id)::bigint
   AND quantity + (:inventory_change)::integer >= 0;
 
-COMMIT;
