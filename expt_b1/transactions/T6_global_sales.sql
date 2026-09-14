@@ -1,4 +1,3 @@
-BEGIN;
 
 SELECT
   merchant_id,
@@ -11,4 +10,3 @@ GROUP BY merchant_id
 ORDER BY revenue DESC
 LIMIT 20;
 
-COMMIT;

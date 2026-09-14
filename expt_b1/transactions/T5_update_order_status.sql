@@ -6,7 +6,7 @@
 \set status_roll random(1, 3)
 \endif
 
-BEGIN;
+
 
 \if :status_roll = 1
 UPDATE orders
@@ -22,4 +22,3 @@ SET order_status = 'COMPLETED'::text
 WHERE order_id = (:order_id)::bigint;
 \endif
 
-COMMIT;
