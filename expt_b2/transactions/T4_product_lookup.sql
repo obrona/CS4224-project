@@ -11,7 +11,7 @@
 \set product_id :merchant_id + (:product_slot * :NUM_MERCHANTS)
 \endif
 
-BEGIN;
+
 
 SELECT
   p.product_id,
@@ -26,4 +26,4 @@ JOIN inventory AS i
 WHERE p.merchant_id = (:merchant_id)::bigint
   AND p.product_id = (:product_id)::bigint;
 
-COMMIT;
+

@@ -6,20 +6,22 @@
 \set status_roll random(1, 3)
 \endif
 
-BEGIN;
+
 
 \if :status_roll = 1
 UPDATE orders
 SET order_status = 'PENDING'::text
-WHERE order_id = (:order_id)::bigint;
+WHERE order_id = (:order_id)::bigint
+  AND order_status IS DISTINCT FROM 'PENDING'::text;
 \elif :status_roll = 2
 UPDATE orders
 SET order_status = 'SHIPPED'::text
-WHERE order_id = (:order_id)::bigint;
+WHERE order_id = (:order_id)::bigint
+  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
 \else
 UPDATE orders
 SET order_status = 'COMPLETED'::text
-WHERE order_id = (:order_id)::bigint;
+WHERE order_id = (:order_id)::bigint
+  AND order_status IS DISTINCT FROM 'COMPLETED'::text;
 \endif
 
-COMMIT;

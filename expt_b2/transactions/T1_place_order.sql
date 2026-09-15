@@ -430,7 +430,8 @@ VALUES(
 \if :order_ok
 UPDATE orders
 SET total_amount = (:order_total)::numeric(12,2)
-WHERE order_id = (:new_order_id)::bigint;
+WHERE merchant_id = (:merchant_id)::bigint
+  AND order_id = (:new_order_id)::bigint;
 COMMIT;
 \else
 ROLLBACK;
