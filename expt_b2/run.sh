@@ -13,7 +13,7 @@
 #SBATCH --exclude=xcng0,xcng1,xgpj0,xcnh[0-3],xcnc13
 
 # IMPORTANT - replace this with your email
-#SBATCH --mail-user=alice_and_bob@u.nus.edu
+#SBATCH --mail-user=e1334269@u.nus.edu
 
 set -euo pipefail
 
