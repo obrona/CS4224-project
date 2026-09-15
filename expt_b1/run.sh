@@ -18,7 +18,7 @@
 set -euo pipefail
 
 # IMPORTANT: replace 99 with your project team number (e.g., 1, 2, ..., 20) to ensure a unique PGPORT number for each team
-TEAM_ID=${TEAM_ID:-99}
+TEAM_ID=${TEAM_ID:-4}
 
 ################# PostgreSQL environment variables
 PGPORT=$((10#${TEAM_ID} + 5432))
