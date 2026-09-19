@@ -123,6 +123,14 @@ inserted_items AS (
 )
 SELECT
   EXISTS (SELECT 1 FROM inserted_order) AS order_created,
-  (SELECT COUNT(*) FROM inserted_items) AS items_created;
+  (SELECT COUNT(*) FROM inserted_items) AS items_created,
+  COALESCE((SELECT order_id FROM inserted_order), 0) AS new_order_id
+\gset t1_
+
+-- Maintain the order_id to merchant_id lookup that T5 routes through.
+\if :t1_new_order_id > 0
+INSERT INTO order_merchant_map (order_id, merchant_id)
+VALUES ((:t1_new_order_id)::bigint, (:merchant_id)::bigint);
+\endif
 
 COMMIT;

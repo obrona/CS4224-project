@@ -6,22 +6,29 @@
 \set status_roll random(1, 3)
 \endif
 
-
+-- order_merchant_map is distributed by order_id, so the lookup is routed to a
+-- single shard.
+SELECT merchant_id
+FROM order_merchant_map
+WHERE order_id = (:order_id)::bigint
+\gset t5_
 
 \if :status_roll = 1
 UPDATE orders
 SET order_status = 'PENDING'::text
-WHERE order_id = (:order_id)::bigint
+WHERE merchant_id = (:t5_merchant_id)::bigint
+  AND order_id = (:order_id)::bigint
   AND order_status IS DISTINCT FROM 'PENDING'::text;
 \elif :status_roll = 2
 UPDATE orders
 SET order_status = 'SHIPPED'::text
-WHERE order_id = (:order_id)::bigint
+WHERE merchant_id = (:t5_merchant_id)::bigint
+  AND order_id = (:order_id)::bigint
   AND order_status IS DISTINCT FROM 'SHIPPED'::text;
 \else
 UPDATE orders
 SET order_status = 'COMPLETED'::text
-WHERE order_id = (:order_id)::bigint
+WHERE merchant_id = (:t5_merchant_id)::bigint
+  AND order_id = (:order_id)::bigint
   AND order_status IS DISTINCT FROM 'COMPLETED'::text;
 \endif
-
