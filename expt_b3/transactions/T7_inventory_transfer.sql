@@ -8,32 +8,25 @@
 \set transfer_qty random(:T7_MIN_TRANSFER_QTY, :T7_MAX_TRANSFER_QTY)
 \endif
 
-\set source_merchant_id 1 + ((:source_product_id - 1) % :NUM_MERCHANTS)
-\set dest_merchant_id 1 + ((:dest_product_id - 1) % :NUM_MERCHANTS)
-
 \set transfer_ok 1
 
 BEGIN;
 
 SELECT EXISTS(
   SELECT 1 FROM inventory
-  WHERE merchant_id = (:source_merchant_id)::bigint
-    AND product_id = (:source_product_id)::bigint
+  WHERE product_id = (:source_product_id)::bigint
 ) AS source_exists
 \gset t7_
 
 SELECT EXISTS(
   SELECT 1 FROM inventory
-  WHERE merchant_id = (:dest_merchant_id)::bigint
-    AND product_id = (:dest_product_id)::bigint
+  WHERE product_id = (:dest_product_id)::bigint
 ) AS dest_exists
 \gset t7_
 
 
 \if :t7_source_exists
-SELECT inventory_id AS source_inventory_id FROM inventory
-WHERE merchant_id = (:source_merchant_id)::bigint
-  AND product_id = (:source_product_id)::bigint
+SELECT inventory_id AS source_inventory_id FROM inventory WHERE product_id = (:source_product_id)::bigint
 \gset
 \else
 \set transfer_ok 0
@@ -41,9 +34,7 @@ WHERE merchant_id = (:source_merchant_id)::bigint
 
 
 \if :t7_dest_exists
-SELECT inventory_id AS dest_inventory_id FROM inventory
-WHERE merchant_id = (:dest_merchant_id)::bigint
-  AND product_id = (:dest_product_id)::bigint
+SELECT inventory_id AS dest_inventory_id FROM inventory WHERE product_id = (:dest_product_id)::bigint
 \gset
 \else
 \set transfer_ok 0
@@ -59,8 +50,7 @@ WITH debit AS (
   UPDATE inventory
   SET quantity = quantity - (:transfer_qty)::integer,
       updated_at = CURRENT_TIMESTAMP
-  WHERE merchant_id = (:source_merchant_id)::bigint
-    AND inventory_id = (:source_inventory_id)::bigint
+  WHERE inventory_id = (:source_inventory_id)::bigint
     AND quantity >= (:transfer_qty)::integer
   RETURNING 1
 )
@@ -72,8 +62,7 @@ WITH credit AS (
   UPDATE inventory
   SET quantity = quantity + (:transfer_qty)::integer,
       updated_at = CURRENT_TIMESTAMP
-  WHERE merchant_id = (:dest_merchant_id)::bigint
-    AND inventory_id = (:dest_inventory_id)::bigint
+  WHERE inventory_id = (:dest_inventory_id)::bigint
   RETURNING 1
 )
 SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok

@@ -12,12 +12,6 @@
 # temporarily exclude xcnc13 as server is problematic
 #SBATCH --exclude=xcng0,xcng1,xgpj0,xcnh[0-3],xcnc13
 
-# Pin every B-side run to one fixed node set, disjoint from the A-side set so
-# the two series can run concurrently without sharing hardware. The compute
-# nodes are shared and this job does not request --exclusive, so an unpinned
-# run measures whoever else is on the node as much as the design change.
-#SBATCH --nodelist=xcnf[7-8,15,25,27]
-
 # IMPORTANT - replace this with your email
 #SBATCH --mail-user=alice_and_bob@u.nus.edu
 
@@ -27,10 +21,7 @@ set -euo pipefail
 TEAM_ID=${TEAM_ID:-4}
 
 ################# PostgreSQL environment variables
-# PGPORT may be overridden so several experiments can share the pinned node set
-# concurrently; each needs its own port because they run on the same hosts.
-# Unset, it is exactly the per-team port the project spec assigns.
-PGPORT="${PGPORT:-$((10#${TEAM_ID} + 5432))}"
+PGPORT=$((10#${TEAM_ID} + 5432))
 PGUSER="${SLURM_JOB_USER:-${USER}}"
 
 DATA_ROOT=/tmp/${PGUSER}/citus-${SLURM_JOB_ID}
