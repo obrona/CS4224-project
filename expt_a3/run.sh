@@ -12,6 +12,15 @@
 # temporarily exclude xcnc13 as server is problematic
 #SBATCH --exclude=xcng0,xcng1,xgpj0,xcnh[0-3],xcnc13
 
+# Pin every A-side run to one fixed node set. The compute nodes are shared and
+# this job does not request --exclusive, so an unpinned run measures whoever
+# else happens to be on the node as much as the design change. This is the
+# reference set: a throughput delta is only attributable against another run
+# from these same five nodes.
+# xcnf2 is deliberately not in the list - it has no /home mount, so initdb is
+# not visible there and the job dies at startup with exit 127.
+#SBATCH --nodelist=xcnf[1,3-6]
+
 # IMPORTANT - replace this with your email
 #SBATCH --mail-user=alice_and_bob@u.nus.edu
 
@@ -21,7 +30,10 @@ set -euo pipefail
 TEAM_ID=${TEAM_ID:-99}
 
 ################# PostgreSQL environment variables
-PGPORT=$((10#${TEAM_ID} + 5432))
+# PGPORT may be overridden so several experiments can share the pinned node set
+# concurrently; each needs its own port because they run on the same hosts.
+# Unset, it is exactly the per-team port the project spec assigns.
+PGPORT="${PGPORT:-$((10#${TEAM_ID} + 5432))}"
 PGUSER="${SLURM_JOB_USER:-${USER}}"
 
 DATA_ROOT=/tmp/${PGUSER}/citus-${SLURM_JOB_ID}
