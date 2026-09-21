@@ -12,6 +12,15 @@
 # temporarily exclude xcnc13 as server is problematic
 #SBATCH --exclude=xcng0,xcng1,xgpj0,xcnh[0-3],xcnc13
 
+# Pin every A-side run to one fixed node set. The compute nodes are shared and
+# this job does not request --exclusive, so an unpinned run measures whoever
+# else happens to be on the node as much as the design change. This is the
+# reference set: a throughput delta is only attributable against another run
+# from these same five nodes.
+# xcnf2 is deliberately not in the list - it has no /home mount, so initdb is
+# not visible there and the job dies at startup with exit 127.
+#SBATCH --nodelist=xcnf[1,3-6]
+
 # IMPORTANT - replace this with your email
 #SBATCH --mail-user=alice_and_bob@u.nus.edu
 
