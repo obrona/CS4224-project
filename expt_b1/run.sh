@@ -19,7 +19,7 @@
 #SBATCH --nodelist=xcnf[16-20]
 
 # IMPORTANT - replace this with your email
-#SBATCH --mail-user=alice_and_bob@u.nus.edu
+#SBATCH --mail-user=e1334269@u.nus.edu
 
 set -euo pipefail
 
