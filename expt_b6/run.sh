@@ -677,20 +677,6 @@ generate_data &>"$JOB_RESULT_DIR/data-generation.log"
 echo "Checking PostgreSQL servers after data loading..."
 check_server_steps || fail "Cluster health check failed after data generation"
 
-################## explain T6
-# Record T6's distributed plan once on the freshly loaded data, for the current
-# query and the bound-CTE version.
-explain_t6() {
-	local f
-	for f in "$TX_DIR/T6_global_sales.sql" "$SCRIPT_DIR/diagnostics/T6_global_sales_bound_cte.sql"; do
-		echo "==================== $f"
-		[[ -f "$f" ]] || { echo "missing, skipped"; continue; }
-		psqlx -v REPORT_DAYS="$REPORT_DAYS" -f "$f" >/dev/null
-		{ echo "EXPLAIN (ANALYZE, VERBOSE, BUFFERS)"; cat "$f"; } | psqlx -v REPORT_DAYS="$REPORT_DAYS"
-	done
-}
-explain_t6 &>"$JOB_RESULT_DIR/t6-explain.log" || echo "T6 EXPLAIN failed; see $JOB_RESULT_DIR/t6-explain.log"
-
 ############### Functions: analyze benchmark results
 
 ###  collect log files

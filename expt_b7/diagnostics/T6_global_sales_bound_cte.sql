@@ -1,6 +1,4 @@
--- T6 as first run in job-875073 (kept for EXPLAIN comparison only; not in the
--- workload). The bound CTE is referenced twice, so it is planned as a Citus
--- subplan and the window predicates become joins against its intermediate result.
+-- T6 as run in expt_b6 (job-875073). Kept for EXPLAIN comparison only.
 WITH bound AS (
   SELECT
     CURRENT_TIMESTAMP AS now_ts,
