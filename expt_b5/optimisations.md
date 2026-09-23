@@ -1,9 +1,15 @@
 ### Prev: expt_b4
 
 This experiment routes T5 (Update Order Status) to the shard that holds its
-order, using a new lookup table `order_merchant_map`. There is no other change
-to the schema, data distribution, indexes, the other transactions, or server
-parameters carried over from `expt_b4`.
+order, using a new lookup table `order_merchant_map` that T1 maintains. Apart
+from that addition to T1, there is no change to the schema, data distribution,
+indexes, the other transactions, or server parameters carried over from
+`expt_b4`.
+
+Two transactions therefore change: T5 gains the routed path, and T1 gains the
+map write that keeps the routed path honest. They are bundled because the
+second is what makes the first sound rather than a separate optimisation, so
+the `expt_b4` to `expt_b5` delta should be attributed to the pair.
 
 ### Motivation
 
@@ -86,15 +92,51 @@ This is the same pattern as `product_merchant_map`, added for T7 in `expt_b4`.
 
 #### Keeping the map correct
 
-No transaction changes an existing order's merchant, and T5 draws its
-`order_id` from `1..INITIAL_NUM_ORDERS`, which is exactly the set of orders
-present when the map is built. T1 creates orders beyond that range at run time
-and does not add them to the map, but T5 can never select one, so the map
-covers every order T5 can reach for the whole run.
+Unlike `product_merchant_map`, this map cannot be built once and left alone.
+Nothing in the workload creates or deletes a product or changes a product's
+merchant, so the product map is exact for the whole run by construction. T1
+does create orders, so a load-time order map goes stale the moment the
+benchmark starts.
 
-As in `expt_b4`, T5 does not depend on that being true: a miss returns
-`merchant_id = 0` and T5 falls back to `expt_b4`'s un-routed statement. Under
-this workload the fallback should never run.
+The map is therefore maintained by T1, which inserts the new order's row
+inside the same transaction that inserts the order itself:
+
+```sql
+INSERT INTO order_merchant_map (order_id, merchant_id)
+VALUES ((:t1_new_order_id)::bigint, (:merchant_id)::bigint);
+```
+
+Because the write is in T1's existing `BEGIN`/`COMMIT`, an order and its map
+row become visible together. There is no window in which a committed order has
+no map row, so a lookup can only miss when the order does not exist.
+
+This is deliberately not left to the observation that T5 draws its `order_id`
+from `1..INITIAL_NUM_ORDERS` while `benchmark_order_id_seq` starts above that
+range, so T5 can never select an order T1 created. That is true of this
+workload, but it is a property of the benchmark's parameters rather than of the
+design, and a map that is only correct because of it would not survive a
+change to either.
+
+The fallback is kept even so. A miss returns `merchant_id = 0` and T5 falls
+back to `expt_b4`'s un-routed statement, which finds the row wherever it is.
+With T1 maintaining the map the fallback should be unreachable, but it is what
+makes a stale map a slow answer rather than a wrong one: without it, a miss
+would run `WHERE merchant_id = 0 AND order_id = ...`, match nothing, and
+silently skip an update it was asked to perform.
+
+#### What the maintenance costs
+
+`order_merchant_map` is distributed by `order_id` in its own colocation group,
+so a new order's map row lands on a shard unrelated to the merchant's. T1 was
+a single-worker, one-phase transaction in `expt_b4`, because every table it
+touched was merchant-colocated and named the same `merchant_id`. It now spans
+two workers and commits in two phases.
+
+That cost is charged on every T1, which is 10% of workload B, and under this
+workload it buys nothing measurable: the rows T1 writes to the map are for
+orders T5 can never select, so they are never read back. The benefit is that
+the design no longer depends on the two id ranges staying disjoint. T1's
+latency against `expt_b4` at 1 client is the price of that.
 
 ### Optimisation 2: Routed T5
 
@@ -126,9 +168,12 @@ is which shards the statement reaches.
 
 T5 has no `BEGIN`/`COMMIT` — it has been a single-statement transaction since
 `expt_b1`'s Optimisation 1, and remains one plus a preceding read. The lookup
-is therefore its own autocommit statement. Nothing writes the map, so reading
-it separately cannot give a different answer than reading it inside a
-transaction would.
+is therefore its own autocommit statement, which is safe even though T1 now
+writes the map: the map is insert-only, and each order's row is written once,
+in the transaction that creates the order. An existing order's mapping never
+changes afterwards, so a concurrent T1 can only add rows for orders T5 is not
+looking at. Reading the map outside a transaction cannot give a different
+answer than reading it inside one.
 
 Per execution, this goes from 1 statement x 32 shards to 1 single-shard lookup
 plus 1 single-shard `UPDATE`.
@@ -143,16 +188,21 @@ is already 50% of latency at 1 client and 7.2% at 64.
 ### What to look at when this is run
 
 - **Comparability.** Run on the same nodes as `expt_b4` (`xcnf[16-20]`). At 1
-  client the unchanged transactions (T1, T2, T3, T4, T6, T7, T8, T9) should be
+  client the unchanged transactions (T2, T3, T4, T6, T7, T8, T9) should be
   within a few percent of `expt_b4`.
 - **T5 latency and its curve across client counts.** The flat ~36 TPS ceiling
   should disappear. A T5 p99 anywhere near `expt_b4`'s p50 would mean the
   fallback is firing.
 - **The next bottleneck.** Recompute the latency-share table. If T6 takes over,
   overall throughput should settle near (T6 TPS) / 0.10.
-- **T1 latency.** T1 writes `orders` too, on the merchant's shard. Removing 32
-  shard-wide write locks per T5 should help T1 as well; if it does not, the
-  contention was somewhere else.
+- **T1 latency, in both directions.** T1 now pays for a two-worker commit it
+  did not pay in `expt_b4`, which should show most clearly at 1 client. Against
+  that, T5 no longer takes write locks on all 32 `orders` shards, which should
+  help T1 under load. The two effects pull opposite ways, so compare 1 client
+  for the commit cost and 64 clients for the contention relief separately.
+- **`deadlock_failures`.** T1 now writes two colocation groups in a fixed order
+  (merchant tables, then the map), so T1s cannot deadlock against each other on
+  that ordering, but the count is worth checking.
 - **`pgbench_exit_code` and `failed_log_records`.**
 
 ### Note: this experiment has not been run yet

@@ -21,26 +21,6 @@ products on the same worker.
 Putting all of `inventory` in one shard does place them on the same worker.
 Every T7 then writes to a single worker and commits in one phase.
 
-#### Why this is sequenced after expt_b5, not before
-
-On `expt_b4`'s measurements this change was not worth making. T7 had already
-fallen to 9.0 ms at 64 clients and was only 1.5% of total measured latency,
-because T5 had become the bottleneck at 88.8%. Removing T7's cost entirely
-would have moved the mix average from 174.4 ms to 171.7 ms — about 1.6% more
-throughput — while moving 55% of the workload's transactions onto one worker.
-T2, T4, T7 and T9 together accounted for 3.19 ms of that 174.4 ms average, so
-there was almost nothing to win and a great deal to lose.
-
-`expt_b5` changes that arithmetic by removing T5 from the denominator. If T5
-lands near T2/T8/T9 at about 2 ms, the mix average at 64 clients falls to
-roughly 19.6 ms, of which T7's 2.69 ms is about 14%. A one-phase commit for T7
-is then worth up to about 16% rather than 1.6%.
-
-**Recompute the shares from `expt_b5`'s `transaction_metrics.csv` before
-running this.** The figures above are projections from `expt_b4`. If T5 does
-not drop as expected, or something other than T7 takes over, this experiment
-should be re-argued or skipped.
-
 ### Why a single shard rather than distributing by product_id
 
 Distributing `products` and `inventory` by `product_id` looks attractive for
@@ -117,8 +97,17 @@ transaction:
 2. **Statement 2, customers, orders and order_items** (runs only if statement
    1 reserved everything). It checks the customer and inserts the order and its
    items, with `unit_price` and `total_amount` computed from the prices
-   returned by statement 1 instead of a join to `products`.
-3. `COMMIT` if an order was created, otherwise `ROLLBACK`.
+   returned by statement 1 instead of a join to `products`. It also returns the
+   new `order_id`.
+3. **Statement 3, order_merchant_map** (runs only if an order was created),
+   carried over from `expt_b5`: the new order's map row, written inside the
+   same transaction so a committed order always has one.
+4. `COMMIT` if an order was created, otherwise `ROLLBACK`.
+
+T1 therefore touches three colocation groups here — products/inventory, the
+merchant tables, and the map — against two in `expt_b5`. The commit cost this
+charges to T1 is on top of the split itself, and both land in the same
+measurement.
 
 The result is the same as before. An order is created only when the customer
 exists and every item was reserved, and otherwise nothing changes. Two

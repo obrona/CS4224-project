@@ -148,13 +148,17 @@ inserted_items AS (
 )
 SELECT
   EXISTS (SELECT 1 FROM inserted_order) AS order_created,
-  (SELECT COUNT(*) FROM inserted_items) AS items_created
+  (SELECT COUNT(*) FROM inserted_items) AS items_created,
+  COALESCE((SELECT order_id FROM inserted_order), 0) AS new_order_id
 \gset t1_
 \else
 \set t1_order_created 0
 \endif
 
+-- Keep order_merchant_map in step with orders
 \if :t1_order_created
+INSERT INTO order_merchant_map (order_id, merchant_id)
+VALUES ((:t1_new_order_id)::bigint, (:merchant_id)::bigint);
 COMMIT;
 \else
 ROLLBACK;

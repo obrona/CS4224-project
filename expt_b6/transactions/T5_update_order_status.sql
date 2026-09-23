@@ -8,16 +8,14 @@
 
 -- T5 is given an order id, but orders is sharded by merchant_id.
 -- order_merchant_map is sharded by order_id, so this lookup is routed to a
--- single shard. No transaction writes the map, and T5 owns no open
--- transaction here, so reading it as its own statement is safe.
+-- single shard.
 SELECT COALESCE(MAX(merchant_id), 0) AS merchant_id
 FROM order_merchant_map
 WHERE order_id = (:order_id)::bigint
 \gset t5_
 
 \if :t5_merchant_id = 0
--- Fallback when the order is missing from the map: the un-routed UPDATE from
--- expt_b4, which is sent to every orders shard.
+-- Fallback when the order is missing from the map
 \if :status_roll = 1
 UPDATE orders
 SET order_status = 'PENDING'::text
@@ -36,7 +34,7 @@ WHERE order_id = (:order_id)::bigint
 \endif
 
 \else
--- Routed path. Naming merchant_id sends the UPDATE to one shard and gives
+-- Naming merchant_id sends the UPDATE to one shard and gives
 -- PostgreSQL the complete PRIMARY KEY (merchant_id, order_id).
 \if :status_roll = 1
 UPDATE orders
