@@ -1,0 +1,283 @@
+2026-09-23 16:36:41.226 +08 [145308] LOG:  There is no designated Main database.
+2026-09-23 16:36:41.226 +08 [145308] LOG:  number of prepared transactions has not been configured, overriding
+2026-09-23 16:36:41.226 +08 [145308] DETAIL:  max_prepared_transactions is now set to 2000
+2026-09-23 16:36:41.337 +08 [145308] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-09-23 16:36:41.337 +08 [145308] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-09-23 16:36:41.337 +08 [145308] LOG:  listening on IPv6 address "::", port 5436
+2026-09-23 16:36:41.338 +08 [145308] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-09-23 16:36:41.341 +08 [145315] LOG:  database system was shut down at 2026-09-23 16:36:40 +08
+2026-09-23 16:36:41.345 +08 [145308] LOG:  database system is ready to accept connections
+2026-09-23 16:36:43.607 +08 [145326] LOG:  starting maintenance daemon on database 16384 user 10
+2026-09-23 16:36:43.607 +08 [145326] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 16:49:32.854 +08 [145326] WARNING:  terminating connection due to administrator command
+2026-09-23 16:49:32.854 +08 [145326] CONTEXT:  while executing command on xcnf17:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-09-23 16:49:32.854 +08 [145326] WARNING:  terminating connection due to administrator command
+2026-09-23 16:49:32.854 +08 [145326] CONTEXT:  while executing command on xcnf18:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-09-23 16:49:32.855 +08 [145326] WARNING:  could not issue cancel request
+2026-09-23 16:49:32.855 +08 [145326] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-09-23 16:49:32.855 +08 [145326] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 16:49:33.481 +08 [145308] LOG:  received fast shutdown request
+2026-09-23 16:49:33.482 +08 [145308] LOG:  aborting any active transactions
+2026-09-23 16:49:33.482 +08 [186649] FATAL:  terminating connection due to administrator command
+2026-09-23 16:49:33.482 +08 [196901] FATAL:  terminating connection due to administrator command
+2026-09-23 16:49:33.487 +08 [145308] LOG:  background worker "logical replication launcher" (PID 145318) exited with exit code 1
+2026-09-23 16:49:33.518 +08 [145313] LOG:  shutting down
+2026-09-23 16:49:33.518 +08 [145313] LOG:  checkpoint starting: shutdown immediate
+2026-09-23 16:49:34.127 +08 [145313] LOG:  checkpoint complete: wrote 77182 buffers (58.9%), wrote 7 SLRU buffers; 0 WAL file(s) added, 0 removed, 251 recycled; write=0.554 s, sync=0.006 s, total=0.609 s; sync files=1322, longest=0.001 s, average=0.001 s; distance=4120368 kB, estimate=4120368 kB; lsn=0/FCF2B0E0, redo lsn=0/FCF2B0E0
+2026-09-23 16:49:34.402 +08 [145308] LOG:  database system is shut down
+2026-09-23 16:49:35.901 +08 [200349] LOG:  There is no designated Main database.
+2026-09-23 16:49:35.901 +08 [200349] LOG:  number of prepared transactions has not been configured, overriding
+2026-09-23 16:49:35.901 +08 [200349] DETAIL:  max_prepared_transactions is now set to 2000
+2026-09-23 16:49:36.015 +08 [200349] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-09-23 16:49:36.015 +08 [200349] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-09-23 16:49:36.015 +08 [200349] LOG:  listening on IPv6 address "::", port 5436
+2026-09-23 16:49:36.015 +08 [200349] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-09-23 16:49:36.019 +08 [200356] LOG:  database system was shut down at 2026-09-23 16:49:34 +08
+2026-09-23 16:49:36.023 +08 [200349] LOG:  database system is ready to accept connections
+2026-09-23 16:49:36.921 +08 [200365] LOG:  starting maintenance daemon on database 16384 user 10
+2026-09-23 16:49:36.921 +08 [200365] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 16:54:14.228 +08 [204730] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 16:54:14.228 +08 [204730] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-09-23 16:54:14.228 +08 [204730] HINT:  The transaction might succeed if retried.
+2026-09-23 16:54:14.228 +08 [204730] STATEMENT:  INSERT INTO public.orders_102138 AS citus_table_alias (order_id, merchant_id, customer_id, order_status, total_amount, created_at) SELECT intermediate_result.order_id, intermediate_result.merchant_id, intermediate_result.customer_id, intermediate_result.order_status, intermediate_result.total_amount, intermediate_result.created_at FROM read_intermediate_result('insert_select_9517_102138'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, merchant_id bigint, customer_id bigint, order_status text, total_amount numeric(12,2), created_at timestamp without time zone) RETURNING citus_table_alias.order_id, citus_table_alias.total_amount
+2026-09-23 16:59:12.049 +08 [204730] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 16:59:12.049 +08 [204730] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-09-23 16:59:12.049 +08 [204730] HINT:  The transaction might succeed if retried.
+2026-09-23 16:59:12.049 +08 [204730] STATEMENT:  PREPARE TRANSACTION 'citus_0_560164_16354_6195'
+2026-09-23 17:01:29.229 +08 [200365] WARNING:  terminating connection due to administrator command
+2026-09-23 17:01:29.229 +08 [200365] CONTEXT:  while executing command on xcnf17:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:01:29.230 +08 [200365] WARNING:  could not issue cancel request
+2026-09-23 17:01:29.230 +08 [200365] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-09-23 17:01:29.230 +08 [200365] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:01:30.968 +08 [200349] LOG:  received fast shutdown request
+2026-09-23 17:01:30.968 +08 [200349] LOG:  aborting any active transactions
+2026-09-23 17:01:30.969 +08 [250489] FATAL:  terminating connection due to administrator command
+2026-09-23 17:01:30.969 +08 [256070] FATAL:  terminating connection due to administrator command
+2026-09-23 17:01:30.972 +08 [200349] LOG:  background worker "logical replication launcher" (PID 200359) exited with exit code 1
+2026-09-23 17:01:31.011 +08 [200354] LOG:  shutting down
+2026-09-23 17:01:31.011 +08 [200354] LOG:  checkpoint starting: shutdown immediate
+2026-09-23 17:01:31.258 +08 [260569] LOG:  PID 250489 in cancel request did not match any process
+2026-09-23 17:01:31.556 +08 [200354] LOG:  checkpoint complete: wrote 70608 buffers (53.9%), wrote 9 SLRU buffers; 0 WAL file(s) added, 0 removed, 125 recycled; write=0.525 s, sync=0.002 s, total=0.545 s; sync files=391, longest=0.001 s, average=0.001 s; distance=2047473 kB, estimate=2047473 kB; lsn=1/79EA75A8, redo lsn=1/79EA75A8
+2026-09-23 17:01:31.811 +08 [200349] LOG:  database system is shut down
+2026-09-23 17:01:33.196 +08 [260586] LOG:  There is no designated Main database.
+2026-09-23 17:01:33.196 +08 [260586] LOG:  number of prepared transactions has not been configured, overriding
+2026-09-23 17:01:33.196 +08 [260586] DETAIL:  max_prepared_transactions is now set to 2000
+2026-09-23 17:01:33.312 +08 [260586] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-09-23 17:01:33.312 +08 [260586] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-09-23 17:01:33.312 +08 [260586] LOG:  listening on IPv6 address "::", port 5436
+2026-09-23 17:01:33.313 +08 [260586] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-09-23 17:01:33.316 +08 [260593] LOG:  database system was shut down at 2026-09-23 17:01:31 +08
+2026-09-23 17:01:33.320 +08 [260586] LOG:  database system is ready to accept connections
+2026-09-23 17:01:34.218 +08 [260602] LOG:  starting maintenance daemon on database 16384 user 10
+2026-09-23 17:01:34.218 +08 [260602] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:13:26.869 +08 [260602] WARNING:  terminating connection due to administrator command
+2026-09-23 17:13:26.869 +08 [260602] CONTEXT:  while executing command on xcnf17:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:13:26.870 +08 [260602] WARNING:  terminating connection due to administrator command
+2026-09-23 17:13:26.870 +08 [260602] CONTEXT:  while executing command on xcnf18:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:13:26.870 +08 [260602] WARNING:  could not issue cancel request
+2026-09-23 17:13:26.870 +08 [260602] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-09-23 17:13:26.870 +08 [260602] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:13:27.238 +08 [260586] LOG:  received fast shutdown request
+2026-09-23 17:13:27.239 +08 [260586] LOG:  aborting any active transactions
+2026-09-23 17:13:27.239 +08 [307722] FATAL:  terminating connection due to administrator command
+2026-09-23 17:13:27.239 +08 [307727] FATAL:  terminating connection due to administrator command
+2026-09-23 17:13:27.242 +08 [260586] LOG:  background worker "logical replication launcher" (PID 260596) exited with exit code 1
+2026-09-23 17:13:27.281 +08 [260591] LOG:  shutting down
+2026-09-23 17:13:27.281 +08 [260591] LOG:  checkpoint starting: shutdown immediate
+2026-09-23 17:13:27.834 +08 [260591] LOG:  checkpoint complete: wrote 70930 buffers (54.1%), wrote 11 SLRU buffers; 0 WAL file(s) added, 0 removed, 125 recycled; write=0.532 s, sync=0.002 s, total=0.554 s; sync files=393, longest=0.001 s, average=0.001 s; distance=2048384 kB, estimate=2048384 kB; lsn=1/F6F075F8, redo lsn=1/F6F075F8
+2026-09-23 17:13:28.104 +08 [260586] LOG:  database system is shut down
+2026-09-23 17:13:30.454 +08 [317194] LOG:  There is no designated Main database.
+2026-09-23 17:13:30.454 +08 [317194] LOG:  number of prepared transactions has not been configured, overriding
+2026-09-23 17:13:30.454 +08 [317194] DETAIL:  max_prepared_transactions is now set to 2000
+2026-09-23 17:13:30.569 +08 [317194] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-09-23 17:13:30.569 +08 [317194] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-09-23 17:13:30.569 +08 [317194] LOG:  listening on IPv6 address "::", port 5436
+2026-09-23 17:13:30.569 +08 [317194] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-09-23 17:13:30.573 +08 [317201] LOG:  database system was shut down at 2026-09-23 17:13:27 +08
+2026-09-23 17:13:30.577 +08 [317194] LOG:  database system is ready to accept connections
+2026-09-23 17:13:31.473 +08 [317210] LOG:  starting maintenance daemon on database 16384 user 10
+2026-09-23 17:13:31.473 +08 [317210] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:15:31.933 +08 [321321] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:15:31.933 +08 [321321] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict out checking.
+2026-09-23 17:15:31.933 +08 [321321] HINT:  The transaction might succeed if retried.
+2026-09-23 17:15:31.933 +08 [321321] STATEMENT:  SELECT (687)::bigint AS merchant_id, worker_column_1 AS order_id, worker_column_2 AS product_id, worker_column_3 AS quantity, worker_column_4 AS unit_price FROM (SELECT o.order_id AS worker_column_1, ri.product_id AS worker_column_2, ri.quantity AS worker_column_3, p.price AS worker_column_4 FROM (((SELECT intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('221_1'::text, 'binary'::citus_copy_format) intermediate_result(item_no integer, product_id bigint, quantity integer)) ri JOIN public.products_102098 p ON (((p.merchant_id OPERATOR(pg_catalog.=) (687)::bigint) AND (p.product_id OPERATOR(pg_catalog.=) ri.product_id)))) CROSS JOIN (SELECT intermediate_result.order_id, intermediate_result.total_amount FROM read_intermediate_result('221_6'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, total_amount numeric(12,2))) o)) worker_subquery
+2026-09-23 17:18:50.066 +08 [321314] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:18:50.066 +08 [321314] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-09-23 17:18:50.066 +08 [321314] HINT:  The transaction might succeed if retried.
+2026-09-23 17:18:50.066 +08 [321314] STATEMENT:  INSERT INTO public.merchant_daily_sales_102290 AS s (merchant_id, sales_date, order_count, revenue) VALUES ('904'::bigint, CURRENT_DATE, '1'::bigint, 1995.04::numeric(14,2)) ON CONFLICT(merchant_id, sales_date) DO UPDATE SET order_count = (s.order_count OPERATOR(pg_catalog.+) 1), revenue = (s.revenue OPERATOR(pg_catalog.+) excluded.revenue)
+2026-09-23 17:18:52.734 +08 [321314] ERROR:  could not serialize access due to concurrent update
+2026-09-23 17:18:52.734 +08 [321314] STATEMENT:  INSERT INTO public.merchant_daily_sales_102266 AS s (merchant_id, sales_date, order_count, revenue) VALUES ('31'::bigint, CURRENT_DATE, '1'::bigint, 3817.12::numeric(14,2)) ON CONFLICT(merchant_id, sales_date) DO UPDATE SET order_count = (s.order_count OPERATOR(pg_catalog.+) 1), revenue = (s.revenue OPERATOR(pg_catalog.+) excluded.revenue)
+2026-09-23 17:19:12.907 +08 [321319] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:19:12.907 +08 [321319] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-09-23 17:19:12.907 +08 [321319] HINT:  The transaction might succeed if retried.
+2026-09-23 17:19:12.907 +08 [321319] STATEMENT:  PREPARE TRANSACTION 'citus_0_560958_10006_1009'
+2026-09-23 17:23:25.183 +08 [321333] ERROR:  could not serialize access due to concurrent update
+2026-09-23 17:23:25.183 +08 [321333] STATEMENT:  INSERT INTO public.merchant_daily_sales_102294 AS s (merchant_id, sales_date, order_count, revenue) VALUES ('11'::bigint, CURRENT_DATE, '1'::bigint, 10995.98::numeric(14,2)) ON CONFLICT(merchant_id, sales_date) DO UPDATE SET order_count = (s.order_count OPERATOR(pg_catalog.+) 1), revenue = (s.revenue OPERATOR(pg_catalog.+) excluded.revenue)
+2026-09-23 17:25:24.777 +08 [317210] WARNING:  terminating connection due to administrator command
+2026-09-23 17:25:24.777 +08 [317210] CONTEXT:  while executing command on xcnf17:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:25:24.777 +08 [317210] WARNING:  terminating connection due to administrator command
+2026-09-23 17:25:24.777 +08 [317210] CONTEXT:  while executing command on xcnf18:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:25:24.778 +08 [317210] WARNING:  could not issue cancel request
+2026-09-23 17:25:24.778 +08 [317210] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-09-23 17:25:24.778 +08 [317210] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:25:25.620 +08 [317194] LOG:  received fast shutdown request
+2026-09-23 17:25:25.621 +08 [317194] LOG:  aborting any active transactions
+2026-09-23 17:25:25.621 +08 [363238] FATAL:  terminating connection due to administrator command
+2026-09-23 17:25:25.621 +08 [363236] FATAL:  terminating connection due to administrator command
+2026-09-23 17:25:25.624 +08 [317194] LOG:  background worker "logical replication launcher" (PID 317204) exited with exit code 1
+2026-09-23 17:25:25.664 +08 [317199] LOG:  shutting down
+2026-09-23 17:25:25.665 +08 [317199] LOG:  checkpoint starting: shutdown immediate
+2026-09-23 17:25:26.219 +08 [317199] LOG:  checkpoint complete: wrote 71101 buffers (54.2%), wrote 10 SLRU buffers; 0 WAL file(s) added, 0 removed, 125 recycled; write=0.532 s, sync=0.002 s, total=0.555 s; sync files=392, longest=0.001 s, average=0.001 s; distance=2048482 kB, estimate=2048482 kB; lsn=2/73F7FEF8, redo lsn=2/73F7FEF8
+2026-09-23 17:25:26.483 +08 [317194] LOG:  database system is shut down
+2026-09-23 17:25:28.828 +08 [372469] LOG:  There is no designated Main database.
+2026-09-23 17:25:28.828 +08 [372469] LOG:  number of prepared transactions has not been configured, overriding
+2026-09-23 17:25:28.828 +08 [372469] DETAIL:  max_prepared_transactions is now set to 2000
+2026-09-23 17:25:28.943 +08 [372469] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-09-23 17:25:28.944 +08 [372469] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-09-23 17:25:28.944 +08 [372469] LOG:  listening on IPv6 address "::", port 5436
+2026-09-23 17:25:28.944 +08 [372469] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-09-23 17:25:28.948 +08 [372476] LOG:  database system was shut down at 2026-09-23 17:25:26 +08
+2026-09-23 17:25:28.952 +08 [372469] LOG:  database system is ready to accept connections
+2026-09-23 17:25:29.858 +08 [372485] LOG:  starting maintenance daemon on database 16384 user 10
+2026-09-23 17:25:29.858 +08 [372485] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:27:09.542 +08 [372573] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:27:09.542 +08 [372573] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-09-23 17:27:09.542 +08 [372573] HINT:  The transaction might succeed if retried.
+2026-09-23 17:27:09.542 +08 [372573] STATEMENT:  INSERT INTO public.order_items_102194 AS citus_table_alias (order_item_id, merchant_id, order_id, product_id, quantity, unit_price) SELECT intermediate_result.order_item_id, intermediate_result.merchant_id, intermediate_result.order_id, intermediate_result.product_id, intermediate_result.quantity, intermediate_result.unit_price FROM read_intermediate_result('insert_select_373_102194'::text, 'binary'::citus_copy_format) intermediate_result(order_item_id bigint, merchant_id bigint, order_id bigint, product_id bigint, quantity integer, unit_price numeric(12,2)) RETURNING 1 AS "?column?"
+2026-09-23 17:30:55.324 +08 [376052] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:30:55.324 +08 [376052] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict out checking.
+2026-09-23 17:30:55.324 +08 [376052] HINT:  The transaction might succeed if retried.
+2026-09-23 17:30:55.324 +08 [376052] STATEMENT:  SELECT (58)::bigint AS merchant_id, worker_column_1 AS order_id, worker_column_2 AS product_id, worker_column_3 AS quantity, worker_column_4 AS unit_price FROM (SELECT o.order_id AS worker_column_1, ri.product_id AS worker_column_2, ri.quantity AS worker_column_3, p.price AS worker_column_4 FROM (((SELECT intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('1410_1'::text, 'binary'::citus_copy_format) intermediate_result(item_no integer, product_id bigint, quantity integer)) ri JOIN public.products_102098 p ON (((p.merchant_id OPERATOR(pg_catalog.=) (58)::bigint) AND (p.product_id OPERATOR(pg_catalog.=) ri.product_id)))) CROSS JOIN (SELECT intermediate_result.order_id, intermediate_result.total_amount FROM read_intermediate_result('1410_6'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, total_amount numeric(12,2))) o)) worker_subquery
+2026-09-23 17:32:04.036 +08 [376067] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:32:04.036 +08 [376067] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-09-23 17:32:04.036 +08 [376067] HINT:  The transaction might succeed if retried.
+2026-09-23 17:32:04.036 +08 [376067] STATEMENT:  INSERT INTO public.orders_102162 AS citus_table_alias (order_id, merchant_id, customer_id, order_status, total_amount, created_at) SELECT intermediate_result.order_id, intermediate_result.merchant_id, intermediate_result.customer_id, intermediate_result.order_status, intermediate_result.total_amount, intermediate_result.created_at FROM read_intermediate_result('insert_select_1954_102162'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, merchant_id bigint, customer_id bigint, order_status text, total_amount numeric(12,2), created_at timestamp without time zone) RETURNING citus_table_alias.order_id, citus_table_alias.total_amount
+2026-09-23 17:37:26.496 +08 [372485] WARNING:  terminating connection due to administrator command
+2026-09-23 17:37:26.496 +08 [372485] CONTEXT:  while executing command on xcnf17:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:37:26.496 +08 [372485] WARNING:  terminating connection due to administrator command
+2026-09-23 17:37:26.496 +08 [372485] CONTEXT:  while executing command on xcnf18:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:37:26.497 +08 [372485] WARNING:  could not issue cancel request
+2026-09-23 17:37:26.497 +08 [372485] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-09-23 17:37:26.497 +08 [372485] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:37:27.259 +08 [372469] LOG:  received fast shutdown request
+2026-09-23 17:37:27.259 +08 [372469] LOG:  aborting any active transactions
+2026-09-23 17:37:27.259 +08 [411185] FATAL:  terminating connection due to administrator command
+2026-09-23 17:37:27.261 +08 [411339] FATAL:  terminating connection due to administrator command
+2026-09-23 17:37:27.263 +08 [372469] LOG:  background worker "logical replication launcher" (PID 372479) exited with exit code 1
+2026-09-23 17:37:27.300 +08 [372474] LOG:  shutting down
+2026-09-23 17:37:27.301 +08 [372474] LOG:  checkpoint starting: shutdown immediate
+2026-09-23 17:37:27.853 +08 [372474] LOG:  checkpoint complete: wrote 71072 buffers (54.2%), wrote 10 SLRU buffers; 0 WAL file(s) added, 0 removed, 125 recycled; write=0.530 s, sync=0.002 s, total=0.554 s; sync files=393, longest=0.001 s, average=0.001 s; distance=2048268 kB, estimate=2048268 kB; lsn=2/F0FC3160, redo lsn=2/F0FC3160
+2026-09-23 17:37:28.126 +08 [372469] LOG:  database system is shut down
+2026-09-23 17:37:30.464 +08 [419094] LOG:  There is no designated Main database.
+2026-09-23 17:37:30.464 +08 [419094] LOG:  number of prepared transactions has not been configured, overriding
+2026-09-23 17:37:30.464 +08 [419094] DETAIL:  max_prepared_transactions is now set to 2000
+2026-09-23 17:37:30.580 +08 [419094] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-09-23 17:37:30.580 +08 [419094] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-09-23 17:37:30.580 +08 [419094] LOG:  listening on IPv6 address "::", port 5436
+2026-09-23 17:37:30.581 +08 [419094] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-09-23 17:37:30.585 +08 [419101] LOG:  database system was shut down at 2026-09-23 17:37:27 +08
+2026-09-23 17:37:30.589 +08 [419094] LOG:  database system is ready to accept connections
+2026-09-23 17:37:31.500 +08 [419110] LOG:  starting maintenance daemon on database 16384 user 10
+2026-09-23 17:37:31.500 +08 [419110] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:38:21.153 +08 [419197] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:38:21.153 +08 [419197] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict out checking.
+2026-09-23 17:38:21.153 +08 [419197] HINT:  The transaction might succeed if retried.
+2026-09-23 17:38:21.153 +08 [419197] STATEMENT:  SELECT (309)::bigint AS merchant_id, worker_column_1 AS order_id, worker_column_2 AS product_id, worker_column_3 AS quantity, worker_column_4 AS unit_price FROM (SELECT o.order_id AS worker_column_1, ri.product_id AS worker_column_2, ri.quantity AS worker_column_3, p.price AS worker_column_4 FROM (((SELECT intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('41_1'::text, 'binary'::citus_copy_format) intermediate_result(item_no integer, product_id bigint, quantity integer)) ri JOIN public.products_102098 p ON (((p.merchant_id OPERATOR(pg_catalog.=) (309)::bigint) AND (p.product_id OPERATOR(pg_catalog.=) ri.product_id)))) CROSS JOIN (SELECT intermediate_result.order_id, intermediate_result.total_amount FROM read_intermediate_result('41_6'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, total_amount numeric(12,2))) o)) worker_subquery
+2026-09-23 17:38:21.423 +08 [419197] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:38:21.423 +08 [419197] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-09-23 17:38:21.423 +08 [419197] HINT:  The transaction might succeed if retried.
+2026-09-23 17:38:21.423 +08 [419197] STATEMENT:  PREPARE TRANSACTION 'citus_0_561795_277_13'
+2026-09-23 17:38:40.838 +08 [419217] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:38:40.838 +08 [419217] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict out checking.
+2026-09-23 17:38:40.838 +08 [419217] HINT:  The transaction might succeed if retried.
+2026-09-23 17:38:40.838 +08 [419217] STATEMENT:  SELECT (58)::bigint AS merchant_id, worker_column_1 AS order_id, worker_column_2 AS product_id, worker_column_3 AS quantity, worker_column_4 AS unit_price FROM (SELECT o.order_id AS worker_column_1, ri.product_id AS worker_column_2, ri.quantity AS worker_column_3, p.price AS worker_column_4 FROM (((SELECT intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('101_1'::text, 'binary'::citus_copy_format) intermediate_result(item_no integer, product_id bigint, quantity integer)) ri JOIN public.products_102098 p ON (((p.merchant_id OPERATOR(pg_catalog.=) (58)::bigint) AND (p.product_id OPERATOR(pg_catalog.=) ri.product_id)))) CROSS JOIN (SELECT intermediate_result.order_id, intermediate_result.total_amount FROM read_intermediate_result('101_6'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, total_amount numeric(12,2))) o)) worker_subquery
+2026-09-23 17:38:49.391 +08 [419193] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:38:49.391 +08 [419193] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-09-23 17:38:49.391 +08 [419193] HINT:  The transaction might succeed if retried.
+2026-09-23 17:38:49.391 +08 [419193] STATEMENT:  INSERT INTO public.orders_102162 AS citus_table_alias (order_id, merchant_id, customer_id, order_status, total_amount, created_at) SELECT intermediate_result.order_id, intermediate_result.merchant_id, intermediate_result.customer_id, intermediate_result.order_status, intermediate_result.total_amount, intermediate_result.created_at FROM read_intermediate_result('insert_select_77_102162'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, merchant_id bigint, customer_id bigint, order_status text, total_amount numeric(12,2), created_at timestamp without time zone) RETURNING citus_table_alias.order_id, citus_table_alias.total_amount
+2026-09-23 17:39:02.705 +08 [419206] ERROR:  could not serialize access due to concurrent update
+2026-09-23 17:39:02.705 +08 [419206] STATEMENT:  INSERT INTO public.merchant_daily_sales_102278 AS s (merchant_id, sales_date, order_count, revenue) VALUES ('65'::bigint, CURRENT_DATE, '1'::bigint, 2965.05::numeric(14,2)) ON CONFLICT(merchant_id, sales_date) DO UPDATE SET order_count = (s.order_count OPERATOR(pg_catalog.+) 1), revenue = (s.revenue OPERATOR(pg_catalog.+) excluded.revenue)
+2026-09-23 17:40:13.239 +08 [422101] ERROR:  could not serialize access due to concurrent update
+2026-09-23 17:40:13.239 +08 [422101] STATEMENT:  INSERT INTO public.merchant_daily_sales_102294 AS s (merchant_id, sales_date, order_count, revenue) VALUES ('11'::bigint, CURRENT_DATE, '1'::bigint, 3988.81::numeric(14,2)) ON CONFLICT(merchant_id, sales_date) DO UPDATE SET order_count = (s.order_count OPERATOR(pg_catalog.+) 1), revenue = (s.revenue OPERATOR(pg_catalog.+) excluded.revenue)
+2026-09-23 17:40:48.316 +08 [422152] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:40:48.316 +08 [422152] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-09-23 17:40:48.316 +08 [422152] HINT:  The transaction might succeed if retried.
+2026-09-23 17:40:48.316 +08 [422152] STATEMENT:  INSERT INTO public.orders_102150 AS citus_table_alias (order_id, merchant_id, customer_id, order_status, total_amount, created_at) SELECT intermediate_result.order_id, intermediate_result.merchant_id, intermediate_result.customer_id, intermediate_result.order_status, intermediate_result.total_amount, intermediate_result.created_at FROM read_intermediate_result('insert_select_324_102150'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, merchant_id bigint, customer_id bigint, order_status text, total_amount numeric(12,2), created_at timestamp without time zone) RETURNING citus_table_alias.order_id, citus_table_alias.total_amount
+2026-09-23 17:42:26.494 +08 [422153] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:42:26.494 +08 [422153] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-09-23 17:42:26.494 +08 [422153] HINT:  The transaction might succeed if retried.
+2026-09-23 17:42:26.494 +08 [422153] STATEMENT:  INSERT INTO public.orders_102162 AS citus_table_alias (order_id, merchant_id, customer_id, order_status, total_amount, created_at) SELECT intermediate_result.order_id, intermediate_result.merchant_id, intermediate_result.customer_id, intermediate_result.order_status, intermediate_result.total_amount, intermediate_result.created_at FROM read_intermediate_result('insert_select_786_102162'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, merchant_id bigint, customer_id bigint, order_status text, total_amount numeric(12,2), created_at timestamp without time zone) RETURNING citus_table_alias.order_id, citus_table_alias.total_amount
+2026-09-23 17:43:08.828 +08 [422128] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:43:08.828 +08 [422128] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-09-23 17:43:08.828 +08 [422128] HINT:  The transaction might succeed if retried.
+2026-09-23 17:43:22.061 +08 [422108] ERROR:  could not serialize access due to concurrent update
+2026-09-23 17:43:22.061 +08 [422108] STATEMENT:  INSERT INTO public.merchant_daily_sales_102274 AS s (merchant_id, sales_date, order_count, revenue) VALUES ('96'::bigint, CURRENT_DATE, '1'::bigint, 316.20::numeric(14,2)) ON CONFLICT(merchant_id, sales_date) DO UPDATE SET order_count = (s.order_count OPERATOR(pg_catalog.+) 1), revenue = (s.revenue OPERATOR(pg_catalog.+) excluded.revenue)
+2026-09-23 17:44:15.221 +08 [422110] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:44:15.221 +08 [422110] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-09-23 17:44:15.221 +08 [422110] HINT:  The transaction might succeed if retried.
+2026-09-23 17:44:15.221 +08 [422110] STATEMENT:  COMMIT
+2026-09-23 17:44:15.224 +08 [422110] WARNING:  there is no transaction in progress
+2026-09-23 17:45:04.282 +08 [422099] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:45:04.282 +08 [422099] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-09-23 17:45:04.282 +08 [422099] HINT:  The transaction might succeed if retried.
+2026-09-23 17:45:04.282 +08 [422099] STATEMENT:  INSERT INTO public.orders_102162 AS citus_table_alias (order_id, merchant_id, customer_id, order_status, total_amount, created_at) SELECT intermediate_result.order_id, intermediate_result.merchant_id, intermediate_result.customer_id, intermediate_result.order_status, intermediate_result.total_amount, intermediate_result.created_at FROM read_intermediate_result('insert_select_1257_102162'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, merchant_id bigint, customer_id bigint, order_status text, total_amount numeric(12,2), created_at timestamp without time zone) RETURNING citus_table_alias.order_id, citus_table_alias.total_amount
+2026-09-23 17:45:17.878 +08 [422161] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:45:17.878 +08 [422161] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-09-23 17:45:17.878 +08 [422161] HINT:  The transaction might succeed if retried.
+2026-09-23 17:45:24.151 +08 [422097] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:45:24.151 +08 [422097] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict out checking.
+2026-09-23 17:45:24.151 +08 [422097] HINT:  The transaction might succeed if retried.
+2026-09-23 17:45:24.151 +08 [422097] STATEMENT:  SELECT (648)::bigint AS merchant_id, worker_column_1 AS order_id, worker_column_2 AS product_id, worker_column_3 AS quantity, worker_column_4 AS unit_price FROM (SELECT o.order_id AS worker_column_1, ri.product_id AS worker_column_2, ri.quantity AS worker_column_3, p.price AS worker_column_4 FROM (((SELECT intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('1061_1'::text, 'binary'::citus_copy_format) intermediate_result(item_no integer, product_id bigint, quantity integer)) ri JOIN public.products_102098 p ON (((p.merchant_id OPERATOR(pg_catalog.=) (648)::bigint) AND (p.product_id OPERATOR(pg_catalog.=) ri.product_id)))) CROSS JOIN (SELECT intermediate_result.order_id, intermediate_result.total_amount FROM read_intermediate_result('1061_6'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, total_amount numeric(12,2))) o)) worker_subquery
+2026-09-23 17:48:01.538 +08 [422150] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:48:01.538 +08 [422150] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-09-23 17:48:01.538 +08 [422150] HINT:  The transaction might succeed if retried.
+2026-09-23 17:48:01.538 +08 [422150] STATEMENT:  INSERT INTO public.order_items_102194 AS citus_table_alias (order_item_id, merchant_id, order_id, product_id, quantity, unit_price) SELECT intermediate_result.order_item_id, intermediate_result.merchant_id, intermediate_result.order_id, intermediate_result.product_id, intermediate_result.quantity, intermediate_result.unit_price FROM read_intermediate_result('insert_select_1632_102194'::text, 'binary'::citus_copy_format) intermediate_result(order_item_id bigint, merchant_id bigint, order_id bigint, product_id bigint, quantity integer, unit_price numeric(12,2)) RETURNING 1 AS "?column?"
+2026-09-23 17:48:01.690 +08 [422150] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:48:01.690 +08 [422150] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-09-23 17:48:01.690 +08 [422150] HINT:  The transaction might succeed if retried.
+2026-09-23 17:48:01.690 +08 [422150] STATEMENT:  INSERT INTO public.order_items_102194 AS citus_table_alias (order_item_id, merchant_id, order_id, product_id, quantity, unit_price) SELECT intermediate_result.order_item_id, intermediate_result.merchant_id, intermediate_result.order_id, intermediate_result.product_id, intermediate_result.quantity, intermediate_result.unit_price FROM read_intermediate_result('insert_select_1643_102194'::text, 'binary'::citus_copy_format) intermediate_result(order_item_id bigint, merchant_id bigint, order_id bigint, product_id bigint, quantity integer, unit_price numeric(12,2)) RETURNING 1 AS "?column?"
+2026-09-23 17:48:38.762 +08 [422147] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:48:38.762 +08 [422147] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-09-23 17:48:38.762 +08 [422147] HINT:  The transaction might succeed if retried.
+2026-09-23 17:48:38.762 +08 [422147] STATEMENT:  INSERT INTO public.merchant_daily_sales_102290 AS s (merchant_id, sales_date, order_count, revenue) VALUES ('309'::bigint, CURRENT_DATE, '1'::bigint, 4187.10::numeric(14,2)) ON CONFLICT(merchant_id, sales_date) DO UPDATE SET order_count = (s.order_count OPERATOR(pg_catalog.+) 1), revenue = (s.revenue OPERATOR(pg_catalog.+) excluded.revenue)
+2026-09-23 17:48:38.838 +08 [422147] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:48:38.838 +08 [422147] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict out checking.
+2026-09-23 17:48:38.838 +08 [422147] HINT:  The transaction might succeed if retried.
+2026-09-23 17:48:38.838 +08 [422147] STATEMENT:  SELECT (309)::bigint AS merchant_id, worker_column_1 AS order_id, worker_column_2 AS product_id, worker_column_3 AS quantity, worker_column_4 AS unit_price FROM (SELECT o.order_id AS worker_column_1, ri.product_id AS worker_column_2, ri.quantity AS worker_column_3, p.price AS worker_column_4 FROM (((SELECT intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('1710_1'::text, 'binary'::citus_copy_format) intermediate_result(item_no integer, product_id bigint, quantity integer)) ri JOIN public.products_102098 p ON (((p.merchant_id OPERATOR(pg_catalog.=) (309)::bigint) AND (p.product_id OPERATOR(pg_catalog.=) ri.product_id)))) CROSS JOIN (SELECT intermediate_result.order_id, intermediate_result.total_amount FROM read_intermediate_result('1710_6'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint, total_amount numeric(12,2))) o)) worker_subquery
+2026-09-23 17:49:25.017 +08 [422142] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-09-23 17:49:25.017 +08 [422142] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-09-23 17:49:25.017 +08 [422142] HINT:  The transaction might succeed if retried.
+2026-09-23 17:49:25.017 +08 [422142] STATEMENT:  INSERT INTO public.merchant_daily_sales_102290 AS s (merchant_id, sales_date, order_count, revenue) VALUES ('314'::bigint, CURRENT_DATE, '1'::bigint, 4196.58::numeric(14,2)) ON CONFLICT(merchant_id, sales_date) DO UPDATE SET order_count = (s.order_count OPERATOR(pg_catalog.+) 1), revenue = (s.revenue OPERATOR(pg_catalog.+) excluded.revenue)
+2026-09-23 17:49:30.981 +08 [419110] WARNING:  terminating connection due to administrator command
+2026-09-23 17:49:30.981 +08 [419110] CONTEXT:  while executing command on xcnf17:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:49:30.981 +08 [419110] WARNING:  terminating connection due to administrator command
+2026-09-23 17:49:30.981 +08 [419110] CONTEXT:  while executing command on xcnf18:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:49:30.981 +08 [419110] WARNING:  could not issue cancel request
+2026-09-23 17:49:30.981 +08 [419110] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-09-23 17:49:30.981 +08 [419110] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-09-23 17:49:31.976 +08 [419094] LOG:  received fast shutdown request
+2026-09-23 17:49:31.976 +08 [419094] LOG:  aborting any active transactions
+2026-09-23 17:49:31.976 +08 [451696] FATAL:  terminating connection due to administrator command
+2026-09-23 17:49:31.976 +08 [452321] FATAL:  terminating connection due to administrator command
+2026-09-23 17:49:31.980 +08 [419094] LOG:  background worker "logical replication launcher" (PID 419104) exited with exit code 1
+2026-09-23 17:49:32.019 +08 [419099] LOG:  shutting down
+2026-09-23 17:49:32.020 +08 [419099] LOG:  checkpoint starting: shutdown immediate
+2026-09-23 17:49:32.571 +08 [419099] LOG:  checkpoint complete: wrote 71242 buffers (54.4%), wrote 10 SLRU buffers; 0 WAL file(s) added, 0 removed, 126 recycled; write=0.531 s, sync=0.002 s, total=0.552 s; sync files=392, longest=0.001 s, average=0.001 s; distance=2048420 kB, estimate=2048420 kB; lsn=3/6E02C180, redo lsn=3/6E02C180
+2026-09-23 17:49:32.841 +08 [419094] LOG:  database system is shut down
