@@ -157,7 +157,3 @@ as well.
   opposite transfers between the same pair of products can deadlock across
   workers. With 500,000 products this should stay near zero, but T7 now runs
   several times more often.
-
-### Note: this experiment has not been run yet
-
-This folder contains no `slurm-results/`.

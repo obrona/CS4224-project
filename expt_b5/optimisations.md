@@ -1,159 +1,159 @@
 ### Prev: expt_b4
 
-This experiment moves `products` and `inventory` out of the merchant
-colocation group into a colocation group of their own with a single shard, so
-every product and inventory row lives on one worker. Everything else carried
-over from `expt_b4` is unchanged, including `product_merchant_map` and the
-routed T7, except for two adaptations that the new layout forces on T1 and on
-data loading (below). Those are not optimisations; the layout does not run
-without them.
+This experiment routes T5 (Update Order Status) to the shard that holds its
+order, using a new lookup table `order_merchant_map`. There is no other change
+to the schema, data distribution, indexes, the other transactions, or server
+parameters carried over from `expt_b4`.
 
 ### Motivation
 
-`expt_b4` routes T7 to the shards that hold its two rows, but the source and
-destination products are independent random draws. With `inventory` hashed over
-32 shards on 4 workers, the two rows are on different workers for about 3 in 4
-transfers, and those transfers commit with two-phase commit across two workers.
-Routing removes T7's fan-out, but no single-column hash distribution can remove
-that cross-worker commit, because it would need to place two unrelated random
-products on the same worker.
+`expt_b4` removed T7 as the bottleneck: T7's average latency fell from 860.6 ms
+to 9.0 ms at 64 clients, and overall throughput rose from 239.8 to 367.1 TPS.
+That made a transaction which had never mattered before into the one that now
+sets throughput.
 
-Putting all of `inventory` in one shard does place them on the same worker.
-Every T7 then writes to a single worker and commits in one phase.
+Each transaction's share of total measured latency in `expt_b4`
+(`avg_latency_ms` x `successful_transactions`, over the workload total):
 
-### Why a single shard rather than distributing by product_id
+| Transaction            | Share at 1 client | Share at 64 clients |
+| ---------------------- | ----------------- | ------------------- |
+| T5 Update Order Status | 7.5%              | 88.8%               |
+| T6 Global Sales        | 50.0%             | 7.2%                |
+| T1 Place Order         | 22.1%             | 1.9%                |
+| T7 Inventory Transfer  | 15.8%             | 1.5%                |
 
-Distributing `products` and `inventory` by `product_id` looks attractive for
-workload B, since T7 (30%), T2 (10%), T4 (5%) and T9 (10%) all know the
-`product_id`. But the two T7 rows would still hash to different workers 3 times
-in 4, so T7 would keep its two-phase commit, while T1 would reserve up to five
-products on up to five different shards. The single shard is the only layout
-that removes the cross-worker commit from T7, so it is the one worth testing.
+T5's latency across client counts in `expt_b4` is 6.3, 10.6, 44.0, 211.5,
+685.4, 1554.3 ms, while its throughput stays flat at about 36 TPS from 4
+clients onwards. A transaction whose throughput stops rising while its latency
+grows in proportion to the client count is saturated. By Little's law
+36.59 x 1.554 = 56.9, so about 57 of the 64 clients are inside T5 at any
+moment. T5 is 10% of workload B, so 36.59 / 0.10 = 366 TPS, which is the
+observed overall throughput (367.1).
 
-### Optimisation 1: products and inventory on a single shard
+The same T5 statement measured 9.3 ms at 64 clients in `expt_b3`. It is 167
+times slower in `expt_b4` without having been modified. In `expt_b3` T7 held
+62 of the 64 clients, so few T5s ever ran at the same time; once T7 became
+cheap, T5 ran at full concurrency and its cost became visible.
+
+### Why T5 is slow
+
+T5 receives only an `order_id`. Since `expt_b1`, `orders` is distributed by
+`merchant_id`, and T5's `UPDATE` does not name it:
 
 ```sql
-SELECT create_distributed_table('products', 'merchant_id', colocate_with => 'none', shard_count => 1);
-SELECT create_distributed_table('inventory', 'merchant_id', colocate_with => 'products');
+UPDATE orders
+SET order_status = 'PENDING'::text
+WHERE order_id = (:order_id)::bigint
+  AND order_status IS DISTINCT FROM 'PENDING'::text;
 ```
 
-Both tables keep `merchant_id` as their distribution column, so their primary
-keys, the `UNIQUE (merchant_id, product_id)` constraint and every query that
-names `merchant_id` are unchanged. With one shard, `merchant_id` no longer
-chooses between shards, but it still lets queries use those indexes. The two
-tables stay colocated with each other, so T4's `products`/`inventory` join
-still runs on one shard.
+Citus cannot prune it, so it is sent to all 32 `orders` shards on all 4
+workers. `PRIMARY KEY (merchant_id, order_id)` does not lead with `order_id`,
+so no shard can answer with a single index probe either. Every T5 therefore
+takes write locks on every shard, which is why concurrent T5s serialise against
+each other rather than spreading across the cluster.
 
-`create_schema` now also writes the placement of the single shard (worker
-name and port) to `schema-create.log`, so the report can say which worker
-carried this load.
+The `IS DISTINCT FROM` guard from `expt_b2` does not help here. It prevents the
+heap write when the status already matches, but the statement is still sent to
+all 32 shards to discover that.
 
-`product_merchant_map` is kept exactly as in `expt_b4`, so that the only
-difference in T7 between the two experiments is where the two `inventory` rows
-live. The lookups still go to the map's shards on other workers, before
-`BEGIN`. Replacing the map with an index on `inventory (product_id)` would
-remove them, and is left as a possible follow-up.
+### Optimisation 1: order_merchant_map
 
-### The trade-off being measured
+Added a two-column table that maps each order to the merchant that owns it:
 
-| Transaction              | Weight | Change from `expt_b4`                                     |
-| ------------------------ | ------ | --------------------------------------------------------- |
-| T7 Inventory Transfer    | 30%    | both rows on one worker; one-phase commit                 |
-| T2 Update Inventory      | 10%    | runs on the products/inventory worker                     |
-| T4 Product Lookup        | 5%     | runs on the products/inventory worker                     |
-| T9 Update Product        | 10%    | runs on the products/inventory worker                     |
-| T1 Place Order           | 10%    | spans two colocation groups; usually two-phase commit     |
-| T3, T5, T6, T8           | 35%    | unchanged                                                 |
+```sql
+CREATE TABLE order_merchant_map (
+  order_id BIGINT NOT NULL,
+  merchant_id BIGINT NOT NULL,
+  PRIMARY KEY (order_id)
+);
+SELECT create_distributed_table('order_merchant_map', 'order_id', colocate_with => 'none');
+```
 
-T2, T4, T7 and T9 (55% of all transactions) now run entirely on one worker, and
-T1 (another 10%) reserves its stock there too. That worker handles most of the
-workload's writes on a quarter of the cluster's hardware. In return, T7, the
-transaction that sets throughput in workload B, stops paying for a cross-worker
-commit. Whether T7's cheaper commit outweighs the concentration on one worker
-is what this experiment measures, and it could go either way.
+It is distributed by `order_id`, so a lookup by `order_id` is routed to one
+shard. It is filled in `generate_data` straight after `orders` is loaded:
 
-Two smaller effects follow from the same change. A deadlock between two T7s is
-now between two local transactions on one worker, so PostgreSQL detects it
-itself instead of waiting for Citus's distributed deadlock detection. And all of
-`products` and `inventory` (500,000 rows each) now share that one worker's 1 GB
-of `shared_buffers`.
+```sql
+INSERT INTO order_merchant_map (order_id, merchant_id)
+SELECT order_id, merchant_id FROM orders;
+```
 
-### Adaptation 1: T1 split into two statements
+It is added to the `TRUNCATE` in `generate_data`, so every database reset
+rebuilds it along with the tables it is derived from, and the whole-database
+`ANALYZE` at the end of `generate_data` covers it.
 
-Since `expt_b3`, T1 has been a single statement that checks the customer,
-checks and reserves stock, and inserts the order and its items. It runs as one
-statement only because all five tables are colocated and every reference names
-the same `merchant_id`, so Citus can send the whole statement to one shard. With
-`products` and `inventory` in another colocation group, that is no longer
-possible. The statement is split at the colocation boundary, inside the same
-transaction:
+This is the same pattern as `product_merchant_map`, added for T7 in `expt_b4`.
 
-1. **Statement 1, products and inventory.** It is identical to `expt_b4`'s
-   eligibility check and reservation, except that the customer check is
-   removed. It returns whether every requested product was reserved, plus the
-   unit price of each item slot (`price_1` to `price_5`) through `\gset`,
-   because statement 2 cannot read `products`.
-2. **Statement 2, customers, orders and order_items** (runs only if statement
-   1 reserved everything). It checks the customer and inserts the order and its
-   items, with `unit_price` and `total_amount` computed from the prices
-   returned by statement 1 instead of a join to `products`.
-3. `COMMIT` if an order was created, otherwise `ROLLBACK`.
+#### Keeping the map correct
 
-The result is the same as before. An order is created only when the customer
-exists and every item was reserved, and otherwise nothing changes. Two
-differences:
+No transaction changes an existing order's merchant, and T5 draws its
+`order_id` from `1..INITIAL_NUM_ORDERS`, which is exactly the set of orders
+present when the map is built. T1 creates orders beyond that range at run time
+and does not add them to the map, but T5 can never select one, so the map
+covers every order T5 can reach for the whole run.
 
-- The customer is now checked after stock is reserved. A missing customer rolls
-  back the reservation instead of preventing it. This affects only the order in
-  which locks are taken.
-- An order that is not created now ends in `ROLLBACK`. `expt_b4` always
-  committed, and the transaction changed nothing in that case.
+As in `expt_b4`, T5 does not depend on that being true: a miss returns
+`merchant_id = 0` and T5 falls back to `expt_b4`'s un-routed statement. Under
+this workload the fallback should never run.
 
-Prices are read in statement 1 under the same transaction snapshot that
-`expt_b4` used to read them, so a concurrent T9 is handled the same way as
-before.
+### Optimisation 2: Routed T5
 
-T1 now needs one more round trip. Whenever the merchant's shard is not on the
-products/inventory worker (about 3 merchants in 4), the transaction also spans
-two workers and commits in two phases. This is the cost the table above
-charges to T1.
+T5 now runs a lookup, routed to one `order_merchant_map` shard:
 
-### Adaptation 2: order_items loading via a staging table
+```sql
+SELECT COALESCE(MAX(merchant_id), 0) AS merchant_id
+FROM order_merchant_map
+WHERE order_id = (:order_id)::bigint
+\gset t5_
+```
 
-`generate_data` loads `order_items` by joining the generated rows (through
-`orders`) to `products` to get each item's `price`. That join now crosses
-colocation groups, which Citus does not push down. `run.sh` therefore adds a
-loader-only table, `product_price_stage (merchant_id, product_id, price)`,
-distributed by `merchant_id` in the merchant colocation group:
+`COALESCE(MAX(...), 0)` always returns exactly one row, as `\gset` requires,
+and turns a miss into `0`. Then the same `UPDATE` as before, with `merchant_id`
+added:
 
-1. It is filled from `products` straight after `product_merchant_map`.
-2. The `order_items` insert joins it instead of `products`, with the same join
-   condition.
-3. It is truncated immediately afterwards, before `orders.total_amount` is
-   computed.
+```sql
+UPDATE orders
+SET order_status = 'PENDING'::text
+WHERE merchant_id = (:t5_merchant_id)::bigint
+  AND order_id = (:order_id)::bigint
+  AND order_status IS DISTINCT FROM 'PENDING'::text;
+```
 
-It is filled by reading `products`, not by recomputing prices from the
-generator's formula, so the loaded data is identical to `expt_b4`'s. It is
-empty for the whole benchmark and is part of every reset's `TRUNCATE`.
+This is routed to one shard and uses the complete
+`PRIMARY KEY (merchant_id, order_id)`. The three status branches and the
+`IS DISTINCT FROM` guard are unchanged, so the only difference from `expt_b4`
+is which shards the statement reaches.
+
+T5 has no `BEGIN`/`COMMIT` — it has been a single-statement transaction since
+`expt_b1`'s Optimisation 1, and remains one plus a preceding read. The lookup
+is therefore its own autocommit statement. Nothing writes the map, so reading
+it separately cannot give a different answer than reading it inside a
+transaction would.
+
+Per execution, this goes from 1 statement x 32 shards to 1 single-shard lookup
+plus 1 single-shard `UPDATE`.
+
+### Expected effect
+
+T5 should join T2, T8 and T9 at roughly 1-2 ms instead of 1554 ms, and stop
+capping throughput at 366 TPS. T6 (Global Sales) is the next candidate: it is
+un-routable by construction, since it aggregates across all merchants, and it
+is already 50% of latency at 1 client and 7.2% at 64.
 
 ### What to look at when this is run
 
-- **Placement.** Note from `schema-create.log` which worker holds the
-  products/inventory shard, and check that worker's PostgreSQL log for errors
-  or overload.
-- **T7 latency** against `expt_b4` at 1 client, where there is no contention.
-  This is the direct effect of the one-phase commit.
-- **T2, T4 and T9 latency** as clients increase. These ran on all four workers
-  in `expt_b4` and now share one. If they climb much faster than in `expt_b4`,
-  that worker is saturating.
-- **T1 latency** against `expt_b4`, for the cost of the split and of the
-  cross-worker commit.
-- **Overall throughput** at 64 clients against `expt_b4`. If the single worker
-  saturates before T7 would have limited `expt_b4`, overall throughput will be
-  lower than `expt_b4`'s, even though T7 itself is cheaper.
-- **`pgbench_exit_code` and `failed_log_records`.** The T1 split and the loader
-  change have not been run yet. A problem in either shows up as a failure in
-  `data-generation.log` or as T1 errors in `benchmark.log`.
+- **Comparability.** Run on the same nodes as `expt_b4` (`xcnf[16-20]`). At 1
+  client the unchanged transactions (T1, T2, T3, T4, T6, T7, T8, T9) should be
+  within a few percent of `expt_b4`.
+- **T5 latency and its curve across client counts.** The flat ~36 TPS ceiling
+  should disappear. A T5 p99 anywhere near `expt_b4`'s p50 would mean the
+  fallback is firing.
+- **The next bottleneck.** Recompute the latency-share table. If T6 takes over,
+  overall throughput should settle near (T6 TPS) / 0.10.
+- **T1 latency.** T1 writes `orders` too, on the merchant's shard. Removing 32
+  shard-wide write locks per T5 should help T1 as well; if it does not, the
+  contention was somewhere else.
+- **`pgbench_exit_code` and `failed_log_records`.**
 
 ### Note: this experiment has not been run yet
 

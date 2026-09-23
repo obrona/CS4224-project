@@ -24,7 +24,6 @@
 
 BEGIN;
 
--- Statement 1: products and inventory only.
 WITH
 input_items(item_no, product_id, quantity) AS (
   VALUES
@@ -45,10 +44,16 @@ requirements AS MATERIALIZED (
   FROM requested_items
   GROUP BY product_id
 ),
--- only eligible if all items requested exist with enough stock.
+-- only eligible if all items requested exist.
 eligible AS MATERIALIZED (
   SELECT
-    NOT EXISTS (
+    EXISTS (
+      SELECT 1
+      FROM customers c
+      WHERE c.merchant_id = (:merchant_id)::bigint
+        AND c.customer_id = (:customer_id)::bigint
+    )
+    AND NOT EXISTS (
       SELECT 1
       FROM requirements r
       LEFT JOIN products p
@@ -72,47 +77,11 @@ reserved AS (
     AND i.product_id = r.product_id
   RETURNING i.product_id
 ),
-item_prices AS MATERIALIZED (
-  SELECT ri.item_no, p.price
-  FROM requested_items ri
-  JOIN products p
-    ON p.merchant_id = (:merchant_id)::bigint
-   AND p.product_id = ri.product_id
-)
-SELECT
-  (SELECT e.ok FROM eligible e)
-    AND (SELECT COUNT(*) FROM reserved)
-      = (SELECT COUNT(*) FROM requirements) AS reserved_ok,
-  COALESCE((SELECT price FROM item_prices WHERE item_no = 1), 0) AS price_1,
-  COALESCE((SELECT price FROM item_prices WHERE item_no = 2), 0) AS price_2,
-  COALESCE((SELECT price FROM item_prices WHERE item_no = 3), 0) AS price_3,
-  COALESCE((SELECT price FROM item_prices WHERE item_no = 4), 0) AS price_4,
-  COALESCE((SELECT price FROM item_prices WHERE item_no = 5), 0) AS price_5
-\gset t1_
-
-\if :t1_reserved_ok
--- Statement 2: customers, orders and order_items on the merchant's shard.
-WITH
-input_items(item_no, product_id, quantity, unit_price) AS (
-  VALUES
-    (1, (:product_id_1)::bigint, (:qty_1)::integer, (:t1_price_1)::numeric(12,2)),
-    (2, (:product_id_2)::bigint, (:qty_2)::integer, (:t1_price_2)::numeric(12,2)),
-    (3, (:product_id_3)::bigint, (:qty_3)::integer, (:t1_price_3)::numeric(12,2)),
-    (4, (:product_id_4)::bigint, (:qty_4)::integer, (:t1_price_4)::numeric(12,2)),
-    (5, (:product_id_5)::bigint, (:qty_5)::integer, (:t1_price_5)::numeric(12,2))
-),
-requested_items AS MATERIALIZED (
-  SELECT item_no, product_id, quantity, unit_price
-  FROM input_items
-  WHERE item_no <= (:item_count)::integer
-),
-customer_ok AS MATERIALIZED (
-  SELECT EXISTS (
-    SELECT 1
-    FROM customers c
-    WHERE c.merchant_id = (:merchant_id)::bigint
-      AND c.customer_id = (:customer_id)::bigint
-  ) AS ok
+reservation_ok AS MATERIALIZED (
+  SELECT e.ok
+     AND (SELECT COUNT(*) FROM reserved)
+       = (SELECT COUNT(*) FROM requirements) AS ok
+  FROM eligible e
 ),
 inserted_order AS (
   INSERT INTO orders(
@@ -123,11 +92,14 @@ inserted_order AS (
     (:merchant_id)::bigint,
     (:customer_id)::bigint,
     'PENDING'::text,
-    SUM(ri.quantity * ri.unit_price)::numeric(12,2),
+    SUM(ri.quantity * p.price)::numeric(12,2),
     CURRENT_TIMESTAMP
   FROM requested_items ri
-  CROSS JOIN customer_ok co
-  WHERE co.ok
+  JOIN products p
+    ON p.merchant_id = (:merchant_id)::bigint
+   AND p.product_id = ri.product_id
+  CROSS JOIN reservation_ok ro
+  WHERE ro.ok
   HAVING COUNT(*) = (:item_count)::integer
   RETURNING order_id
 ),
@@ -141,21 +113,16 @@ inserted_items AS (
     o.order_id,
     ri.product_id,
     ri.quantity,
-    ri.unit_price
+    p.price
   FROM requested_items ri
+  JOIN products p
+    ON p.merchant_id = (:merchant_id)::bigint
+   AND p.product_id = ri.product_id
   CROSS JOIN inserted_order o
   RETURNING 1
 )
 SELECT
   EXISTS (SELECT 1 FROM inserted_order) AS order_created,
-  (SELECT COUNT(*) FROM inserted_items) AS items_created
-\gset t1_
-\else
-\set t1_order_created 0
-\endif
+  (SELECT COUNT(*) FROM inserted_items) AS items_created;
 
-\if :t1_order_created
 COMMIT;
-\else
-ROLLBACK;
-\endif
