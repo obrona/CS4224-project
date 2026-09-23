@@ -1,20 +1,14 @@
 -- Same window as the baseline using a per-merchant/day rollup for
 -- whole days, combined with a live scan of orders for the boundary day.
-WITH bound AS (
-  SELECT
-    CURRENT_TIMESTAMP AS now_ts,
-    CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day' AS win_start
-),
-partial_day AS (
+WITH partial_day AS (
   SELECT
     o.merchant_id,
     COUNT(*) AS order_count,
     SUM(o.total_amount) AS revenue
   FROM orders AS o
-  CROSS JOIN bound AS b
-  WHERE o.created_at >= b.win_start
-    AND o.created_at < b.now_ts
-    AND o.created_at < ((b.win_start)::date + 1)
+  WHERE o.created_at >= CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day'
+    AND o.created_at < CURRENT_TIMESTAMP
+    AND o.created_at < (CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day')::date + 1
   GROUP BY o.merchant_id
 ),
 whole_days AS (
@@ -23,8 +17,7 @@ whole_days AS (
     SUM(s.order_count) AS order_count,
     SUM(s.revenue) AS revenue
   FROM merchant_daily_sales AS s
-  CROSS JOIN bound AS b
-  WHERE s.sales_date >= ((b.win_start)::date + 1)
+  WHERE s.sales_date >= (CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day')::date + 1
   GROUP BY s.merchant_id
 )
 SELECT
