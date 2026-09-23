@@ -1,176 +1,229 @@
 ### Prev: expt_b5
 
-This experiment moves `products` and `inventory` out of the merchant
-colocation group into a colocation group of their own with a single shard, so
-every product and inventory row lives on one worker. Everything else carried
-over from `expt_b5` is unchanged, including `product_merchant_map`, the routed
-T7, `order_merchant_map` and the routed T5, except for two adaptations that the
-new layout forces on T1 and on data loading (below). Those are not
-optimisations; the layout does not run without them.
+This experiment answers T6 (Global Sales) from a per-merchant, per-day revenue
+rollup instead of scanning `orders`. There is no change to the schema of the
+existing tables, to data distribution, to the other transactions, or to server
+parameters carried over from `expt_b5`, apart from T1 maintaining the new
+rollup.
 
 ### Motivation
 
-`expt_b4` routes T7 to the shards that hold its two rows, but the source and
-destination products are independent random draws. With `inventory` hashed over
-32 shards on 4 workers, the two rows are on different workers for about 3 in 4
-transfers, and those transfers commit with two-phase commit across two workers.
-Routing removes T7's fan-out, but no single-column hash distribution can remove
-that cross-worker commit, because it would need to place two unrelated random
-products on the same worker.
+`expt_b5` removed T5 as the bottleneck: T5's average latency fell from 1554.3 ms
+to 28.5 ms at 64 clients. Overall throughput rose only from 367.1 to 405.2 TPS,
+because T6 took over.
 
-Putting all of `inventory` in one shard does place them on the same worker.
-Every T7 then writes to a single worker and commits in one phase.
+Each transaction's share of total measured latency in `expt_b5`
+(`avg_latency_ms` x `successful_transactions`, over the workload total):
 
-### Why a single shard rather than distributing by product_id
+| Transaction            | Share at 1 client | Share at 64 clients |
+| ---------------------- | ----------------- | ------------------- |
+| T6 Global Sales        | 52.5%             | 65.4%               |
+| T7 Inventory Transfer  | 16.6%             | 14.6%               |
+| T1 Place Order         | 24.0%             | 13.6%               |
+| T5 Update Order Status | 2.0%              | 1.8%                |
 
-Distributing `products` and `inventory` by `product_id` looks attractive for
-workload B, since T7 (30%), T2 (10%), T4 (5%) and T9 (10%) all know the
-`product_id`. But the two T7 rows would still hash to different workers 3 times
-in 4, so T7 would keep its two-phase commit, while T1 would reserve up to five
-products on up to five different shards. The single shard is the only layout
-that removes the cross-worker commit from T7, so it is the one worth testing.
+T6's latency across client counts is 42.9, 64.7, 128.5, 296.0, 565.4,
+1030.2 ms. By Little's law 40.115 x 1.030 = 41.3, so about 41 of the 64 clients
+are inside T6 at any moment. T6 is 10% of workload B, so 40.115 / 0.10 = 401
+TPS, which is the observed overall throughput (405.2). T6 sets the ceiling.
 
-### Optimisation 1: products and inventory on a single shard
+### Why T6 is slow
+
+T6 aggregates revenue per merchant over a rolling 30-day window:
 
 ```sql
-SELECT create_distributed_table('products', 'merchant_id', colocate_with => 'none', shard_count => 1);
-SELECT create_distributed_table('inventory', 'merchant_id', colocate_with => 'products');
+SELECT merchant_id, COUNT(*), SUM(total_amount)
+FROM orders
+WHERE created_at >= CURRENT_TIMESTAMP - 30 * INTERVAL '1 day'
+  AND created_at < CURRENT_TIMESTAMP
+GROUP BY merchant_id
+ORDER BY revenue DESC
+LIMIT 20;
 ```
 
-Both tables keep `merchant_id` as their distribution column, so their primary
-keys, the `UNIQUE (merchant_id, product_id)` constraint and every query that
-names `merchant_id` are unchanged. With one shard, `merchant_id` no longer
-chooses between shards, but it still lets queries use those indexes. The two
-tables stay colocated with each other, so T4's `products`/`inventory` join
-still runs on one shard.
+Unlike every earlier bottleneck, this one is not a routing problem. T6 spans
+all merchants by definition, so no distribution column can prune it and no
+rewrite can route it to one worker. Citus already does the right thing:
+each shard computes partial per-merchant aggregates and the coordinator merges
+them. The cost is the volume. The generator spreads 5,000,000 orders over 365
+days, so a 30-day window covers roughly 411,000 order rows, and every T6
+re-derives the same historical sums from scratch.
 
-`create_schema` now also writes the placement of the single shard (worker
-name and port) to `schema-create.log`, so the report can say which worker
-carried this load.
+The only way to make it cheaper is to stop recomputing what cannot change.
 
-`product_merchant_map` is kept exactly as in `expt_b5`, so that the only
-difference in T7 between the two experiments is where the two `inventory` rows
-live. The lookups still go to the map's shards on other workers, before
-`BEGIN`. Replacing the map with an index on `inventory (product_id)` would
-remove them, and is left as a possible follow-up — with a single shard that
-index would be enough to find either row directly.
+### Optimisation 1: merchant_daily_sales
 
-### The trade-off being measured
+```sql
+CREATE TABLE merchant_daily_sales (
+  merchant_id BIGINT NOT NULL,
+  sales_date  DATE   NOT NULL,
+  order_count BIGINT NOT NULL,
+  revenue     NUMERIC(14, 2) NOT NULL,
+  PRIMARY KEY (merchant_id, sales_date)
+);
+SELECT create_distributed_table('merchant_daily_sales', 'merchant_id',
+                                colocate_with => 'merchants');
+```
 
-| Transaction              | Weight | Change from `expt_b5`                                     |
-| ------------------------ | ------ | --------------------------------------------------------- |
-| T7 Inventory Transfer    | 30%    | both rows on one worker; one-phase commit                 |
-| T2 Update Inventory      | 10%    | runs on the products/inventory worker                     |
-| T4 Product Lookup        | 5%     | runs on the products/inventory worker                     |
-| T9 Update Product        | 10%    | runs on the products/inventory worker                     |
-| T1 Place Order           | 10%    | spans two colocation groups; usually two-phase commit     |
-| T3, T5, T6, T8           | 35%    | unchanged                                                 |
+`revenue` is `NUMERIC(14,2)` rather than `orders.total_amount`'s `(12,2)`
+because one row sums many orders.
 
-T2, T4, T7 and T9 (55% of all transactions) now run entirely on one worker, and
-T1 (another 10%) reserves its stock there too. That worker handles most of the
-workload's writes on a quarter of the cluster's hardware. In return, T7, the
-transaction that sets throughput in workload B, stops paying for a cross-worker
-commit. Whether T7's cheaper commit outweighs the concentration on one worker
-is what this experiment measures, and it could go either way.
+T6 filters on `sales_date` across all merchants, which is not a prefix of the
+primary key, so a covering index makes that scan index-only:
 
-Two smaller effects follow from the same change. A deadlock between two T7s is
-now between two local transactions on one worker, so PostgreSQL detects it
-itself instead of waiting for Citus's distributed deadlock detection. And all of
-`products` and `inventory` (500,000 rows each) now share that one worker's 1 GB
-of `shared_buffers`.
+```sql
+CREATE INDEX idx_mds_period ON merchant_daily_sales (sales_date)
+  INCLUDE (merchant_id, order_count, revenue);
+```
 
-### Adaptation 1: T1 split into two statements
+It is preloaded in `generate_data` by aggregating `orders`, not by recomputing
+the generator's formula:
 
-Since `expt_b3`, T1 has been a single statement that checks the customer,
-checks and reserves stock, and inserts the order and its items. It runs as one
-statement only because all five tables are colocated and every reference names
-the same `merchant_id`, so Citus can send the whole statement to one shard. With
-`products` and `inventory` in another colocation group, that is no longer
-possible. The statement is split at the colocation boundary, inside the same
-transaction:
+```sql
+INSERT INTO merchant_daily_sales (merchant_id, sales_date, order_count, revenue)
+SELECT merchant_id, created_at::date, COUNT(*), SUM(total_amount)
+FROM orders
+GROUP BY merchant_id, created_at::date;
+```
 
-1. **Statement 1, products and inventory.** It is identical to `expt_b5`'s
-   eligibility check and reservation, except that the customer check is
-   removed. It returns whether every requested product was reserved, plus the
-   unit price of each item slot (`price_1` to `price_5`) through `\gset`,
-   because statement 2 cannot read `products`.
-2. **Statement 2, customers, orders and order_items** (runs only if statement
-   1 reserved everything). It checks the customer and inserts the order and its
-   items, with `unit_price` and `total_amount` computed from the prices
-   returned by statement 1 instead of a join to `products`. It also returns the
-   new `order_id`.
-3. **Statement 3, order_merchant_map** (runs only if an order was created),
-   carried over from `expt_b5`: the new order's map row, written inside the
-   same transaction so a committed order always has one.
-4. `COMMIT` if an order was created, otherwise `ROLLBACK`.
+This must run **after** `generate_data`'s `UPDATE orders SET total_amount`.
+Orders are inserted with `total_amount` 0.00 and backfilled from `order_items`
+later; preloading any earlier records zero revenue for every merchant-day, and
+nothing errors — the benchmark would simply produce a wrong T6.
 
-T1 therefore touches three colocation groups here — products/inventory, the
-merchant tables, and the map — against two in `expt_b5`. The commit cost this
-charges to T1 is on top of the split itself, and both land in the same
-measurement.
+The table is in the `TRUNCATE` for every reset and is covered by the
+whole-database `ANALYZE` at the end of `generate_data`.
 
-The result is the same as before. An order is created only when the customer
-exists and every item was reserved, and otherwise nothing changes. Two
-differences:
+### Optimisation 2: T1 maintains the rollup
 
-- The customer is now checked after stock is reserved. A missing customer rolls
-  back the reservation instead of preventing it. This affects only the order in
-  which locks are taken.
-- An order that is not created now ends in `ROLLBACK`. `expt_b5` always
-  committed, and the transaction changed nothing in that case.
+`inserted_order` now returns `total_amount` alongside `order_id`, and T1 adds
+one upsert inside its existing transaction:
 
-Prices are read in statement 1 under the same transaction snapshot that
-`expt_b5` used to read them, so a concurrent T9 is handled the same way as
-before.
+```sql
+INSERT INTO merchant_daily_sales AS s (merchant_id, sales_date, order_count, revenue)
+VALUES ((:merchant_id)::bigint, CURRENT_DATE, 1, (:t1_new_order_total)::numeric(12,2))
+ON CONFLICT (merchant_id, sales_date)
+DO UPDATE SET order_count = s.order_count + 1,
+              revenue     = s.revenue + EXCLUDED.revenue;
+```
 
-T1 now needs one more round trip. Whenever the merchant's shard is not on the
-products/inventory worker (about 3 merchants in 4), the transaction also spans
-two workers and commits in two phases. This is the cost the table above
-charges to T1.
+Unlike `order_merchant_map`, this costs no extra commit participant.
+`merchant_daily_sales` is distributed by `merchant_id` and colocated with
+`orders`, so the upsert lands on the same shard as the order T1 just inserted.
+T1 keeps exactly the two participants it had in `expt_b5`.
 
-### Adaptation 2: order_items loading via a staging table
+`CURRENT_DATE` and the order's own `created_at::date` both derive from the
+transaction's start timestamp, so they always name the same bucket, including
+for a transaction that straddles midnight.
 
-`generate_data` loads `order_items` by joining the generated rows (through
-`orders`) to `products` to get each item's `price`. That join now crosses
-colocation groups, which Citus does not push down. `run.sh` therefore adds a
-loader-only table, `product_price_stage (merchant_id, product_id, price)`,
-distributed by `merchant_id` in the merchant colocation group:
+### Optimisation 3: T6 reads the rollup and the boundary day
 
-1. It is filled from `products` straight after `product_merchant_map`.
-2. The `order_items` insert joins it instead of `products`, with the same join
-   condition.
-3. It is truncated immediately afterwards, before `orders.total_amount` is
-   computed.
+Day buckets cannot express a rolling `CURRENT_TIMESTAMP` boundary. The day
+containing the window start is therefore read from `orders` with the baseline's
+own predicate, and only the whole days after it come from the rollup:
 
-It is filled by reading `products`, not by recomputing prices from the
-generator's formula, so the loaded data is identical to `expt_b5`'s. It is
-empty for the whole benchmark and is part of every reset's `TRUNCATE`.
+```sql
+WITH bound AS (
+  SELECT CURRENT_TIMESTAMP AS now_ts,
+         CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day' AS win_start
+),
+partial_day AS (        -- from orders, one day, baseline predicate kept intact
+  ... WHERE o.created_at >= b.win_start
+        AND o.created_at <  b.now_ts
+        AND o.created_at <  ((b.win_start)::date + 1)
+),
+whole_days AS (         -- from the rollup
+  ... WHERE s.sales_date >= ((b.win_start)::date + 1)
+)
+SELECT merchant_id, SUM(order_count), SUM(revenue)
+FROM (partial_day UNION ALL whole_days) combined
+GROUP BY merchant_id ORDER BY revenue DESC LIMIT 20;
+```
 
-`order_merchant_map` is built from `orders` and is unaffected by this layout
-change, since `orders` stays in the merchant colocation group.
+The `created_at < now_ts` upper bound is kept verbatim even though no visible
+order can have a future `created_at`, so the scan side stays textually the
+baseline's.
+
+Rows touched per T6: about 13,700 for the boundary day plus about 30,000
+rollup rows (1,000 merchants x 30 days), against roughly 411,000 order rows
+before — close to a 9x reduction, on much narrower tuples.
+
+### Why this returns the baseline's answer exactly
+
+Let `W` be `win_start`, `N` be `now_ts` and `D` be `W::date`.
+
+- **Disjoint.** Every order in `partial_day` has `created_at` in `[W, D+1)`, and
+  since `W >= D` they all fall in bucket `D`. `whole_days` starts at bucket
+  `D+1`. No order is counted twice.
+- **Covering.** `partial_day` covers `[W, D+1)` and `whole_days` covers
+  `[D+1, infinity)`, so together they cover `[W, infinity)`, which contains the
+  baseline's `[W, N)`. Nothing lands beyond `N`, because `created_at` is the
+  inserting transaction's start time and T6 only sees committed rows, so
+  `created_at < commit < T6's snapshot`.
+- **Consistent.** The upsert is in T1's transaction, so any snapshot sees an
+  order and its rollup contribution together. This is what makes reading two
+  sources safe; an asynchronous rollup would let T6 see an order in `orders`
+  that no bucket had counted yet.
+- **Stable summands.** T5 writes `order_status`, T9 writes product `price`, and
+  nothing deletes orders, so an order's contribution is fixed at insert. Note
+  this depends on `expt_b3`'s set-based T1, which computes `total_amount`
+  inline; `expt_b2`'s trailing `UPDATE orders SET total_amount` would have made
+  buckets drift.
+- **Exact arithmetic.** `total_amount` is `NUMERIC`, so summing per-day
+  subtotals gives bit-identical results to summing the orders directly. With
+  `DOUBLE PRECISION` this would not hold.
+
+The only visible difference is a type label: the baseline's `COUNT(*)` is
+`bigint` while `SUM(order_count)` is `numeric`.
+
+### What this does not assume about the data
+
+The rollup is built by aggregating `orders`, maintained for whatever T1
+creates, and the boundary day is computed from `orders` with the exact
+predicate. None of that depends on how the synthetic data was generated.
+
+This is worth stating because the naive version of this optimisation — reading
+only the rollup, with `sales_date >= (win_start)::date` — *would* have depended
+on it. The generator gives every order at a given day-offset an identical
+timestamp, so the boundary day is a solid block of about 13,700 orders that
+falls entirely in or entirely out depending on the time of day the job started
+and how long it has been running. The two-way split removes that.
+
+What does depend on the data is the size of the win, not the answer. Because
+`(i * 31) % 365` cycles evenly, days hold about 13,700 orders each and the
+boundary scan is cheap. Skewed data would make `partial_day` more expensive
+while still returning the correct result.
 
 ### What to look at when this is run
 
-- **Placement.** Note from `schema-create.log` which worker holds the
-  products/inventory shard, and check that worker's PostgreSQL log for errors
-  or overload.
-- **T7 latency** against `expt_b5` at 1 client, where there is no contention.
-  This is the direct effect of the one-phase commit.
-- **T2, T4 and T9 latency** as clients increase. These ran on all four workers
-  in `expt_b5` and now share one. If they climb much faster than in `expt_b5`,
-  that worker is saturating.
-- **T1 latency** against `expt_b5`, for the cost of the split and of the
-  cross-worker commit.
-- **Overall throughput** at 64 clients against `expt_b5`. If the single worker
-  saturates before T7 would have limited `expt_b5`, overall throughput will be
-  lower than `expt_b5`'s, even though T7 itself is cheaper.
-- **`pgbench_exit_code` and `failed_log_records`.** The T1 split and the loader
-  change have not been run yet. A problem in either shows up as a failure in
-  `data-generation.log` or as T1 errors in `benchmark.log`.
+- **Comparability.** Run on the same nodes as `expt_b5` (`xcnf[16-20]`). At 1
+  client the unchanged transactions (T2, T3, T4, T5, T7, T8, T9) should be
+  within a few percent of `expt_b5`.
+- **T6 latency**, which was 42.9 ms at 1 client and 1030.2 ms at 64. The 1-client
+  figure is the direct effect of scanning ~44,000 rows instead of ~411,000.
+- **The next bottleneck.** Recompute the latency-share table. T7 (14.6%) and T1
+  (13.6%) are the next candidates, and they are close enough that which one
+  surfaces is worth knowing before choosing what follows.
+- **T1 latency** against `expt_b5`, for the cost of the upsert. It should be
+  small, since the write is colocated and adds no participant.
+- **`serialization_failures`.** The upsert creates a contention point T1 did not
+  have: concurrent T1s for the same merchant on the same day now conflict on one
+  row under `SERIALIZABLE`. The rate looks safe (about 40 T1/s, half to 100 hot
+  merchants, so roughly 0.2/s per hot row), but `expt_b5` already reported 5
+  failures and `pgbench_exit_code=2` at 64 clients.
+- **Verify the plan once with `EXPLAIN`.** Both tables are distributed by
+  `merchant_id` and colocated, and every aggregate groups by `merchant_id`, so
+  the whole query should run per-shard with only the final sort and limit merged
+  at the coordinator. Confirm Citus folds the `bound` CTE on the coordinator
+  rather than doing something odd with `CURRENT_TIMESTAMP`.
 
-A result showing that this layout is slower is still worth reporting: it is a
-direct measurement of concentration cost against commit cost, and the
-projection above says it is a close call.
+### Possible refinement
+
+T1's upsert is a second statement to a worker already in the transaction. It
+could instead be folded into T1's single statement as another data-modifying
+CTE reading `inserted_order`, saving one round trip. That was left out here
+because `ON CONFLICT` inside a distributed multi-CTE statement is the least
+proven part of the pattern, and a failed run costs a full job.
 
 ### Note: this experiment has not been run yet
 

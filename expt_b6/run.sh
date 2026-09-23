@@ -424,7 +424,7 @@ create_schema() {
 
 	if [[ "$DROP_EXISTING" == "1" ]]; then
 		psqlx <<'SQL'
-DROP TABLE IF EXISTS product_price_stage CASCADE;
+DROP TABLE IF EXISTS merchant_daily_sales CASCADE;
 DROP TABLE IF EXISTS product_merchant_map CASCADE;
 DROP TABLE IF EXISTS order_merchant_map CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
@@ -507,14 +507,14 @@ CREATE TABLE IF NOT EXISTS order_merchant_map (
 	PRIMARY KEY (order_id)
 );
 
--- Loader-only copy of product prices, colocated with order_items. products is
--- no longer colocated with orders, so generate_data cannot join them directly.
--- It is filled, used and emptied inside generate_data; empty during the run.
-CREATE TABLE IF NOT EXISTS product_price_stage (
+-- Per-merchant, per-day revenue rollup for T6. Distributed by merchant_id and
+-- colocated with orders.
+CREATE TABLE IF NOT EXISTS merchant_daily_sales (
 	merchant_id BIGINT NOT NULL,
-	product_id BIGINT NOT NULL,
-	price NUMERIC(12, 2) NOT NULL,
-	PRIMARY KEY (merchant_id, product_id)
+	sales_date DATE NOT NULL,
+	order_count BIGINT NOT NULL,
+	revenue NUMERIC(14, 2) NOT NULL,
+	PRIMARY KEY (merchant_id, sales_date)
 );
 
 CREATE INDEX IF NOT EXISTS idx_orders_customer_recent
@@ -526,6 +526,10 @@ CREATE INDEX IF NOT EXISTS idx_order_items_order
 CREATE INDEX IF NOT EXISTS idx_orders_sales_period
 	ON orders (created_at)
 	INCLUDE (merchant_id, total_amount);
+
+CREATE INDEX IF NOT EXISTS idx_mds_period
+	ON merchant_daily_sales (sales_date)
+	INCLUDE (merchant_id, order_count, revenue);
 SQL
 
 	psqlx <<'SQL'
@@ -541,13 +545,11 @@ BEGIN
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'products'::regclass) THEN
-			-- products and inventory form their own colocation group with a
-			-- single shard, so every product and inventory row is on one worker.
-			PERFORM create_distributed_table('products', 'merchant_id', colocate_with => 'none', shard_count => 1);
+			PERFORM create_distributed_table('products', 'merchant_id', colocate_with => 'merchants');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'inventory'::regclass) THEN
-			PERFORM create_distributed_table('inventory', 'merchant_id', colocate_with => 'products');
+			PERFORM create_distributed_table('inventory', 'merchant_id', colocate_with => 'merchants');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'orders'::regclass) THEN
@@ -566,20 +568,12 @@ BEGIN
 			PERFORM create_distributed_table('order_merchant_map', 'order_id', colocate_with => 'none');
 		END IF;
 
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'product_price_stage'::regclass) THEN
-			PERFORM create_distributed_table('product_price_stage', 'merchant_id', colocate_with => 'merchants');
+		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'merchant_daily_sales'::regclass) THEN
+			PERFORM create_distributed_table('merchant_daily_sales', 'merchant_id', colocate_with => 'merchants');
 		END IF;
 	END IF;
 END
 $$;
-SQL
-
-	# Record which worker holds the single products/inventory shard.
-	psqlx <<'SQL'
-SELECT table_name, shardid, nodename, nodeport
-FROM citus_shards
-WHERE table_name IN ('products'::regclass, 'inventory'::regclass)
-ORDER BY table_name::text;
 SQL
 }
 
@@ -599,7 +593,7 @@ generate_data() {
 	COLD_MERCHANTS=$((NUM_MERCHANTS - HOT_MERCHANTS))
 	((COLD_MERCHANTS >= 1)) || COLD_MERCHANTS=1
 
-	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE product_price_stage,product_merchant_map,order_merchant_map,order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
+	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE merchant_daily_sales,product_merchant_map,order_merchant_map,order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
 
 	psqlx <<SQL
 INSERT INTO merchants SELECT i,'Merchant-'||i,(ARRAY['North','South','East','West','Central'])[1+(i%5)] FROM generate_series(1::bigint, $NUM_MERCHANTS::bigint) g(i);
@@ -617,9 +611,6 @@ SQL
 	psqlx <<'SQL'
 INSERT INTO product_merchant_map (product_id, merchant_id)
 SELECT product_id, merchant_id FROM products;
-
-INSERT INTO product_price_stage (merchant_id, product_id, price)
-SELECT merchant_id, product_id, price FROM products;
 SQL
 
 	psqlx <<SQL
@@ -647,11 +638,9 @@ y AS (SELECT *,merchant_id+$NUM_MERCHANTS*(ph%((($NUM_PRODUCTS-merchant_id)/$NUM
 INSERT INTO order_items
 SELECT y.order_item_id,y.merchant_id,y.order_id,y.product_id,y.qty,p.price
 FROM y
-JOIN product_price_stage p
+JOIN products p
   ON p.merchant_id=y.merchant_id
  AND p.product_id=y.product_id;
-
-TRUNCATE TABLE product_price_stage;
 
 UPDATE orders o
 SET total_amount=x.total
@@ -663,6 +652,14 @@ FROM (
 WHERE o.merchant_id=x.merchant_id
   AND o.order_id=x.order_id;
 SQL
+
+	psqlx <<'SQL'
+INSERT INTO merchant_daily_sales (merchant_id, sales_date, order_count, revenue)
+SELECT merchant_id, created_at::date, COUNT(*), SUM(total_amount)
+FROM orders
+GROUP BY merchant_id, created_at::date;
+SQL
+
 	[[ "$RUN_ANALYZE" == "1" ]] && psqlx -c "ANALYZE;"
 	echo "Synthetic data generation complete. Default scale creates about $((NUM_ORDER_ITEMS / NUM_ORDERS)) historical items/order."
 }
