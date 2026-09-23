@@ -49,6 +49,7 @@ LOG_DIR="${RUN_DIR}/logs"
 
 SCRIPT_DIR="${SCRIPT_DIR:-${SLURM_SUBMIT_DIR}}"
 TX_DIR="${SCRIPT_DIR}/transactions"
+EXPLAIN_DIR="${SCRIPT_DIR}/explain"
 
 ################# Files
 BENCHMARK_LOG_FILE="${JOB_RESULT_DIR}/benchmark.log"
@@ -1536,6 +1537,21 @@ EOF
 	echo "Overall metrics: $SUMMARY_FILE"
 	echo "Per-transaction metrics: $TX_METRICS_FILE"
 }
+
+#####################  Explain transactions
+# Record the plan of every statement T1-T9 runs, once, on the freshly loaded
+# data and outside the timed benchmark.
+explain_transactions() {
+	local f
+	reset_benchmark_sequences # T1 draws from benchmark_order_id_seq
+	for f in "$EXPLAIN_DIR"/T*.sql; do
+		echo "==================== $(basename "$f")"
+		psqlx -v REPORT_DAYS="$REPORT_DAYS" -f "$f" >/dev/null 2>&1 || true
+		psqlx -v REPORT_DAYS="$REPORT_DAYS" --echo-queries --no-align --tuples-only -f "$f" ||
+			echo "FAILED: $(basename "$f")"
+	done
+}
+explain_transactions &>"$JOB_RESULT_DIR/explain.log" || echo "EXPLAIN step failed; see $JOB_RESULT_DIR/explain.log"
 
 #####################  perform benchmarking
 run_benchmark &>"${BENCHMARK_LOG_FILE}"

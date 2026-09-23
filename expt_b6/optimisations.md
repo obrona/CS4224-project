@@ -123,34 +123,32 @@ containing the window start is therefore read from `orders` with the baseline's
 own predicate, and only the whole days after it come from the rollup:
 
 ```sql
-WITH bound AS (
-  SELECT CURRENT_TIMESTAMP AS now_ts,
-         CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day' AS win_start
-),
-partial_day AS (        -- from orders, one day, baseline predicate kept intact
-  ... WHERE o.created_at >= b.win_start
-        AND o.created_at <  b.now_ts
-        AND o.created_at <  ((b.win_start)::date + 1)
+WITH partial_day AS (   -- from orders, one day, baseline predicate kept intact
+  ... WHERE o.created_at >= CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day'
+        AND o.created_at <  CURRENT_TIMESTAMP
+        AND o.created_at <  (CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day')::date + 1
 ),
 whole_days AS (         -- from the rollup
-  ... WHERE s.sales_date >= ((b.win_start)::date + 1)
+  ... WHERE s.sales_date >= (CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day')::date + 1
 )
 SELECT merchant_id, SUM(order_count), SUM(revenue)
 FROM (partial_day UNION ALL whole_days) combined
 GROUP BY merchant_id ORDER BY revenue DESC LIMIT 20;
 ```
 
-The `created_at < now_ts` upper bound is kept verbatim even though no visible
-order can have a future `created_at`, so the scan side stays textually the
-baseline's.
+The `created_at < CURRENT_TIMESTAMP` upper bound is kept verbatim even though
+no visible order can have a future `created_at`, so the scan side stays
+textually the baseline's. `CURRENT_TIMESTAMP` is fixed for the whole
+transaction, so both branches see the same window.
 
 Rows touched per T6: about 13,700 for the boundary day plus about 30,000
 rollup rows (1,000 merchants x 30 days), against roughly 411,000 order rows
-before — close to a 9x reduction, on much narrower tuples.
+before � close to a 9x reduction, on much narrower tuples.
 
 ### Why this returns the baseline's answer exactly
 
-Let `W` be `win_start`, `N` be `now_ts` and `D` be `W::date`.
+Let `W` be the window start, `CURRENT_TIMESTAMP - REPORT_DAYS days`, `N` be
+`CURRENT_TIMESTAMP` and `D` be `W::date`.
 
 - **Disjoint.** Every order in `partial_day` has `created_at` in `[W, D+1)`, and
   since `W >= D` they all fall in bucket `D`. `whole_days` starts at bucket
@@ -183,7 +181,7 @@ creates, and the boundary day is computed from `orders` with the exact
 predicate. None of that depends on how the synthetic data was generated.
 
 This is worth stating because the naive version of this optimisation — reading
-only the rollup, with `sales_date >= (win_start)::date` — *would* have depended
+only the rollup, with `sales_date >= (win_start)::date` — _would_ have depended
 on it. The generator gives every order at a given day-offset an identical
 timestamp, so the boundary day is a solid block of about 13,700 orders that
 falls entirely in or entirely out depending on the time of day the job started
@@ -194,28 +192,24 @@ What does depend on the data is the size of the win, not the answer. Because
 boundary scan is cheap. Skewed data would make `partial_day` more expensive
 while still returning the correct result.
 
-### What to look at when this is run
+### Recording plans
 
-- **Comparability.** Run on the same nodes as `expt_b5` (`xcnf[16-20]`). At 1
-  client the unchanged transactions (T2, T3, T4, T5, T7, T8, T9) should be
-  within a few percent of `expt_b5`.
-- **T6 latency**, which was 42.9 ms at 1 client and 1030.2 ms at 64. The 1-client
-  figure is the direct effect of scanning ~44,000 rows instead of ~411,000.
-- **The next bottleneck.** Recompute the latency-share table. T7 (14.6%) and T1
-  (13.6%) are the next candidates, and they are close enough that which one
-  surfaces is worth knowing before choosing what follows.
-- **T1 latency** against `expt_b5`, for the cost of the upsert. It should be
-  small, since the write is colocated and adds no participant.
-- **`serialization_failures`.** The upsert creates a contention point T1 did not
-  have: concurrent T1s for the same merchant on the same day now conflict on one
-  row under `SERIALIZABLE`. The rate looks safe (about 40 T1/s, half to 100 hot
-  merchants, so roughly 0.2/s per hot row), but `expt_b5` already reported 5
-  failures and `pgbench_exit_code=2` at 64 clients.
-- **Verify the plan once with `EXPLAIN`.** Both tables are distributed by
-  `merchant_id` and colocated, and every aggregate groups by `merchant_id`, so
-  the whole query should run per-shard with only the final sort and limit merged
-  at the coordinator. Confirm Citus folds the `bound` CTE on the coordinator
-  rather than doing something odd with `CURRENT_TIMESTAMP`.
+After data generation, `run.sh` writes `explain.log` with an
+`EXPLAIN (ANALYZE, VERBOSE, BUFFERS)` of every statement T1 to T9 runs. The
+scripts are in `explain/`, one per transaction. They are psql rather than
+pgbench scripts, because the transaction files rely on pgbench's `random()`
+and `\if` expressions: each takes merchant 1, its lowest-numbered customer or
+products, order 1 and a transfer between merchants 1 and 2 from the loaded
+data, and follows the routed path. Writes run inside `BEGIN` ... `ROLLBACK`.
+
+Each script is run once untimed to warm the cache and then again with its
+output kept. `VERBOSE` shows the SQL sent to the shards, and `ANALYZE` shows
+one sample shard's plan. The step runs outside the timed benchmark, and a
+failing script is reported in the log without stopping the job.
+
+**The `explain/` scripts duplicate the statements in `transactions/`.** A
+change to a transaction must be copied into its explain script, or the log
+will describe the old query.
 
 ### Possible refinement
 
@@ -224,4 +218,3 @@ could instead be folded into T1's single statement as another data-modifying
 CTE reading `inserted_order`, saving one round trip. That was left out here
 because `ON CONFLICT` inside a distributed multi-CTE statement is the least
 proven part of the pattern, and a failed run costs a full job.
-
