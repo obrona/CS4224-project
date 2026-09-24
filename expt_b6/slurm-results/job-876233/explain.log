@@ -1,0 +1,66 @@
+DO
+==================== T1_place_order.sql
+psql: error: connection to server at "xcnf16" (127.0.1.1), port 5436 failed: FATAL:  the database system is in recovery mode
+FAILED: T1_place_order.sql
+==================== T2_update_inventory.sql
+psql: error: connection to server at "xcnf16" (127.0.1.1), port 5436 failed: FATAL:  the database system is in recovery mode
+FAILED: T2_update_inventory.sql
+==================== T3_order_history.sql
+psql: error: connection to server at "xcnf16" (127.0.1.1), port 5436 failed: FATAL:  the database system is not yet accepting connections
+DETAIL:  Consistent recovery state has not been yet reached.
+FAILED: T3_order_history.sql
+==================== T4_product_lookup.sql
+psql: error: connection to server at "xcnf16" (127.0.1.1), port 5436 failed: FATAL:  the database system is not yet accepting connections
+DETAIL:  Consistent recovery state has not been yet reached.
+FAILED: T4_product_lookup.sql
+==================== T5_update_order_status.sql
+psql: error: connection to server at "xcnf16" (127.0.1.1), port 5436 failed: FATAL:  the database system is not yet accepting connections
+DETAIL:  Consistent recovery state has not been yet reached.
+FAILED: T5_update_order_status.sql
+==================== T6_global_sales.sql
+psql: error: connection to server at "xcnf16" (127.0.1.1), port 5436 failed: FATAL:  the database system is not yet accepting connections
+DETAIL:  Consistent recovery state has not been yet reached.
+FAILED: T6_global_sales.sql
+==================== T7_inventory_transfer.sql
+psql: error: connection to server at "xcnf16" (127.0.1.1), port 5436 failed: FATAL:  the database system is not yet accepting connections
+DETAIL:  Consistent recovery state has not been yet reached.
+FAILED: T7_inventory_transfer.sql
+==================== T8_update_customer.sql
+psql: error: connection to server at "xcnf16" (127.0.1.1), port 5436 failed: FATAL:  the database system is not yet accepting connections
+DETAIL:  Consistent recovery state has not been yet reached.
+FAILED: T8_update_customer.sql
+==================== T9_update_product.sql
+SELECT MIN(product_id) AS product_id
+FROM products
+WHERE merchant_id = (1)::bigint
+BEGIN;
+BEGIN
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+UPDATE products
+SET price = price + (5)::numeric(12,2)
+WHERE product_id = (1)::bigint
+  AND merchant_id = (1)::bigint;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=1.233..1.233 rows=0.00 loops=1)
+  Task Count: 1
+  Tasks Shown: All
+  ->  Task
+        Query: UPDATE public.products_102073 products SET price = (price OPERATOR(pg_catalog.+) (5)::numeric(12,2)) WHERE ((product_id OPERATOR(pg_catalog.=) (1)::bigint) AND (merchant_id OPERATOR(pg_catalog.=) (1)::bigint))
+        Node: host=xcnf18 port=5436 dbname=project-876233
+        ->  Update on public.products_102073 products  (cost=0.29..8.31 rows=0 width=0) (actual time=0.132..0.132 rows=0.00 loops=1)
+              Buffers: shared hit=17 read=1 dirtied=1
+              ->  Index Scan using products_pkey_102073 on public.products_102073 products  (cost=0.29..8.31 rows=1 width=22) (actual time=0.017..0.018 rows=1.00 loops=1)
+                    Output: (price + 5.00::numeric(12,2)), ctid
+                    Index Cond: ((products.merchant_id = '1'::bigint) AND (products.product_id = '1'::bigint))
+                    Index Searches: 1
+                    Buffers: shared hit=5
+            Planning:
+              Buffers: shared hit=6
+            Planning Time: 0.050 ms
+            Execution Time: 0.178 ms
+  Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=19
+Planning Time: 0.108 ms
+Execution Time: 1.252 ms
+ROLLBACK;
+ROLLBACK
