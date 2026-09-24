@@ -28,7 +28,7 @@ FROM (
 
 BEGIN;
 
-EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+EXPLAIN (VERBOSE)
 WITH
 input_items(item_no, product_id, quantity) AS (
   VALUES

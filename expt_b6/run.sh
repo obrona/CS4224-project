@@ -1546,9 +1546,18 @@ explain_transactions() {
 	reset_benchmark_sequences # T1 draws from benchmark_order_id_seq
 	for f in "$EXPLAIN_DIR"/T*.sql; do
 		echo "==================== $(basename "$f")"
-		psqlx -v REPORT_DAYS="$REPORT_DAYS" -f "$f" >/dev/null 2>&1 || true
-		psqlx -v REPORT_DAYS="$REPORT_DAYS" --echo-queries --no-align --tuples-only -f "$f" ||
+		if ! psqlx -v REPORT_DAYS="$REPORT_DAYS" -f "$f" >/dev/null ||
+			! psqlx -v REPORT_DAYS="$REPORT_DAYS" --echo-queries --no-align --tuples-only -f "$f"; then
 			echo "FAILED: $(basename "$f")"
+			wait_for_coordinator 120 || return 1
+		fi
+	done
+}
+wait_for_coordinator() {
+	local timeout="$1" waited=0
+	until "${PG_BIN_DIR}/pg_isready" -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d postgres >/dev/null 2>&1; do
+		((waited++ < timeout)) || { echo "Coordinator not ready after ${timeout}s"; return 1; }
+		sleep 1
 	done
 }
 explain_transactions &>"$JOB_RESULT_DIR/explain.log" || echo "EXPLAIN step failed; see $JOB_RESULT_DIR/explain.log"
