@@ -576,6 +576,14 @@ BEGIN
 END
 $$;
 SQL
+
+	# T1 runs as one distributed function, delegated to its merchant's worker.
+	# Its definition is the \if 0 ... \endif block in T1_place_order.sql, which
+	# pgbench skips; only the lines between the two markers go to psql.
+	local t1_function
+	t1_function=$(sed -n '/^\\if 0/,/^\\endif/p' "$TX_DIR/T1_place_order.sql" | sed '1d;$d')
+	[[ -n "$t1_function" ]] || fail "No \\if 0 block with place_order in $TX_DIR/T1_place_order.sql"
+	psqlx <<<"$t1_function"
 }
 
 ############### create database schema
