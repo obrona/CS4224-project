@@ -96,12 +96,12 @@ whole-database `ANALYZE` at the end of `generate_data`.
 
 ### Optimisation 2: T1 maintains the rollup
 
-`inserted_order` now returns `total_amount` alongside `order_id`, and T1 adds
-one upsert inside its existing transaction:
+`inserted_order` now returns `total_amount` and `created_at` alongside
+`order_id`, and T1 adds one upsert inside its existing transaction:
 
 ```sql
 INSERT INTO merchant_daily_sales AS s (merchant_id, sales_date, order_count, revenue)
-VALUES ((:merchant_id)::bigint, CURRENT_DATE, 1, (:t1_new_order_total)::numeric(12,2))
+VALUES ((:merchant_id)::bigint, DATE '2000-01-01' + (:t1_new_order_day)::integer, 1, (:t1_new_order_total)::numeric(12,2))
 ON CONFLICT (merchant_id, sales_date)
 DO UPDATE SET order_count = s.order_count + 1,
               revenue     = s.revenue + EXCLUDED.revenue;
@@ -112,9 +112,10 @@ Unlike `order_merchant_map`, this costs no extra commit participant.
 `orders`, so the upsert lands on the same shard as the order T1 just inserted.
 T1 keeps exactly the two participants it had in `expt_b5`.
 
-`CURRENT_DATE` and the order's own `created_at::date` both derive from the
-transaction's start timestamp, so they always name the same bucket, including
-for a transaction that straddles midnight.
+The bucket is the inserted order's own `created_at::date`, returned by
+`inserted_order` as a day number (`created_at::date - DATE '2000-01-01'`)
+because pgbench substitutes variables unquoted. It is the same expression the
+preload groups by, so an order and its rollup contribution always share a day.
 
 ### Optimisation 3: T6 reads the rollup and the boundary day
 

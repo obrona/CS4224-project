@@ -101,7 +101,7 @@ inserted_order AS (
   CROSS JOIN reservation_ok ro
   WHERE ro.ok
   HAVING COUNT(*) = (:item_count)::integer
-  RETURNING order_id, total_amount
+  RETURNING order_id, total_amount, created_at
 ),
 inserted_items AS (
   INSERT INTO order_items(
@@ -125,7 +125,8 @@ SELECT
   EXISTS (SELECT 1 FROM inserted_order) AS order_created,
   (SELECT COUNT(*) FROM inserted_items) AS items_created,
   COALESCE((SELECT order_id FROM inserted_order), 0) AS new_order_id,
-  COALESCE((SELECT total_amount FROM inserted_order), 0) AS new_order_total
+  COALESCE((SELECT total_amount FROM inserted_order), 0) AS new_order_total,
+  COALESCE((SELECT created_at::date - DATE '2000-01-01' FROM inserted_order), 0) AS new_order_day
 \gset t1_
 
 -- Keep order_merchant_map in step with orders
@@ -133,9 +134,9 @@ SELECT
 INSERT INTO order_merchant_map (order_id, merchant_id)
 VALUES ((:t1_new_order_id)::bigint, (:merchant_id)::bigint);
 
--- Keep T6 rollup in step with orders
+-- Keep T6 rollup in step with orders.
 INSERT INTO merchant_daily_sales AS s (merchant_id, sales_date, order_count, revenue)
-VALUES ((:merchant_id)::bigint, CURRENT_DATE, 1, (:t1_new_order_total)::numeric(12,2))
+VALUES ((:merchant_id)::bigint, DATE '2000-01-01' + (:t1_new_order_day)::integer, 1, (:t1_new_order_total)::numeric(12,2))
 ON CONFLICT (merchant_id, sales_date)
 DO UPDATE SET order_count = s.order_count + 1,
               revenue     = s.revenue + EXCLUDED.revenue;
