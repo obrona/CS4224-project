@@ -416,6 +416,8 @@ create_schema() {
 	if [[ "$DROP_EXISTING" == "1" ]]; then
 		psqlx <<'SQL'
 DROP TABLE IF EXISTS order_items CASCADE;
+DROP TABLE IF EXISTS order_route CASCADE;
+DROP TABLE IF EXISTS inventory_locator CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS inventory CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
@@ -479,6 +481,18 @@ CREATE TABLE IF NOT EXISTS order_items (
 	PRIMARY KEY (merchant_id, order_item_id)
 );
 
+-- Global ID lookups for transactions without merchant_id in their input.
+CREATE TABLE IF NOT EXISTS order_route (
+	order_id BIGINT PRIMARY KEY,
+	merchant_id BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS inventory_locator (
+	product_id BIGINT PRIMARY KEY,
+	merchant_id BIGINT NOT NULL,
+	inventory_id BIGINT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_orders_customer_recent
 	ON orders (merchant_id, customer_id, created_at DESC, order_id);
 
@@ -517,6 +531,14 @@ BEGIN
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_items'::regclass) THEN
 			PERFORM create_distributed_table('order_items', 'merchant_id', colocate_with => 'merchants');
 		END IF;
+
+		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_route'::regclass) THEN
+			PERFORM create_distributed_table('order_route', 'order_id');
+		END IF;
+
+		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'inventory_locator'::regclass) THEN
+			PERFORM create_distributed_table('inventory_locator', 'product_id');
+		END IF;
 	END IF;
 END
 $$;
@@ -539,7 +561,11 @@ generate_data() {
 	COLD_MERCHANTS=$((NUM_MERCHANTS - HOT_MERCHANTS))
 	((COLD_MERCHANTS >= 1)) || COLD_MERCHANTS=1
 
-	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
+	if [[ "$TRUNCATE_FIRST" == "1" ]]; then
+		psqlx -c "TRUNCATE TABLE order_route;"
+		psqlx -c "TRUNCATE TABLE inventory_locator;"
+		psqlx -c "TRUNCATE TABLE order_items,orders,inventory,products,customers,merchants CASCADE;"
+	fi
 
 	psqlx <<SQL
 INSERT INTO merchants SELECT i,'Merchant-'||i,(ARRAY['North','South','East','West','Central'])[1+(i%5)] FROM generate_series(1::bigint, $NUM_MERCHANTS::bigint) g(i);
@@ -550,6 +576,12 @@ INSERT INTO products SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Product-'||i,'
 
 INSERT INTO inventory SELECT product_id,merchant_id,product_id,10+((hashint8extended(product_id,$DATA_SEED)&9223372036854775807)%991)::int,current_timestamp FROM products;
 SQL
+
+	# The locator uses a different distribution key from inventory, so stream
+	# the actual source rows through the coordinator during setup and resets.
+	psqlx -c "\copy (SELECT product_id, merchant_id, inventory_id FROM inventory) TO '${DATA_ROOT}/inventory-locator.csv' WITH (FORMAT csv)"
+	psqlx -c "\copy inventory_locator (product_id, merchant_id, inventory_id) FROM '${DATA_ROOT}/inventory-locator.csv' WITH (FORMAT csv)"
+	rm -f "${DATA_ROOT}/inventory-locator.csv"
 
 	psqlx <<SQL
 WITH g AS (
@@ -585,6 +617,9 @@ FROM (
 WHERE o.merchant_id=x.merchant_id
   AND o.order_id=x.order_id;
 SQL
+	psqlx -c "\copy (SELECT order_id, merchant_id FROM orders) TO '${DATA_ROOT}/order-route.csv' WITH (FORMAT csv)"
+	psqlx -c "\copy order_route (order_id, merchant_id) FROM '${DATA_ROOT}/order-route.csv' WITH (FORMAT csv)"
+	rm -f "${DATA_ROOT}/order-route.csv"
 	[[ "$RUN_ANALYZE" == "1" ]] && psqlx -c "ANALYZE;"
 	echo "Synthetic data generation complete. Default scale creates about $((NUM_ORDER_ITEMS / NUM_ORDERS)) historical items/order."
 }

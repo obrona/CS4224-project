@@ -1,56 +1,55 @@
 \if :DEBUG_MODE
 \set source_product_id :DEBUG_T7_SOURCE_PRODUCT_ID
 \set dest_product_id :DEBUG_T7_DEST_PRODUCT_ID
-\set transfer_qty :DEBUG_T7_TRANSFER_QTY
 \else
 \set source_product_id random(1, :NUM_PRODUCTS)
 \set dest_product_id random(1, :NUM_PRODUCTS)
+\endif
+
+-- A transfer to the same product does no work.
+\if :source_product_id = :dest_product_id
+\else
+\if :DEBUG_MODE
+\set transfer_qty :DEBUG_T7_TRANSFER_QTY
+\else
 \set transfer_qty random(:T7_MIN_TRANSFER_QTY, :T7_MAX_TRANSFER_QTY)
 \endif
 
 \set transfer_ok 1
-
 BEGIN;
 
-SELECT EXISTS(
-  SELECT 1 FROM inventory
-  WHERE product_id = (:source_product_id)::bigint
-) AS source_exists
-\gset t7_
+-- Each lookup targets one locator shard. Aggregates always return a row,
+-- including when a product is absent.
+SELECT COUNT(*) AS found,
+       MAX(merchant_id) AS merchant_id,
+       MAX(inventory_id) AS inventory_id
+FROM inventory_locator
+WHERE product_id = (:source_product_id)::bigint
+\gset t7_source_
 
-SELECT EXISTS(
-  SELECT 1 FROM inventory
-  WHERE product_id = (:dest_product_id)::bigint
-) AS dest_exists
-\gset t7_
+SELECT COUNT(*) AS found,
+       MAX(merchant_id) AS merchant_id,
+       MAX(inventory_id) AS inventory_id
+FROM inventory_locator
+WHERE product_id = (:dest_product_id)::bigint
+\gset t7_dest_
 
-
-\if :t7_source_exists
-SELECT inventory_id AS source_inventory_id FROM inventory WHERE product_id = (:source_product_id)::bigint
-\gset
+\if :t7_source_found
 \else
 \set transfer_ok 0
 \endif
-
-
-\if :t7_dest_exists
-SELECT inventory_id AS dest_inventory_id FROM inventory WHERE product_id = (:dest_product_id)::bigint
-\gset
+\if :t7_dest_found
 \else
 \set transfer_ok 0
 \endif
-
-
-\if :source_product_id = :dest_product_id
-\set transfer_ok 0
-\endif
-
 \if :transfer_ok
 WITH debit AS (
   UPDATE inventory
   SET quantity = quantity - (:transfer_qty)::integer,
       updated_at = CURRENT_TIMESTAMP
-  WHERE inventory_id = (:source_inventory_id)::bigint
+  WHERE merchant_id = (:t7_source_merchant_id)::bigint
+    AND inventory_id = (:t7_source_inventory_id)::bigint
+    AND product_id = (:source_product_id)::bigint
     AND quantity >= (:transfer_qty)::integer
   RETURNING 1
 )
@@ -62,7 +61,9 @@ WITH credit AS (
   UPDATE inventory
   SET quantity = quantity + (:transfer_qty)::integer,
       updated_at = CURRENT_TIMESTAMP
-  WHERE inventory_id = (:dest_inventory_id)::bigint
+  WHERE merchant_id = (:t7_dest_merchant_id)::bigint
+    AND inventory_id = (:t7_dest_inventory_id)::bigint
+    AND product_id = (:dest_product_id)::bigint
   RETURNING 1
 )
 SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
@@ -81,4 +82,5 @@ SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
 COMMIT;
 \else
 ROLLBACK;
+\endif
 \endif

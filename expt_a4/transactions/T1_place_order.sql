@@ -123,6 +123,14 @@ inserted_items AS (
 )
 SELECT
   EXISTS (SELECT 1 FROM inserted_order) AS order_created,
-  (SELECT COUNT(*) FROM inserted_items) AS items_created;
+  (SELECT COUNT(*) FROM inserted_items) AS items_created,
+  (SELECT order_id FROM inserted_order) AS order_id
+\gset t1_
+
+-- The route entry commits atomically with the order and its items.
+\if :t1_order_created
+INSERT INTO order_route (order_id, merchant_id)
+VALUES ((:t1_order_id)::bigint, (:merchant_id)::bigint);
+\endif
 
 COMMIT;
