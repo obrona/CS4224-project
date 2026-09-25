@@ -121,8 +121,10 @@ inserted_items AS (
   CROSS JOIN inserted_order o
   RETURNING 1
 )
-SELECT
-  EXISTS (SELECT 1 FROM inserted_order) AS order_created,
-  (SELECT COUNT(*) FROM inserted_items) AS items_created;
+-- If validation or reservation fails, inserted_order is empty and this inserts no route row.
+-- All data-modifying CTEs complete as part of this statement.
+INSERT INTO order_route (order_id, merchant_id)
+SELECT o.order_id, (:merchant_id)::bigint
+FROM inserted_order o;
 
 COMMIT;
