@@ -167,28 +167,22 @@ function runs in the worker's own transaction, under that node's
 `explain/T1_place_order.sql` no longer wraps T1 in `BEGIN ... ROLLBACK`,
 because Citus would not delegate the call inside a transaction block. It shows
 the id draw with `ANALYZE`, and the call with `EXPLAIN (VERBOSE)` only, since
-running it would commit an order. `client_min_messages` is set to `debug1`
-around the call, so the log records Citus's delegation decision. The statements
-inside the function run on the worker and do not appear in the plan.
+running it would commit an order. A delegated call shows as one `Task` on a
+worker whose query is the call itself. The statements inside the function run
+on the worker and do not appear in the plan.
 
 ### What to look at when this is run
 
 - **`schema-create.log`.** `create_distributed_function` succeeds, and every
   worker shows `hasmetadata` and `metadatasynced` as `t`.
-- **`explain.log`.** The DEBUG output includes `pushing down the function
-call`, and the plan is one `Task` on a worker whose query is the call itself.
-  The id draw shows a plain local plan with no `Task`.
+- **`explain.log`.** The call's plan is one `Task` on a worker whose query is
+  the call itself. The id draw shows a plain local plan with no `Task`.
 - **T1 latency at 1 client**, 21.7 ms in `expt_b6` (job-880152) and 23.8 ms in
   the first attempt. If delegated, it should be a few ms. If it stays near
-  20 ms, delegation is not happening; check the DEBUG lines.
+  20 ms, delegation is not happening; check the plan in `explain.log`.
 - **`serialization_failures` and `deadlock_failures`**, 127 and 0 at 64
   clients in `expt_b6`. A faster T1 means more overlap on hot merchants'
   inventory and rollup rows.
 - **The next bottleneck.** Recompute the latency-share table. In the first
   attempt T6 was 40.5% at 64 clients and T7 22.8%.
 - **Comparability.** Run on the same nodes as `expt_b6` (`xcnf[17-21]`).
-
-### Note: this version has not been run yet
-
-`slurm-results/job-880433` holds the first attempt's results, not this
-version's.

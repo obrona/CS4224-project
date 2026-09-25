@@ -26,7 +26,7 @@ FROM (
 ) AS ids
 \gset
 
--- No BEGIN ... ROLLBACK here: T1 runs without a transaction block, and inside
+-- No BEGIN / ROLLBACK here as T1 runs without a transaction block, and inside
 -- one Citus would not delegate the call.
 
 -- The id draw should run on the coordinator alone, with no Task.
@@ -48,8 +48,6 @@ SELECT
   CASE WHEN (:item_count)::integer >= 5 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_5
 \gset t1_
 
-SET client_min_messages TO debug1;
-
 EXPLAIN (VERBOSE)
 SELECT public.place_order(
   (:merchant_id)::bigint,
@@ -63,5 +61,3 @@ SELECT public.place_order(
   ARRAY[(:t1_item_id_1)::bigint, (:t1_item_id_2)::bigint, (:t1_item_id_3)::bigint,
         (:t1_item_id_4)::bigint, (:t1_item_id_5)::bigint]
 );
-
-RESET client_min_messages;
