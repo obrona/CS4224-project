@@ -16,10 +16,10 @@
 # the two series can run concurrently without sharing hardware. The compute
 # nodes are shared and this job does not request --exclusive, so an unpinned
 # run measures whoever else is on the node as much as the design change.
-#SBATCH --nodelist=xcnf[7-8,15,25,27]
+#SBATCH --nodelist=xcnf[16-20]
 
 # IMPORTANT - replace this with your email
-#SBATCH --mail-user=alice_and_bob@u.nus.edu
+#SBATCH --mail-user=e1334269@u.nus.edu
 
 set -euo pipefail
 

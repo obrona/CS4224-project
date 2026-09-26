@@ -104,7 +104,3 @@ Also check `pgbench_exit_code` and the number of clients still running at the
 end of each measured run. A client that dies on a non-retriable error stops
 issuing transactions, so that run's numbers are not for the client count they
 are labelled with.
-
-### Note: this experiment has not been run yet
-
-This folder contains no `slurm-results/`.
