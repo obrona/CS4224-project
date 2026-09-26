@@ -1,0 +1,9 @@
+### Prev: expt a6
+
+### Optimisation: reduce isolation level to repeatable read
+
+**Description.** `run.sh` sets PostgreSQL `default_transaction_isolation` to `repeatable read` instead of `serializable` for the benchmark. This retains a stable snapshot within each transaction while avoiding the extra read/write dependency tracking used to enforce serializable execution. It may reduce isolation overhead and unnecessary aborts; the actual throughput and latency effect must be measured.
+
+**Justification.** The workload's critical stock operations do not rely on a predicate read followed by a write to unrelated rows. T1 checks the quantities of all requested products and updates those same inventory rows before inserting the order. T2 changes one inventory row with a nonnegative-quantity condition. T7 conditionally debits the source and credits the destination in one transaction, rolling back if either step fails. The remaining writes update individual order, customer, or product rows; T3, T4, and T6 are read-only. PostgreSQL repeatable read rejects a transaction that attempts to update a row changed since its snapshot, so competing stock updates must retry rather than silently overwrite one another.
+
+**Limits.** Repeatable read permits serialization anomalies in general and does not provide a strict serializable guarantee for this workload. In particular, a cross-shard sales report should not be treated as a globally synchronized snapshot solely because of this setting. Row-update conflicts and deadlocks can still occur: `pgbench` is configured for up to three tries, and exhausted retries remain failures. Compare successful transactions, retry/failure counts, and latency with the serializable baseline before claiming a performance gain. A rolled-back or no-op business operation can still count as a completed `pgbench` script.
