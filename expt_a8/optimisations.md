@@ -11,11 +11,11 @@ when validation fails. A later error aborts the transaction and rolls back
 the stock update and inserts.
 
 The order and item sequences are coordinator-local, so T1 allocates their
-IDs on the coordinator and passes them to the worker. On success, the
-function also inserts the order_route row. This table is distributed by
-order_id, so its shard may be on another worker and this is still a
-distributed transaction. Unsuccessful orders can consume sequence values;
-gaps are harmless.
+IDs on the coordinator and passes them to the worker. On success,
+the caller inserts the order_route row within the same explicit transaction. This table is distributed by order_id,
+so its shard may be on another worker. If that insert fails, the transaction
+rolls back the worker's stock update, order, and items. Unsuccessful orders
+can consume sequence values; gaps are harmless.
 
 run.sh creates and registers the function after distributing the schema.
 Compare A8 against A7 using the same scale, seed, client counts, and

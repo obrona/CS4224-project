@@ -25,7 +25,7 @@
 
 
 -- Sequence values are allocated on the coordinator. Gaps on an unsuccessful
--- order are harmless. The function call writes all order rows atomically.
+-- order are harmless. The transaction also covers the order_route write.
 SELECT nextval('benchmark_order_id_seq') AS order_id,
        nextval('benchmark_order_item_id_seq') AS item_id_1,
        nextval('benchmark_order_item_id_seq') AS item_id_2,
@@ -33,6 +33,8 @@ SELECT nextval('benchmark_order_id_seq') AS order_id,
        nextval('benchmark_order_item_id_seq') AS item_id_4,
        nextval('benchmark_order_item_id_seq') AS item_id_5
 \gset t1_
+
+BEGIN;
 
 SELECT public.a8_place_order(
   (:merchant_id)::bigint,
@@ -49,3 +51,10 @@ SELECT public.a8_place_order(
         (:t1_item_id_5)::bigint]
 ) AS created
 \gset t1_
+
+\if :t1_created
+INSERT INTO order_route (order_id, merchant_id)
+VALUES ((:t1_order_id)::bigint, (:merchant_id)::bigint);
+\endif
+
+COMMIT;

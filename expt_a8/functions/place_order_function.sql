@@ -112,11 +112,6 @@ BEGIN
     );
   END LOOP;
 
-  -- This table is distributed by order_id and may live on another worker.
-  -- Its insert is part of the same distributed function call.
-  INSERT INTO public.order_route (order_id, merchant_id)
-  VALUES (p_order_id, p_merchant_id);
-
   RETURN true;
 END;
 $function$;

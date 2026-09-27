@@ -1425,7 +1425,7 @@ EOF
 			fi
 
 			if ((warmup_rc != 0)); then
-				info "Warmup c${clients} completed with pgbench exit code $warmup_rc; continuing"
+				fail "Warmup c${clients} failed with pgbench exit code $warmup_rc; see $RUN_DIR/warmup-c${clients}.txt"
 			fi
 
 			if ((RESET_AFTER_WARMUP)); then
@@ -1439,15 +1439,15 @@ EOF
 
 		run_pgbench "$clients" "$DURATION" "$RUN_DIR/result-c${clients}.txt" "Measured run" "$prefix" 1 || pgbench_rc=$?
 
-		analyze_run "$clients" "$prefix" "$RUN_DIR/result-c${clients}.txt" "$pgbench_rc"
-
 		if ! check_server_steps; then
 			fail "PostgreSQL/Citus cluster became unhealthy during c${clients}"
 		fi
 
 		if ((pgbench_rc != 0)); then
-			info "Measured c${clients} completed with pgbench exit code $pgbench_rc; results retained and benchmark continues"
+			fail "Measured c${clients} failed with pgbench exit code $pgbench_rc; see $RUN_DIR/result-c${clients}.txt"
 		fi
+
+		analyze_run "$clients" "$prefix" "$RUN_DIR/result-c${clients}.txt" "$pgbench_rc"
 	done
 
 	cat >"${README_METRICS_FILE}" <<EOF
