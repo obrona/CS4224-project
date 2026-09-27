@@ -1,0 +1,38 @@
+\set ON_ERROR_STOP on
+BEGIN;
+BEGIN
+\echo T9 statement 1
+T9 statement 1
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) UPDATE products
+SET price = price + (:price_increase)::numeric(12,2)
+WHERE product_id = (:product_id)::bigint
+  AND merchant_id = (:merchant_id)::bigint;
+                                                                                                            QUERY PLAN                                                                                                            
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=12.152..12.153 rows=0.00 loops=1)
+   Task Count: 1
+   Tasks Shown: All
+   ->  Task
+         Query: UPDATE public.products_102073 products SET price = (price OPERATOR(pg_catalog.+) (1)::numeric(12,2)) WHERE ((product_id OPERATOR(pg_catalog.=) (1)::bigint) AND (merchant_id OPERATOR(pg_catalog.=) (1)::bigint))
+         Node: host=xcnc38 port=5531 dbname=project-884135
+         ->  Update on public.products_102073 products  (cost=0.29..8.31 rows=0 width=0) (actual time=0.256..0.257 rows=0.00 loops=1)
+               Buffers: shared hit=13 read=4 dirtied=4
+               ->  Index Scan using products_pkey_102073 on public.products_102073 products  (cost=0.29..8.31 rows=1 width=22) (actual time=0.020..0.021 rows=1.00 loops=1)
+                     Output: (price + 1.00::numeric(12,2)), ctid
+                     Index Cond: ((products.merchant_id = '1'::bigint) AND (products.product_id = '1'::bigint))
+                     Index Searches: 1
+                     Buffers: shared hit=3
+             Planning:
+               Buffers: shared hit=136
+             Planning Time: 0.611 ms
+             Execution Time: 0.313 ms
+   Buffers: shared hit=71
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=408
+ Planning Time: 2.587 ms
+ Execution Time: 12.209 ms
+(23 rows)
+
+ROLLBACK;
+ROLLBACK

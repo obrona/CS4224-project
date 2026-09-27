@@ -1,0 +1,42 @@
+\set ON_ERROR_STOP on
+BEGIN;
+BEGIN
+\echo T2 statement 1
+T2 statement 1
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) UPDATE inventory
+SET quantity = quantity + (:inventory_change)::integer,
+    updated_at = CURRENT_TIMESTAMP
+WHERE inventory_id = (:product_id)::bigint
+  AND merchant_id = (:merchant_id)::bigint
+  AND product_id = (:product_id)::bigint
+  AND quantity + (:inventory_change)::integer >= 0;
+                                                                                                                                                                                                        QUERY PLAN                                                                                                                                                                                                         
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=12.851..12.852 rows=0.00 loops=1)
+   Task Count: 1
+   Tasks Shown: All
+   ->  Task
+         Query: UPDATE public.inventory_102105 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-09-27 12:01:36.577125'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '1'::bigint) AND (merchant_id OPERATOR(pg_catalog.=) '1'::bigint) AND (product_id OPERATOR(pg_catalog.=) '1'::bigint) AND ((quantity OPERATOR(pg_catalog.+) 1) OPERATOR(pg_catalog.>=) 0))
+         Node: host=xcnc38 port=5531 dbname=project-884135
+         ->  Update on public.inventory_102105 inventory  (cost=0.29..8.32 rows=0 width=0) (actual time=0.154..0.154 rows=0.00 loops=1)
+               Buffers: shared hit=5
+               ->  Index Scan using inventory_merchant_id_product_id_key_102105 on public.inventory_102105 inventory  (cost=0.29..8.32 rows=1 width=18) (actual time=0.074..0.075 rows=1.00 loops=1)
+                     Output: (quantity + 1), '2026-09-27 12:01:36.577125'::timestamp without time zone, ctid
+                     Index Cond: ((inventory.merchant_id = '1'::bigint) AND (inventory.product_id = '1'::bigint))
+                     Filter: ((inventory.inventory_id = '1'::bigint) AND ((inventory.quantity + 1) >= 0))
+                     Index Searches: 1
+                     Buffers: shared hit=3
+             Planning:
+               Buffers: shared hit=156
+             Planning Time: 0.697 ms
+             Execution Time: 0.247 ms
+   Buffers: shared hit=71
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=424
+ Planning Time: 2.450 ms
+ Execution Time: 13.034 ms
+(24 rows)
+
+ROLLBACK;
+ROLLBACK

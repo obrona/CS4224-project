@@ -1,0 +1,62 @@
+\set ON_ERROR_STOP on
+BEGIN;
+BEGIN
+\echo T3 statement 1
+T3 statement 1
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) SELECT
+  o.order_id,
+  o.order_status,
+  o.total_amount,
+  o.created_at,
+  oi.product_id,
+  oi.quantity,
+  oi.unit_price
+FROM orders AS o
+JOIN order_items AS oi
+  ON oi.order_id = o.order_id
+ AND oi.merchant_id = o.merchant_id
+WHERE o.merchant_id = (:merchant_id)::bigint
+  AND o.customer_id = (:customer_id)::bigint
+ORDER BY o.created_at DESC
+LIMIT 20;
+                                                                                                                                                                                                                            QUERY PLAN                                                                                                                                                                                                                            
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=14.426..14.428 rows=20.00 loops=1)
+   Output: remote_scan.order_id, remote_scan.order_status, remote_scan.total_amount, remote_scan.created_at, remote_scan.product_id, remote_scan.quantity, remote_scan.unit_price
+   Task Count: 1
+   Tuple data received from nodes: 1220 bytes
+   Tasks Shown: All
+   ->  Task
+         Query: SELECT o.order_id, o.order_status, o.total_amount, o.created_at, oi.product_id, oi.quantity, oi.unit_price FROM (public.orders_102137 o JOIN public.order_items_102169 oi ON (((oi.order_id OPERATOR(pg_catalog.=) o.order_id) AND (oi.merchant_id OPERATOR(pg_catalog.=) o.merchant_id)))) WHERE ((o.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (o.customer_id OPERATOR(pg_catalog.=) (1)::bigint)) ORDER BY o.created_at DESC LIMIT 20
+         Tuple data received from node: 1220 bytes
+         Node: host=xcnc38 port=5531 dbname=project-884135
+         ->  Limit  (cost=0.84..16.89 rows=1 width=51) (actual time=0.176..0.554 rows=20.00 loops=1)
+               Output: o.order_id, o.order_status, o.total_amount, o.created_at, oi.product_id, oi.quantity, oi.unit_price
+               Buffers: shared hit=39
+               ->  Nested Loop  (cost=0.84..16.89 rows=1 width=51) (actual time=0.175..0.550 rows=20.00 loops=1)
+                     Output: o.order_id, o.order_status, o.total_amount, o.created_at, oi.product_id, oi.quantity, oi.unit_price
+                     Buffers: shared hit=39
+                     ->  Index Scan using idx_orders_customer_recent_102137 on public.orders_102137 o  (cost=0.42..8.44 rows=1 width=40) (actual time=0.073..0.185 rows=7.00 loops=1)
+                           Output: o.order_id, o.merchant_id, o.customer_id, o.order_status, o.total_amount, o.created_at
+                           Index Cond: ((o.merchant_id = '1'::bigint) AND (o.customer_id = '1'::bigint))
+                           Index Searches: 1
+                           Buffers: shared hit=11
+                     ->  Index Scan using idx_order_items_order_102169 on public.order_items_102169 oi  (cost=0.42..8.45 rows=1 width=35) (actual time=0.049..0.050 rows=2.86 loops=7)
+                           Output: oi.order_item_id, oi.merchant_id, oi.order_id, oi.product_id, oi.quantity, oi.unit_price
+                           Index Cond: ((oi.merchant_id = '1'::bigint) AND (oi.order_id = o.order_id))
+                           Index Searches: 7
+                           Buffers: shared hit=28
+             Planning:
+               Buffers: shared hit=357
+             Planning Time: 1.355 ms
+             Execution Time: 0.613 ms
+   Buffers: shared hit=71
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=632
+ Planning Time: 2.925 ms
+ Execution Time: 14.453 ms
+(35 rows)
+
+ROLLBACK;
+ROLLBACK

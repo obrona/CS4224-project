@@ -1,0 +1,418 @@
+\set ON_ERROR_STOP on
+BEGIN;
+BEGIN
+\echo T1 planned statement (Citus does not support ANALYZE here)
+T1 planned statement (Citus does not support ANALYZE here)
+EXPLAIN (VERBOSE, SETTINGS) WITH
+input_items(item_no, product_id, quantity) AS (
+  VALUES
+    (1, (:product_id_1)::bigint, (:qty_1)::integer),
+    (2, (:product_id_2)::bigint, (:qty_2)::integer),
+    (3, (:product_id_3)::bigint, (:qty_3)::integer),
+    (4, (:product_id_4)::bigint, (:qty_4)::integer),
+    (5, (:product_id_5)::bigint, (:qty_5)::integer)
+),
+requested_items AS MATERIALIZED (
+  SELECT item_no, product_id, quantity
+  FROM input_items
+  WHERE item_no <= (:item_count)::integer
+),
+-- Duplicate selections need their combined quantity reserved atomically.
+requirements AS MATERIALIZED (
+  SELECT product_id, SUM(quantity)::integer AS quantity
+  FROM requested_items
+  GROUP BY product_id
+),
+-- only eligible if all items requested exist.
+eligible AS MATERIALIZED (
+  SELECT
+    EXISTS (
+      SELECT 1
+      FROM customers c
+      WHERE c.merchant_id = (:merchant_id)::bigint
+        AND c.customer_id = (:customer_id)::bigint
+    )
+    AND NOT EXISTS (
+      SELECT 1
+      FROM requirements r
+      LEFT JOIN products p
+        ON p.merchant_id = (:merchant_id)::bigint
+       AND p.product_id = r.product_id
+      LEFT JOIN inventory i
+        ON i.merchant_id = (:merchant_id)::bigint
+       AND i.product_id = r.product_id
+      WHERE p.product_id IS NULL
+         OR i.product_id IS NULL
+         OR i.quantity < r.quantity
+    ) AS ok
+),
+reserved AS (
+  UPDATE inventory i
+  SET quantity = i.quantity - r.quantity,
+      updated_at = CURRENT_TIMESTAMP
+  FROM requirements r, eligible e
+  WHERE e.ok
+    AND i.merchant_id = (:merchant_id)::bigint
+    AND i.product_id = r.product_id
+  RETURNING i.product_id
+),
+reservation_ok AS MATERIALIZED (
+  SELECT e.ok
+     AND (SELECT COUNT(*) FROM reserved)
+       = (SELECT COUNT(*) FROM requirements) AS ok
+  FROM eligible e
+),
+inserted_order AS (
+  INSERT INTO orders(
+    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+  )
+  SELECT
+    nextval('benchmark_order_id_seq'),
+    (:merchant_id)::bigint,
+    (:customer_id)::bigint,
+    'PENDING'::text,
+    SUM(ri.quantity * p.price)::numeric(12,2),
+    CURRENT_TIMESTAMP
+  FROM requested_items ri
+  JOIN products p
+    ON p.merchant_id = (:merchant_id)::bigint
+   AND p.product_id = ri.product_id
+  CROSS JOIN reservation_ok ro
+  WHERE ro.ok
+  HAVING COUNT(*) = (:item_count)::integer
+  RETURNING order_id
+),
+inserted_items AS (
+  INSERT INTO order_items(
+    order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+  )
+  SELECT
+    nextval('benchmark_order_item_id_seq'),
+    (:merchant_id)::bigint,
+    o.order_id,
+    ri.product_id,
+    ri.quantity,
+    p.price
+  FROM requested_items ri
+  JOIN products p
+    ON p.merchant_id = (:merchant_id)::bigint
+   AND p.product_id = ri.product_id
+  CROSS JOIN inserted_order o
+  RETURNING 1
+)
+-- If validation or reservation fails, inserted_order is empty and this inserts no route row.
+-- All data-modifying CTEs complete as part of this statement.
+INSERT INTO order_route (order_id, merchant_id)
+SELECT o.order_id, (:merchant_id)::bigint
+FROM inserted_order o;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                  QUERY PLAN                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus INSERT ... SELECT)  (cost=0.00..0.00 rows=0 width=0)
+   INSERT/SELECT method: pull to coordinator
+   ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
+         Output: remote_scan.order_id, remote_scan.merchant_id
+         ->  Distributed Subplan 13_1
+               ->  Values Scan on "*VALUES*"  (cost=0.00..0.08 rows=2 width=16)
+                     Output: "*VALUES*".column1, "*VALUES*".column2, "*VALUES*".column3
+                     Filter: ("*VALUES*".column1 <= 3)
+               Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+         ->  Distributed Subplan 13_2
+               ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
+                     Output: remote_scan.product_id, remote_scan.quantity
+                     Task Count: 1
+                     Tasks Shown: All
+                     ->  Task
+                           Query: SELECT product_id, (sum(quantity))::integer AS quantity FROM (SELECT intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('13_1'::text, 'binary'::citus_copy_format) intermediate_result(item_no integer, product_id bigint, quantity integer)) requested_items GROUP BY product_id
+                           Node: host=localhost port=5531 dbname=project-884135
+                           ->  HashAggregate  (cost=15.00..17.50 rows=200 width=12)
+                                 Output: intermediate_result.product_id, (sum(intermediate_result.quantity))::integer
+                                 Group Key: intermediate_result.product_id
+                                 ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result  (cost=0.00..10.00 rows=1000 width=12)
+                                       Output: intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity
+                                       Function Call: read_intermediate_result('13_1'::text, 'binary'::citus_copy_format)
+               Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+         ->  Distributed Subplan 13_3
+               ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
+                     Output: remote_scan.ok
+                     Task Count: 1
+                     Tasks Shown: All
+                     ->  Task
+                           Query: SELECT ((EXISTS (SELECT 1 AS "?column?" FROM public.customers_102041 c WHERE ((c.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (c.customer_id OPERATOR(pg_catalog.=) (1)::bigint)))) AND (NOT (EXISTS (SELECT 1 AS "?column?" FROM (((SELECT intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('13_2'::text, 'binary'::citus_copy_format) intermediate_result(product_id bigint, quantity integer)) r LEFT JOIN public.products_102073 p ON (((p.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (p.product_id OPERATOR(pg_catalog.=) r.product_id)))) LEFT JOIN public.inventory_102105 i ON (((i.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (i.product_id OPERATOR(pg_catalog.=) r.product_id)))) WHERE ((p.product_id IS NULL) OR (i.product_id IS NULL) OR (i.quantity OPERATOR(pg_catalog.<) r.quantity)))))) AS ok
+                           Node: host=xcnc38 port=5531 dbname=project-884135
+                           ->  Result  (cost=14.91..14.92 rows=1 width=1)
+                                 Output: ((InitPlan 1).col1 AND (NOT (InitPlan 2).col1))
+                                 InitPlan 1
+                                   ->  Index Only Scan using customers_pkey_102041 on public.customers_102041 c  (cost=0.29..8.31 rows=1 width=0)
+                                         Index Cond: ((c.merchant_id = '1'::bigint) AND (c.customer_id = '1'::bigint))
+                                 InitPlan 2
+                                   ->  Nested Loop Left Join  (cost=0.58..2005.50 rows=333 width=0)
+                                         Inner Unique: true
+                                         Filter: ((p.product_id IS NULL) OR (i.product_id IS NULL) OR (i.quantity < intermediate_result.quantity))
+                                         ->  Nested Loop Left Join  (cost=0.29..637.50 rows=1000 width=20)
+                                               Output: intermediate_result.quantity, intermediate_result.product_id, p.product_id
+                                               Inner Unique: true
+                                               ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result  (cost=0.00..10.00 rows=1000 width=12)
+                                                     Output: intermediate_result.product_id, intermediate_result.quantity
+                                                     Function Call: read_intermediate_result('13_2'::text, 'binary'::citus_copy_format)
+                                               ->  Index Only Scan using products_pkey_102073 on public.products_102073 p  (cost=0.29..0.63 rows=1 width=8)
+                                                     Output: p.merchant_id, p.product_id
+                                                     Index Cond: ((p.merchant_id = '1'::bigint) AND (p.product_id = intermediate_result.product_id))
+                                         ->  Index Scan using inventory_merchant_id_product_id_key_102105 on public.inventory_102105 i  (cost=0.29..1.36 rows=1 width=12)
+                                               Output: i.inventory_id, i.merchant_id, i.product_id, i.quantity, i.updated_at
+                                               Index Cond: ((i.merchant_id = '1'::bigint) AND (i.product_id = intermediate_result.product_id))
+               Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+         ->  Distributed Subplan 13_4
+               ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
+                     Output: remote_scan.product_id
+                     Task Count: 1
+                     Tasks Shown: All
+                     ->  Task
+                           Query: UPDATE public.inventory_102105 i SET quantity = (i.quantity OPERATOR(pg_catalog.-) r.quantity), updated_at = '2026-09-27 12:01:36.420026'::timestamp without time zone FROM (SELECT intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('13_2'::text, 'binary'::citus_copy_format) intermediate_result(product_id bigint, quantity integer)) r, (SELECT intermediate_result.ok FROM read_intermediate_result('13_3'::text, 'binary'::citus_copy_format) intermediate_result(ok boolean)) e WHERE (e.ok AND (i.merchant_id OPERATOR(pg_catalog.=) '1'::bigint) AND (i.product_id OPERATOR(pg_catalog.=) r.product_id)) RETURNING i.product_id
+                           Node: host=xcnc38 port=5531 dbname=project-884135
+                           ->  Update on public.inventory_102105 i  (cost=206.67..446.87 rows=14500 width=78)
+                                 Output: i.product_id
+                                 ->  Nested Loop  (cost=206.67..446.87 rows=14500 width=78)
+                                       Output: (i.quantity - intermediate_result.quantity), '2026-09-27 12:01:36.420026'::timestamp without time zone, i.ctid, intermediate_result.*, intermediate_result_1.*
+                                       ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result_1  (cost=0.00..10.00 rows=500 width=24)
+                                             Output: intermediate_result_1.*
+                                             Function Call: read_intermediate_result('13_3'::text, 'binary'::citus_copy_format)
+                                             Filter: intermediate_result_1.ok
+                                       ->  Materialize  (cost=206.66..219.44 rows=29 width=50)
+                                             Output: i.quantity, i.ctid, intermediate_result.quantity, intermediate_result.*
+                                             ->  Hash Join  (cost=206.66..219.29 rows=29 width=50)
+                                                   Output: i.quantity, i.ctid, intermediate_result.quantity, intermediate_result.*
+                                                   Inner Unique: true
+                                                   Hash Cond: (intermediate_result.product_id = i.product_id)
+                                                   ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result  (cost=0.00..10.00 rows=1000 width=48)
+                                                         Output: intermediate_result.quantity, intermediate_result.*, intermediate_result.product_id
+                                                         Function Call: read_intermediate_result('13_2'::text, 'binary'::citus_copy_format)
+                                                   ->  Hash  (cost=200.41..200.41 rows=500 width=18)
+                                                         Output: i.quantity, i.ctid, i.product_id
+                                                         ->  Bitmap Heap Scan on public.inventory_102105 i  (cost=16.16..200.41 rows=500 width=18)
+                                                               Output: i.quantity, i.ctid, i.product_id
+                                                               Recheck Cond: (i.merchant_id = '1'::bigint)
+                                                               ->  Bitmap Index Scan on inventory_merchant_id_product_id_key_102105  (cost=0.00..16.04 rows=500 width=0)
+                                                                     Index Cond: (i.merchant_id = '1'::bigint)
+               Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+         ->  Distributed Subplan 13_5
+               ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
+                     Output: remote_scan.ok
+                     Task Count: 1
+                     Tasks Shown: All
+                     ->  Task
+                           Query: SELECT (ok AND ((SELECT count(*) AS count FROM (SELECT intermediate_result.product_id FROM read_intermediate_result('13_4'::text, 'binary'::citus_copy_format) intermediate_result(product_id bigint)) reserved) OPERATOR(pg_catalog.=) (SELECT count(*) AS count FROM (SELECT intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('13_2'::text, 'binary'::citus_copy_format) intermediate_result(product_id bigint, quantity integer)) requirements))) AS ok FROM (SELECT intermediate_result.ok FROM read_intermediate_result('13_3'::text, 'binary'::citus_copy_format) intermediate_result(ok boolean)) e
+                           Node: host=localhost port=5531 dbname=project-884135
+                           ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result  (cost=25.03..37.53 rows=1000 width=1)
+                                 Output: (intermediate_result.ok AND ((InitPlan 1).col1 = (InitPlan 2).col1))
+                                 Function Call: read_intermediate_result('13_3'::text, 'binary'::citus_copy_format)
+                                 InitPlan 1
+                                   ->  Aggregate  (cost=12.50..12.51 rows=1 width=8)
+                                         Output: count(*)
+                                         ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result_1  (cost=0.00..10.00 rows=1000 width=0)
+                                               Output: intermediate_result_1.product_id
+                                               Function Call: read_intermediate_result('13_4'::text, 'binary'::citus_copy_format)
+                                 InitPlan 2
+                                   ->  Aggregate  (cost=12.50..12.51 rows=1 width=8)
+                                         Output: count(*)
+                                         ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result_2  (cost=0.00..10.00 rows=1000 width=0)
+                                               Output: intermediate_result_2.product_id, intermediate_result_2.quantity
+                                               Function Call: read_intermediate_result('13_2'::text, 'binary'::citus_copy_format)
+               Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+         ->  Distributed Subplan 13_6
+               ->  Custom Scan (Citus INSERT ... SELECT)  (cost=0.00..0.00 rows=0 width=0)
+                     Output: remote_scan.order_id
+                     INSERT/SELECT method: pull to coordinator
+                     ->  Aggregate  (cost=500.00..500.03 rows=1 width=80)
+                           Output: nextval('benchmark_order_id_seq'::regclass), '1'::bigint, '1'::bigint, 'PENDING'::text, (sum(remote_scan.total_amount))::numeric(12,2), "timestamp"(CURRENT_TIMESTAMP)
+                           Filter: (COALESCE((pg_catalog.sum(remote_scan.worker_column_2))::bigint, '0'::bigint) = 3)
+                           ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=100000 width=40)
+                                 Output: remote_scan.total_amount, remote_scan.worker_column_2
+                                 Task Count: 1
+                                 Tasks Shown: All
+                                 ->  Task
+                                       Query: SELECT sum(((worker_column_1)::numeric OPERATOR(pg_catalog.*) worker_column_2)) AS total_amount, count(*) AS worker_column_2 FROM (SELECT ri.quantity AS worker_column_1, p.price AS worker_column_2 FROM (((SELECT intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('13_1'::text, 'binary'::citus_copy_format) intermediate_result(item_no integer, product_id bigint, quantity integer)) ri JOIN public.products_102073 p ON (((p.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (p.product_id OPERATOR(pg_catalog.=) ri.product_id)))) CROSS JOIN (SELECT intermediate_result.ok FROM read_intermediate_result('13_5'::text, 'binary'::citus_copy_format) intermediate_result(ok boolean)) ro) WHERE ro.ok) worker_subquery
+                                       Node: host=xcnc38 port=5531 dbname=project-884135
+                                       ->  Aggregate  (cost=549.62..549.63 rows=1 width=40)
+                                             Output: sum(((intermediate_result.quantity)::numeric * p.price)), count(*)
+                                             ->  Nested Loop  (cost=200.67..404.62 rows=14500 width=11)
+                                                   Output: intermediate_result.quantity, p.price
+                                                   ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result_1  (cost=0.00..10.00 rows=500 width=0)
+                                                         Output: intermediate_result_1.ok
+                                                         Function Call: read_intermediate_result('13_5'::text, 'binary'::citus_copy_format)
+                                                         Filter: intermediate_result_1.ok
+                                                   ->  Materialize  (cost=200.66..213.44 rows=29 width=11)
+                                                         Output: intermediate_result.quantity, p.price
+                                                         ->  Hash Join  (cost=200.66..213.29 rows=29 width=11)
+                                                               Output: intermediate_result.quantity, p.price
+                                                               Inner Unique: true
+                                                               Hash Cond: (intermediate_result.product_id = p.product_id)
+                                                               ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result  (cost=0.00..10.00 rows=1000 width=12)
+                                                                     Output: intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity
+                                                                     Function Call: read_intermediate_result('13_1'::text, 'binary'::citus_copy_format)
+                                                               ->  Hash  (cost=194.41..194.41 rows=500 width=15)
+                                                                     Output: p.price, p.product_id
+                                                                     ->  Bitmap Heap Scan on public.products_102073 p  (cost=16.16..194.41 rows=500 width=15)
+                                                                           Output: p.price, p.product_id
+                                                                           Recheck Cond: (p.merchant_id = '1'::bigint)
+                                                                           ->  Bitmap Index Scan on products_pkey_102073  (cost=0.00..16.04 rows=500 width=0)
+                                                                                 Index Cond: (p.merchant_id = '1'::bigint)
+                     Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+               Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+         ->  Distributed Subplan 13_7
+               ->  Custom Scan (Citus INSERT ... SELECT)  (cost=0.00..0.00 rows=0 width=0)
+                     Output: remote_scan."?column?"
+                     INSERT/SELECT method: pull to coordinator
+                     ->  Custom Scan (Citus Adaptive)  (cost=0.00..250.00 rows=100000 width=52)
+                           Output: nextval('benchmark_order_item_id_seq'::regclass), remote_scan.merchant_id, remote_scan.order_id, remote_scan.product_id, remote_scan.quantity, remote_scan.unit_price
+                           Task Count: 1
+                           Tasks Shown: All
+                           ->  Task
+                                 Query: SELECT (1)::bigint AS merchant_id, worker_column_1 AS order_id, worker_column_2 AS product_id, worker_column_3 AS quantity, worker_column_4 AS unit_price FROM (SELECT o.order_id AS worker_column_1, ri.product_id AS worker_column_2, ri.quantity AS worker_column_3, p.price AS worker_column_4 FROM (((SELECT intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity FROM read_intermediate_result('13_1'::text, 'binary'::citus_copy_format) intermediate_result(item_no integer, product_id bigint, quantity integer)) ri JOIN public.products_102073 p ON (((p.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (p.product_id OPERATOR(pg_catalog.=) ri.product_id)))) CROSS JOIN (SELECT intermediate_result.order_id FROM read_intermediate_result('13_6'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint)) o)) worker_subquery
+                                 Node: host=xcnc38 port=5531 dbname=project-884135
+                                 ->  Nested Loop  (cost=200.67..585.87 rows=29000 width=35)
+                                       Output: '1'::bigint, intermediate_result_1.order_id, intermediate_result.product_id, intermediate_result.quantity, p.price
+                                       ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result_1  (cost=0.00..10.00 rows=1000 width=8)
+                                             Output: intermediate_result_1.order_id
+                                             Function Call: read_intermediate_result('13_6'::text, 'binary'::citus_copy_format)
+                                       ->  Materialize  (cost=200.66..213.44 rows=29 width=19)
+                                             Output: intermediate_result.product_id, intermediate_result.quantity, p.price
+                                             ->  Hash Join  (cost=200.66..213.29 rows=29 width=19)
+                                                   Output: intermediate_result.product_id, intermediate_result.quantity, p.price
+                                                   Inner Unique: true
+                                                   Hash Cond: (intermediate_result.product_id = p.product_id)
+                                                   ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result  (cost=0.00..10.00 rows=1000 width=12)
+                                                         Output: intermediate_result.item_no, intermediate_result.product_id, intermediate_result.quantity
+                                                         Function Call: read_intermediate_result('13_1'::text, 'binary'::citus_copy_format)
+                                                   ->  Hash  (cost=194.41..194.41 rows=500 width=15)
+                                                         Output: p.price, p.product_id
+                                                         ->  Bitmap Heap Scan on public.products_102073 p  (cost=16.16..194.41 rows=500 width=15)
+                                                               Output: p.price, p.product_id
+                                                               Recheck Cond: (p.merchant_id = '1'::bigint)
+                                                               ->  Bitmap Index Scan on products_pkey_102073  (cost=0.00..16.04 rows=500 width=0)
+                                                                     Index Cond: (p.merchant_id = '1'::bigint)
+                     Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+               Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+         Task Count: 1
+         Tasks Shown: All
+         ->  Task
+               Query: SELECT order_id, int8 AS merchant_id FROM (SELECT o.order_id, (1)::bigint AS int8 FROM (SELECT intermediate_result.order_id FROM read_intermediate_result('13_6'::text, 'binary'::citus_copy_format) intermediate_result(order_id bigint)) o) citus_insert_select_subquery
+               Node: host=localhost port=5531 dbname=project-884135
+               ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result  (cost=0.00..10.00 rows=1000 width=16)
+                     Output: intermediate_result.order_id, '1'::bigint
+                     Function Call: read_intermediate_result('13_6'::text, 'binary'::citus_copy_format)
+   Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+(195 rows)
+
+\echo T1 actual execution time (psql Timing line follows)
+T1 actual execution time (psql Timing line follows)
+\timing on
+Timing is on.
+WITH
+input_items(item_no, product_id, quantity) AS (
+  VALUES
+    (1, (:product_id_1)::bigint, (:qty_1)::integer),
+    (2, (:product_id_2)::bigint, (:qty_2)::integer),
+    (3, (:product_id_3)::bigint, (:qty_3)::integer),
+    (4, (:product_id_4)::bigint, (:qty_4)::integer),
+    (5, (:product_id_5)::bigint, (:qty_5)::integer)
+),
+requested_items AS MATERIALIZED (
+  SELECT item_no, product_id, quantity
+  FROM input_items
+  WHERE item_no <= (:item_count)::integer
+),
+-- Duplicate selections need their combined quantity reserved atomically.
+requirements AS MATERIALIZED (
+  SELECT product_id, SUM(quantity)::integer AS quantity
+  FROM requested_items
+  GROUP BY product_id
+),
+-- only eligible if all items requested exist.
+eligible AS MATERIALIZED (
+  SELECT
+    EXISTS (
+      SELECT 1
+      FROM customers c
+      WHERE c.merchant_id = (:merchant_id)::bigint
+        AND c.customer_id = (:customer_id)::bigint
+    )
+    AND NOT EXISTS (
+      SELECT 1
+      FROM requirements r
+      LEFT JOIN products p
+        ON p.merchant_id = (:merchant_id)::bigint
+       AND p.product_id = r.product_id
+      LEFT JOIN inventory i
+        ON i.merchant_id = (:merchant_id)::bigint
+       AND i.product_id = r.product_id
+      WHERE p.product_id IS NULL
+         OR i.product_id IS NULL
+         OR i.quantity < r.quantity
+    ) AS ok
+),
+reserved AS (
+  UPDATE inventory i
+  SET quantity = i.quantity - r.quantity,
+      updated_at = CURRENT_TIMESTAMP
+  FROM requirements r, eligible e
+  WHERE e.ok
+    AND i.merchant_id = (:merchant_id)::bigint
+    AND i.product_id = r.product_id
+  RETURNING i.product_id
+),
+reservation_ok AS MATERIALIZED (
+  SELECT e.ok
+     AND (SELECT COUNT(*) FROM reserved)
+       = (SELECT COUNT(*) FROM requirements) AS ok
+  FROM eligible e
+),
+inserted_order AS (
+  INSERT INTO orders(
+    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+  )
+  SELECT
+    nextval('benchmark_order_id_seq'),
+    (:merchant_id)::bigint,
+    (:customer_id)::bigint,
+    'PENDING'::text,
+    SUM(ri.quantity * p.price)::numeric(12,2),
+    CURRENT_TIMESTAMP
+  FROM requested_items ri
+  JOIN products p
+    ON p.merchant_id = (:merchant_id)::bigint
+   AND p.product_id = ri.product_id
+  CROSS JOIN reservation_ok ro
+  WHERE ro.ok
+  HAVING COUNT(*) = (:item_count)::integer
+  RETURNING order_id
+),
+inserted_items AS (
+  INSERT INTO order_items(
+    order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+  )
+  SELECT
+    nextval('benchmark_order_item_id_seq'),
+    (:merchant_id)::bigint,
+    o.order_id,
+    ri.product_id,
+    ri.quantity,
+    p.price
+  FROM requested_items ri
+  JOIN products p
+    ON p.merchant_id = (:merchant_id)::bigint
+   AND p.product_id = ri.product_id
+  CROSS JOIN inserted_order o
+  RETURNING 1
+)
+-- If validation or reservation fails, inserted_order is empty and this inserts no route row.
+-- All data-modifying CTEs complete as part of this statement.
+INSERT INTO order_route (order_id, merchant_id)
+SELECT o.order_id, (:merchant_id)::bigint
+FROM inserted_order o;
+INSERT 0 1
+Time: 43.676 ms
+\timing off
+Timing is off.
+ROLLBACK;
+ROLLBACK

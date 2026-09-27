@@ -1,0 +1,77 @@
+\set ON_ERROR_STOP on
+BEGIN;
+BEGIN
+SELECT merchant_id AS t5_merchant_id FROM order_route WHERE order_id = (:order_id)::bigint \gset
+\echo T5 statement 1
+T5 statement 1
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) SELECT COUNT(*) AS found, MAX(merchant_id) AS merchant_id
+FROM order_route
+WHERE order_id = (:order_id)::bigint;
+                                                                                     QUERY PLAN                                                                                     
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=1.855..1.856 rows=1.00 loops=1)
+   Output: remote_scan.found, remote_scan.merchant_id
+   Task Count: 1
+   Tuple data received from nodes: 16 bytes
+   Tasks Shown: All
+   ->  Task
+         Query: SELECT count(*) AS found, max(merchant_id) AS merchant_id FROM public.order_route_102201 order_route WHERE (order_id OPERATOR(pg_catalog.=) (1)::bigint)
+         Tuple data received from node: 16 bytes
+         Node: host=xcnc38 port=5531 dbname=project-884135
+         ->  Aggregate  (cost=8.44..8.45 rows=1 width=16) (actual time=0.035..0.035 rows=1.00 loops=1)
+               Output: count(*), max(merchant_id)
+               Buffers: shared hit=4
+               ->  Index Scan using order_route_pkey_102201 on public.order_route_102201 order_route  (cost=0.42..8.44 rows=1 width=8) (actual time=0.029..0.030 rows=1.00 loops=1)
+                     Output: order_id, merchant_id
+                     Index Cond: (order_route.order_id = '1'::bigint)
+                     Index Searches: 1
+                     Buffers: shared hit=4
+             Planning:
+               Buffers: shared hit=6
+             Planning Time: 0.106 ms
+             Execution Time: 0.067 ms
+   Buffers: shared hit=3
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=7
+ Planning Time: 0.175 ms
+ Execution Time: 1.871 ms
+(27 rows)
+
+\echo T5 statement 2
+T5 statement 2
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) UPDATE orders
+SET order_status = 'SHIPPED'::text
+WHERE merchant_id = (:t5_merchant_id)::bigint
+  AND order_id = (:order_id)::bigint
+  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+                                                                                                                      QUERY PLAN                                                                                                                      
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=11.995..11.996 rows=0.00 loops=1)
+   Task Count: 1
+   Tasks Shown: All
+   ->  Task
+         Query: UPDATE public.orders_102163 orders SET order_status = 'SHIPPED'::text WHERE ((merchant_id OPERATOR(pg_catalog.=) (41)::bigint) AND (order_id OPERATOR(pg_catalog.=) (1)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+         Node: host=xcnc40 port=5531 dbname=project-884135
+         ->  Update on public.orders_102163 orders  (cost=0.42..8.44 rows=0 width=0) (actual time=0.240..0.240 rows=0.00 loops=1)
+               Buffers: shared hit=14 read=2
+               ->  Index Scan using orders_pkey_102163 on public.orders_102163 orders  (cost=0.42..8.44 rows=1 width=38) (actual time=0.060..0.061 rows=1.00 loops=1)
+                     Output: 'SHIPPED'::text, ctid
+                     Index Cond: ((orders.merchant_id = '41'::bigint) AND (orders.order_id = '1'::bigint))
+                     Filter: (orders.order_status IS DISTINCT FROM 'SHIPPED'::text)
+                     Index Searches: 1
+                     Buffers: shared hit=4
+             Planning:
+               Buffers: shared hit=179
+             Planning Time: 0.688 ms
+             Execution Time: 0.356 ms
+   Buffers: shared hit=4
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=186
+ Planning Time: 0.551 ms
+ Execution Time: 12.045 ms
+(24 rows)
+
+ROLLBACK;
+ROLLBACK

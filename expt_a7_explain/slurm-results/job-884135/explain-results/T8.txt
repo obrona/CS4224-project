@@ -1,0 +1,41 @@
+\set ON_ERROR_STOP on
+BEGIN;
+BEGIN
+\echo T8 statement 1
+T8 statement 1
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) UPDATE customers
+SET email = 'Customer-' || :new_email_number || '@acme.com'
+WHERE customer_id = (:customer_id)::bigint
+  AND merchant_id = (:merchant_id)::bigint
+  AND email IS DISTINCT FROM
+      ('Customer-' || :new_email_number || '@acme.com');
+                                                                                                                               QUERY PLAN                                                                                                                               
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=12.639..12.641 rows=0.00 loops=1)
+   Task Count: 1
+   Tasks Shown: All
+   ->  Task
+         Query: UPDATE public.customers_102041 customers SET email = 'Customer-1@acme.com'::text WHERE ((customer_id OPERATOR(pg_catalog.=) '1'::bigint) AND (merchant_id OPERATOR(pg_catalog.=) '1'::bigint) AND (email IS DISTINCT FROM 'Customer-1@acme.com'::text))
+         Node: host=xcnc38 port=5531 dbname=project-884135
+         ->  Update on public.customers_102041 customers  (cost=0.29..8.31 rows=0 width=0) (actual time=0.254..0.255 rows=0.00 loops=1)
+               Buffers: shared hit=9 read=5 dirtied=4
+               ->  Index Scan using customers_pkey_102041 on public.customers_102041 customers  (cost=0.29..8.31 rows=1 width=38) (actual time=0.075..0.076 rows=1.00 loops=1)
+                     Output: 'Customer-1@acme.com'::text, ctid
+                     Index Cond: ((customers.merchant_id = '1'::bigint) AND (customers.customer_id = '1'::bigint))
+                     Filter: (customers.email IS DISTINCT FROM 'Customer-1@acme.com'::text)
+                     Index Searches: 1
+                     Buffers: shared hit=2 read=1
+             Planning:
+               Buffers: shared hit=138
+             Planning Time: 0.577 ms
+             Execution Time: 0.341 ms
+   Buffers: shared hit=71
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=410
+ Planning Time: 2.291 ms
+ Execution Time: 12.832 ms
+(24 rows)
+
+ROLLBACK;
+ROLLBACK

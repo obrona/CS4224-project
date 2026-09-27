@@ -1,0 +1,67 @@
+\set ON_ERROR_STOP on
+BEGIN;
+BEGIN
+\echo T6 statement 1
+T6 statement 1
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) SELECT
+  merchant_id,
+  COUNT(*) AS order_count,
+  SUM(total_amount) AS revenue
+FROM orders
+WHERE created_at >= CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day'
+  AND created_at < CURRENT_TIMESTAMP
+GROUP BY merchant_id
+ORDER BY revenue DESC
+LIMIT 20;
+                                                                                                                                                                                      QUERY PLAN                                                                                                                                                                                       
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=2660.96..2661.01 rows=20 width=48) (actual time=76.655..76.663 rows=20.00 loops=1)
+   Output: remote_scan.merchant_id, remote_scan.order_count, remote_scan.revenue
+   Buffers: shared hit=83
+   ->  Sort  (cost=2660.96..2910.96 rows=100000 width=48) (actual time=76.654..76.657 rows=20.00 loops=1)
+         Output: remote_scan.merchant_id, remote_scan.order_count, remote_scan.revenue
+         Sort Key: remote_scan.revenue DESC
+         Sort Method: top-N heapsort  Memory: 26kB
+         Buffers: shared hit=83
+         ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=100000 width=48) (actual time=76.221..76.302 rows=640.00 loops=1)
+               Output: remote_scan.merchant_id, remote_scan.order_count, remote_scan.revenue
+               Task Count: 32
+               Tuple data received from nodes: 19 kB
+               Tasks Shown: One of 32
+               ->  Task
+                     Query: SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102150 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+                     Tuple data received from node: 598 bytes
+                     Node: host=xcnc39 port=5531 dbname=project-884135
+                     ->  Limit  (cost=1533.32..1533.37 rows=20 width=48) (actual time=16.619..16.626 rows=20.00 loops=1)
+                           Output: merchant_id, (count(*)), (sum(total_amount))
+                           Buffers: shared hit=232 read=15
+                           ->  Sort  (cost=1533.32..1533.40 rows=33 width=48) (actual time=16.618..16.621 rows=20.00 loops=1)
+                                 Output: merchant_id, (count(*)), (sum(total_amount))
+                                 Sort Key: (sum(orders.total_amount)) DESC
+                                 Sort Method: quicksort  Memory: 27kB
+                                 Buffers: shared hit=232 read=15
+                                 ->  HashAggregate  (cost=1532.07..1532.48 rows=33 width=48) (actual time=16.547..16.570 rows=33.00 loops=1)
+                                       Output: merchant_id, count(*), sum(total_amount)
+                                       Group Key: orders.merchant_id
+                                       Batches: 1  Memory Usage: 40kB
+                                       Buffers: shared hit=232 read=15
+                                       ->  Index Only Scan using idx_orders_sales_period_102150 on public.orders_102150 orders  (cost=0.43..1397.99 rows=17878 width=14) (actual time=0.053..8.132 rows=16756.00 loops=1)
+                                             Output: created_at, merchant_id, total_amount
+                                             Index Cond: ((orders.created_at >= (CURRENT_TIMESTAMP - '30 days'::interval)) AND (orders.created_at < CURRENT_TIMESTAMP))
+                                             Heap Fetches: 0
+                                             Index Searches: 1
+                                             Buffers: shared hit=232 read=15
+                         Planning:
+                           Buffers: shared hit=84
+                         Planning Time: 0.883 ms
+                         Execution Time: 16.694 ms
+               Buffers: shared hit=80
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=426
+ Planning Time: 3.651 ms
+ Execution Time: 76.697 ms
+(46 rows)
+
+ROLLBACK;
+ROLLBACK

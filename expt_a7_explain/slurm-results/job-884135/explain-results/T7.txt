@@ -1,0 +1,185 @@
+\set ON_ERROR_STOP on
+BEGIN;
+BEGIN
+SELECT inventory_id AS t7_source_inventory_id, merchant_id AS t7_source_merchant_id FROM product_route WHERE product_id = (:source_product_id)::bigint \gset
+SELECT inventory_id AS t7_dest_inventory_id, merchant_id AS t7_dest_merchant_id FROM product_route WHERE product_id = (:dest_product_id)::bigint \gset
+\echo T7 statement 1
+T7 statement 1
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) SELECT COUNT(*) AS source_found,
+       MAX(inventory_id) AS source_inventory_id,
+       MAX(merchant_id) AS source_merchant_id
+FROM product_route
+WHERE product_id = (:source_product_id)::bigint;
+                                                                                                              QUERY PLAN                                                                                                               
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=1.829..1.830 rows=1.00 loops=1)
+   Output: remote_scan.source_found, remote_scan.source_inventory_id, remote_scan.source_merchant_id
+   Task Count: 1
+   Tuple data received from nodes: 24 bytes
+   Tasks Shown: All
+   ->  Task
+         Query: SELECT count(*) AS source_found, max(inventory_id) AS source_inventory_id, max(merchant_id) AS source_merchant_id FROM public.product_route_102233 product_route WHERE (product_id OPERATOR(pg_catalog.=) (1)::bigint)
+         Tuple data received from node: 24 bytes
+         Node: host=xcnc38 port=5531 dbname=project-884135
+         ->  Aggregate  (cost=8.31..8.32 rows=1 width=24) (actual time=0.018..0.019 rows=1.00 loops=1)
+               Output: count(*), max(inventory_id), max(merchant_id)
+               Buffers: shared hit=3
+               ->  Index Scan using product_route_pkey_102233 on public.product_route_102233 product_route  (cost=0.29..8.30 rows=1 width=16) (actual time=0.012..0.013 rows=1.00 loops=1)
+                     Output: product_id, inventory_id, merchant_id
+                     Index Cond: (product_route.product_id = '1'::bigint)
+                     Index Searches: 1
+                     Buffers: shared hit=3
+             Planning:
+               Buffers: shared hit=6
+             Planning Time: 0.127 ms
+             Execution Time: 0.070 ms
+   Buffers: shared hit=3
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=7
+ Planning Time: 0.184 ms
+ Execution Time: 1.842 ms
+(27 rows)
+
+\echo T7 statement 2
+T7 statement 2
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) SELECT COUNT(*) AS dest_found,
+       MAX(inventory_id) AS dest_inventory_id,
+       MAX(merchant_id) AS dest_merchant_id
+FROM product_route
+WHERE product_id = (:dest_product_id)::bigint;
+                                                                                                           QUERY PLAN                                                                                                            
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=1.685..1.686 rows=1.00 loops=1)
+   Output: remote_scan.dest_found, remote_scan.dest_inventory_id, remote_scan.dest_merchant_id
+   Task Count: 1
+   Tuple data received from nodes: 24 bytes
+   Tasks Shown: All
+   ->  Task
+         Query: SELECT count(*) AS dest_found, max(inventory_id) AS dest_inventory_id, max(merchant_id) AS dest_merchant_id FROM public.product_route_102256 product_route WHERE (product_id OPERATOR(pg_catalog.=) (2)::bigint)
+         Tuple data received from node: 24 bytes
+         Node: host=xcnc37 port=5531 dbname=project-884135
+         ->  Aggregate  (cost=8.31..8.32 rows=1 width=24) (actual time=0.017..0.018 rows=1.00 loops=1)
+               Output: count(*), max(inventory_id), max(merchant_id)
+               Buffers: shared hit=3
+               ->  Index Scan using product_route_pkey_102256 on public.product_route_102256 product_route  (cost=0.29..8.30 rows=1 width=16) (actual time=0.011..0.012 rows=1.00 loops=1)
+                     Output: product_id, inventory_id, merchant_id
+                     Index Cond: (product_route.product_id = '2'::bigint)
+                     Index Searches: 1
+                     Buffers: shared hit=3
+             Planning:
+               Buffers: shared hit=6
+             Planning Time: 0.118 ms
+             Execution Time: 0.049 ms
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=1
+ Planning Time: 0.112 ms
+ Execution Time: 1.696 ms
+(26 rows)
+
+\echo T7 statement 3
+T7 statement 3
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) WITH debit AS (
+  UPDATE inventory
+  SET quantity = quantity - (:transfer_qty)::integer,
+      updated_at = CURRENT_TIMESTAMP
+  WHERE merchant_id = (:t7_source_merchant_id)::bigint
+    AND inventory_id = (:t7_source_inventory_id)::bigint
+    AND product_id = (:source_product_id)::bigint
+    AND quantity >= (:transfer_qty)::integer
+  RETURNING 1
+)
+SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok;
+                                                                                                                                                                                                                                                                                  QUERY PLAN                                                                                                                                                                                                                                                                                  
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=2.236..2.238 rows=1.00 loops=1)
+   Output: remote_scan.debit_ok
+   Task Count: 1
+   Tuple data received from nodes: 1 bytes
+   Tasks Shown: All
+   ->  Task
+         Query: WITH debit AS (UPDATE public.inventory_102105 inventory SET quantity = (inventory.quantity OPERATOR(pg_catalog.-) 1), updated_at = '2026-09-27 12:01:37.050173'::timestamp without time zone WHERE ((inventory.merchant_id OPERATOR(pg_catalog.=) '1'::bigint) AND (inventory.inventory_id OPERATOR(pg_catalog.=) '1'::bigint) AND (inventory.product_id OPERATOR(pg_catalog.=) '1'::bigint) AND (inventory.quantity OPERATOR(pg_catalog.>=) 1)) RETURNING 1 AS "?column?") SELECT (EXISTS (SELECT 1 AS "?column?" FROM debit debit("?column?"))) AS debit_ok
+         Tuple data received from node: 1 bytes
+         Node: host=xcnc38 port=5531 dbname=project-884135
+         ->  Result  (cost=8.33..8.34 rows=1 width=1) (actual time=0.126..0.127 rows=1.00 loops=1)
+               Output: (InitPlan 2).col1
+               Buffers: shared hit=5
+               CTE debit
+                 ->  Update on public.inventory_102105 inventory  (cost=0.29..8.31 rows=1 width=18) (actual time=0.123..0.125 rows=1.00 loops=1)
+                       Output: 1
+                       Buffers: shared hit=5
+                       ->  Index Scan using inventory_merchant_id_product_id_key_102105 on public.inventory_102105 inventory  (cost=0.29..8.31 rows=1 width=18) (actual time=0.038..0.039 rows=1.00 loops=1)
+                             Output: (inventory.quantity - 1), '2026-09-27 12:01:37.050173'::timestamp without time zone, inventory.ctid
+                             Index Cond: ((inventory.merchant_id = '1'::bigint) AND (inventory.product_id = '1'::bigint))
+                             Filter: ((inventory.quantity >= 1) AND (inventory.inventory_id = '1'::bigint))
+                             Index Searches: 1
+                             Buffers: shared hit=3
+               InitPlan 2
+                 ->  CTE Scan on debit  (cost=0.00..0.02 rows=1 width=0) (actual time=0.125..0.125 rows=1.00 loops=1)
+                       Storage: Memory  Maximum Storage: 17kB
+                       Buffers: shared hit=5
+             Planning:
+               Buffers: shared hit=63
+             Planning Time: 0.367 ms
+             Execution Time: 0.223 ms
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=170
+ Planning Time: 0.628 ms
+ Execution Time: 2.352 ms
+(35 rows)
+
+\echo T7 statement 4
+T7 statement 4
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) WITH credit AS (
+  UPDATE inventory
+  SET quantity = quantity + (:transfer_qty)::integer,
+      updated_at = CURRENT_TIMESTAMP
+  WHERE merchant_id = (:t7_dest_merchant_id)::bigint
+    AND inventory_id = (:t7_dest_inventory_id)::bigint
+    AND product_id = (:dest_product_id)::bigint
+  RETURNING 1
+)
+SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok;
+                                                                                                                                                                                                                                                          QUERY PLAN                                                                                                                                                                                                                                                           
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=2.057..2.058 rows=1.00 loops=1)
+   Output: remote_scan.credit_ok
+   Task Count: 1
+   Tuple data received from nodes: 1 bytes
+   Tasks Shown: All
+   ->  Task
+         Query: WITH credit AS (UPDATE public.inventory_102128 inventory SET quantity = (inventory.quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-09-27 12:01:37.050173'::timestamp without time zone WHERE ((inventory.merchant_id OPERATOR(pg_catalog.=) '2'::bigint) AND (inventory.inventory_id OPERATOR(pg_catalog.=) '2'::bigint) AND (inventory.product_id OPERATOR(pg_catalog.=) '2'::bigint)) RETURNING 1 AS "?column?") SELECT (EXISTS (SELECT 1 AS "?column?" FROM credit credit("?column?"))) AS credit_ok
+         Tuple data received from node: 1 bytes
+         Node: host=xcnc37 port=5531 dbname=project-884135
+         ->  Result  (cost=8.33..8.34 rows=1 width=1) (actual time=0.194..0.195 rows=1.00 loops=1)
+               Output: (InitPlan 2).col1
+               Buffers: shared hit=5 read=4 dirtied=2
+               CTE credit
+                 ->  Update on public.inventory_102128 inventory  (cost=0.29..8.31 rows=1 width=18) (actual time=0.191..0.192 rows=1.00 loops=1)
+                       Output: 1
+                       Buffers: shared hit=5 read=4 dirtied=2
+                       ->  Index Scan using inventory_merchant_id_product_id_key_102128 on public.inventory_102128 inventory  (cost=0.29..8.31 rows=1 width=18) (actual time=0.058..0.059 rows=1.00 loops=1)
+                             Output: (inventory.quantity + 1), '2026-09-27 12:01:37.050173'::timestamp without time zone, inventory.ctid
+                             Index Cond: ((inventory.merchant_id = '2'::bigint) AND (inventory.product_id = '2'::bigint))
+                             Filter: (inventory.inventory_id = '2'::bigint)
+                             Index Searches: 1
+                             Buffers: shared read=3
+               InitPlan 2
+                 ->  CTE Scan on credit  (cost=0.00..0.02 rows=1 width=0) (actual time=0.193..0.193 rows=1.00 loops=1)
+                       Storage: Memory  Maximum Storage: 17kB
+                       Buffers: shared hit=5 read=4 dirtied=2
+             Planning:
+               Buffers: shared hit=58 read=2
+             Planning Time: 0.450 ms
+             Execution Time: 0.329 ms
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=2
+ Planning Time: 0.160 ms
+ Execution Time: 2.151 ms
+(35 rows)
+
+ROLLBACK;
+ROLLBACK

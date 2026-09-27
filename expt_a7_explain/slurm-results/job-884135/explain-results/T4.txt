@@ -1,0 +1,55 @@
+\set ON_ERROR_STOP on
+BEGIN;
+BEGIN
+\echo T4 statement 1
+T4 statement 1
+EXPLAIN (ANALYZE, BUFFERS, VERBOSE, SETTINGS) SELECT
+  p.product_id,
+  p.product_name,
+  p.category,
+  p.price,
+  i.quantity
+FROM products AS p
+JOIN inventory AS i
+  ON i.product_id = p.product_id
+ AND i.merchant_id = p.merchant_id
+WHERE p.merchant_id = (:merchant_id)::bigint
+  AND p.product_id = (:product_id)::bigint;
+                                                                                                                                                                                       QUERY PLAN                                                                                                                                                                                       
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=12.851..12.853 rows=1.00 loops=1)
+   Output: remote_scan.product_id, remote_scan.product_name, remote_scan.category, remote_scan.price, remote_scan.quantity
+   Task Count: 1
+   Tuple data received from nodes: 43 bytes
+   Tasks Shown: All
+   ->  Task
+         Query: SELECT p.product_id, p.product_name, p.category, p.price, i.quantity FROM (public.products_102073 p JOIN public.inventory_102105 i ON (((i.product_id OPERATOR(pg_catalog.=) p.product_id) AND (i.merchant_id OPERATOR(pg_catalog.=) p.merchant_id)))) WHERE ((p.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (p.product_id OPERATOR(pg_catalog.=) (1)::bigint))
+         Tuple data received from node: 43 bytes
+         Node: host=xcnc38 port=5531 dbname=project-884135
+         ->  Nested Loop  (cost=0.57..16.62 rows=1 width=44) (actual time=0.073..0.074 rows=1.00 loops=1)
+               Output: p.product_id, p.product_name, p.category, p.price, i.quantity
+               Buffers: shared hit=6
+               ->  Index Scan using products_pkey_102073 on public.products_102073 p  (cost=0.29..8.31 rows=1 width=48) (actual time=0.008..0.009 rows=1.00 loops=1)
+                     Output: p.product_id, p.merchant_id, p.product_name, p.category, p.price
+                     Index Cond: ((p.merchant_id = '1'::bigint) AND (p.product_id = '1'::bigint))
+                     Index Searches: 1
+                     Buffers: shared hit=3
+               ->  Index Scan using inventory_merchant_id_product_id_key_102105 on public.inventory_102105 i  (cost=0.29..8.31 rows=1 width=20) (actual time=0.061..0.061 rows=1.00 loops=1)
+                     Output: i.inventory_id, i.merchant_id, i.product_id, i.quantity, i.updated_at
+                     Index Cond: ((i.merchant_id = '1'::bigint) AND (i.product_id = '1'::bigint))
+                     Index Searches: 1
+                     Buffers: shared hit=3
+             Planning:
+               Buffers: shared hit=193
+             Planning Time: 0.841 ms
+             Execution Time: 0.120 ms
+   Buffers: shared hit=71
+ Settings: work_mem = '32MB', enable_self_join_elimination = 'off'
+ Planning:
+   Buffers: shared hit=550
+ Planning Time: 2.670 ms
+ Execution Time: 12.876 ms
+(32 rows)
+
+ROLLBACK;
+ROLLBACK
