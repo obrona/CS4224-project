@@ -539,7 +539,7 @@ BEGIN
 
 	END IF;
 END
-$;
+$$;
 SQL
 
 	psqlx -f "${SCRIPT_DIR}/functions/place_order_function.sql"
