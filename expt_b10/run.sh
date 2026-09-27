@@ -584,10 +584,7 @@ END
 $$;
 SQL
 
-	# T1 and T7 each run as one distributed function, delegated to a merchant's
-	# worker. Each definition is the \if 0 ... \endif block at the end of its
-	# transaction file, which pgbench skips; only the lines between the two
-	# markers go to psql.
+	# T1 and T7 each run as one distributed function, delegated to a merchant's worker.
 	local tx_file tx_function
 	for tx_file in T1_place_order.sql T7_inventory_transfer.sql; do
 		tx_function=$(sed -n '/^\\if 0/,/^\\endif/p' "$TX_DIR/$tx_file" | sed '1d;$d')
@@ -624,9 +621,8 @@ INSERT INTO products SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Product-'||i,'
 INSERT INTO inventory SELECT product_id,merchant_id,product_id,10+((hashint8extended(product_id,$DATA_SEED)&9223372036854775807)%991)::int,current_timestamp FROM products;
 SQL
 
-	# Built by reading products, not by assuming how the generator assigned
-	# products to merchants. No transaction inserts products or changes a
-	# product's merchant, so the map stays exact for the whole run.
+	# No transaction inserts products or changes a product's merchant, 
+	# so the map stays exact for the whole run.
 	psqlx <<'SQL'
 INSERT INTO product_merchant_map (product_id, merchant_id)
 SELECT product_id, merchant_id FROM products;

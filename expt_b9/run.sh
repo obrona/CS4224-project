@@ -621,9 +621,8 @@ INSERT INTO products SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Product-'||i,'
 INSERT INTO inventory SELECT product_id,merchant_id,product_id,10+((hashint8extended(product_id,$DATA_SEED)&9223372036854775807)%991)::int,current_timestamp FROM products;
 SQL
 
-	# Built by reading products, not by assuming how the generator assigned
-	# products to merchants. No transaction inserts products or changes a
-	# product's merchant, so the map stays exact for the whole run.
+	# No transaction inserts products or changes a product's merchant, 
+	# so the map stays exact for the whole run.
 	psqlx <<'SQL'
 INSERT INTO product_merchant_map (product_id, merchant_id)
 SELECT product_id, merchant_id FROM products;
