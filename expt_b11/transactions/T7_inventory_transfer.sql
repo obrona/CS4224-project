@@ -12,15 +12,11 @@
 
 -- T7 is given product id, but inventory is sharded by merchant_id.
 -- product_merchant_map is a reference table with a copy on the coordinator, so
--- each lookup is read locally there without going to a worker.
-SELECT COALESCE(MAX(merchant_id), 0) AS source_merchant_id
+-- the lookup is read locally there without going to a worker.
+SELECT COALESCE(MAX(merchant_id) FILTER (WHERE product_id = (:source_product_id)::bigint), 0) AS source_merchant_id,
+       COALESCE(MAX(merchant_id) FILTER (WHERE product_id = (:dest_product_id)::bigint), 0) AS dest_merchant_id
 FROM product_merchant_map
-WHERE product_id = (:source_product_id)::bigint
-\gset t7_
-
-SELECT COALESCE(MAX(merchant_id), 0) AS dest_merchant_id
-FROM product_merchant_map
-WHERE product_id = (:dest_product_id)::bigint
+WHERE product_id IN ((:source_product_id)::bigint, (:dest_product_id)::bigint)
 \gset t7_
 
 \if :source_product_id = :dest_product_id
