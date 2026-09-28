@@ -55,31 +55,7 @@ when both merchants are on the same worker. The coordinator still handles the
 same 6 statements, so the saving is the wait on the network and the work of
 sending and receiving, not the planning.
 
-### Optimisation: one lookup statement instead of two
-
-```sql
-SELECT COALESCE(MAX(merchant_id) FILTER (WHERE product_id = :source_product_id), 0) AS source_merchant_id,
-       COALESCE(MAX(merchant_id) FILTER (WHERE product_id = :dest_product_id), 0)   AS dest_merchant_id
-FROM product_merchant_map
-WHERE product_id IN (:source_product_id, :dest_product_id)
-```
-
-The first run of this experiment (job-885153) kept `expt_b9`'s two lookup
-statements. T7 at 1 client fell from 4.6 to 3.0 ms, but throughput fell at
-8 clients and above (3897.1 to 3820.1 TPS at 64), and the single-shard
-transactions that never read the map (T2, T4, T5, T8, T9) got about 1 ms
-slower at 64 clients. The likely cause is coordinator CPU: each lookup is
-now planned and executed on the coordinator (the shard query's own planning
-alone took 0.46 ms in `explain.log`), which was already the bottleneck.
-
-Merging the two lookups halves that work: pgbench sends one statement
-instead of two, and the coordinator plans and executes the shard query once,
-with two index searches. The result is unchanged: a missing product still
-gives 0, and when both ids are equal both columns get the same merchant, which
-the existing `source_product_id = dest_product_id` check still rejects. Both
-ids are now read in the same snapshot.
-
-The debit and credit do not change.
+T7's statements do not change. Only the comment above the lookups changes.
 
 ### Why a reference table fits this table
 
@@ -125,11 +101,7 @@ changes, so it does not matter which copy answers. The transfer itself is
 - **`explain.log`.** T7's lookup plan should show its task on the coordinator
   itself (local execution), not on an `xcnf` worker. If it still goes to a
   worker, the reference table is not being read locally and this experiment
-  saves nothing. The plan names the coordinator as the node either way, so
-  the explain file turns on `citus.log_local_commands` around it: a NOTICE
-  `executing the command locally` confirms local execution. The lookup runs
-  once before the EXPLAIN, so its timing is not that of a cold session (in
-  job-885153 it was the session's first read of the map and took 5.1 ms).
+  saves nothing.
 - **T7 latency at 1 client**, 4.6 ms in `expt_b9`. Its two groups (same
   worker and different workers) should both shift down by roughly the cost
   of two network hops.

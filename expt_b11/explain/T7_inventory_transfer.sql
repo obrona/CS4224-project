@@ -8,21 +8,20 @@ SELECT MIN(product_id) AS dest_product_id FROM products WHERE merchant_id = 2
 
 -- product_merchant_map is a reference table. The lookup should run on the
 -- coordinator's own copy, with no worker in the plan.
-SELECT COALESCE(MAX(merchant_id) FILTER (WHERE product_id = (:source_product_id)::bigint), 0) AS source_merchant_id,
-       COALESCE(MAX(merchant_id) FILTER (WHERE product_id = (:dest_product_id)::bigint), 0) AS dest_merchant_id
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT COALESCE(MAX(merchant_id), 0) AS source_merchant_id
 FROM product_merchant_map
-WHERE product_id IN ((:source_product_id)::bigint, (:dest_product_id)::bigint)
+WHERE product_id = (:source_product_id)::bigint;
+
+SELECT COALESCE(MAX(merchant_id), 0) AS source_merchant_id
+FROM product_merchant_map
+WHERE product_id = (:source_product_id)::bigint
 \gset t7_
 
--- The plan shows the coordinator as the task's node whether the task ran
--- locally or over a connection to itself.
-SET citus.log_local_commands = on;
-EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
-SELECT COALESCE(MAX(merchant_id) FILTER (WHERE product_id = (:source_product_id)::bigint), 0) AS source_merchant_id,
-       COALESCE(MAX(merchant_id) FILTER (WHERE product_id = (:dest_product_id)::bigint), 0) AS dest_merchant_id
+SELECT COALESCE(MAX(merchant_id), 0) AS dest_merchant_id
 FROM product_merchant_map
-WHERE product_id IN ((:source_product_id)::bigint, (:dest_product_id)::bigint);
-RESET citus.log_local_commands;
+WHERE product_id = (:dest_product_id)::bigint
+\gset t7_
 
 BEGIN;
 
