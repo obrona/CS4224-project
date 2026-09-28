@@ -46,6 +46,7 @@ RESULT_ROOT="${RESULT_ROOT:-${SLURM_SUBMIT_DIR}/slurm-results}"
 JOB_RESULT_DIR="${RESULT_ROOT}/job-${SLURM_JOB_ID}"
 RUN_DIR="${JOB_RESULT_DIR}/benchmark-results"
 LOG_DIR="${RUN_DIR}/logs"
+MEMORY_DIR="${JOB_RESULT_DIR}/memory"
 
 SCRIPT_DIR="${SCRIPT_DIR:-${SLURM_SUBMIT_DIR}}"
 TX_DIR="${SCRIPT_DIR}/transactions"
@@ -109,6 +110,17 @@ RESET_AFTER_WARMUP="${RESET_AFTER_WARMUP:-0}"
 RESTART_SERVERS_BETWEEN_CLIENT_COUNTS="${RESTART_SERVERS_BETWEEN_CLIENT_COUNTS:-1}"
 SERVER_RESTART_TIMEOUT="${SERVER_RESTART_TIMEOUT:-60}"
 
+################# Memory monitoring
+# Every MEMORY_SAMPLE_INTERVAL seconds, each node records its Slurm cgroup's
+# memory totals and its MEMORY_TOP_PROCESSES largest PostgreSQL processes in
+# $MEMORY_DIR. Every MEMORY_CONTEXT_INTERVAL seconds, the MEMORY_CONTEXT_TOP
+# largest also write their memory contexts to that node's PostgreSQL log.
+# An interval of 0 turns that part off.
+MEMORY_SAMPLE_INTERVAL="${MEMORY_SAMPLE_INTERVAL:-15}"
+MEMORY_TOP_PROCESSES="${MEMORY_TOP_PROCESSES:-20}"
+MEMORY_CONTEXT_INTERVAL="${MEMORY_CONTEXT_INTERVAL:-60}"
+MEMORY_CONTEXT_TOP="${MEMORY_CONTEXT_TOP:-2}"
+
 # Weights for transaction workloads A & B
 WORKLOAD="${WORKLOAD:-B}"
 if [[ "${WORKLOAD}" == "A" ]]; then
@@ -159,6 +171,7 @@ T7_MAX_TRANSFER_QTY="${T7_MAX_TRANSFER_QTY:-5}"
 CLEANUP_STARTED=0  # clean up has not started
 SERVERS_LAUNCHED=0 # servers have not been launched
 declare -a SERVER_PIDS=()
+declare -a MONITOR_PIDS=()
 declare -a NODES=()
 
 ############### Functions
@@ -189,6 +202,8 @@ cleanup() {
 	else
 		echo "Running cleanup after failure; exit code=$exit_code"
 	fi
+
+	stop_memory_monitors
 
 	if ((SERVERS_LAUNCHED)); then
 		local n
@@ -269,6 +284,161 @@ check_server_steps() {
 			return 1
 		fi
 	done
+}
+
+### sample memory use on the node this runs on (started by start_memory_monitors)
+# Writes, in out_dir:
+#   <node>-info.txt       node memory size and what /tmp (holding PGDATA) is
+#   <node>-summary.tsv    one line per sample: the server's Slurm step and job
+#                         cgroup totals, the node's MemAvailable, and the sum
+#                         of private memory over all PostgreSQL processes
+#   <node>-processes.tsv  the largest PostgreSQL processes in each sample
+# rss_anon is a process's private memory, which is what grows if it leaks;
+# rss_shmem is mostly the part of shared_buffers it has touched. Every
+# ctx_interval seconds the ctx_top largest processes also log their memory
+# contexts ("logging memory contexts of PID ...") to the PostgreSQL log.
+# postmaster.pid is re-read on every pass, so it follows server restarts.
+memory_monitor_loop() {
+	local node="$1" out_dir="$2" pgdata="$3" pg_bin="$4" port="$5" user="$6"
+	local interval="$7" top="$8" ctx_interval="$9" ctx_top="${10}"
+	local summary="$out_dir/$node-summary.tsv"
+	local processes="$out_dir/$node-processes.tsv"
+	local last_ctx=0 now ts pm cg job_dir step_dir rows pid
+
+	# a cgroup file holding bytes, as kB; "max" passes through
+	cg_kb() {
+		local x
+		x=$(cat "$1" 2>/dev/null) || { echo -; return; }
+		[[ "$x" =~ ^[0-9]+$ ]] && echo $((x / 1024)) || echo "$x"
+	}
+	# the value of one key in a "key value" file, divided by $3
+	key_value() {
+		local key val
+		while read -r key val _; do
+			if [[ "$key" == "$2" && "$val" =~ ^[0-9]+$ ]]; then
+				echo $((val / ${3:-1}))
+				return
+			fi
+		done 2>/dev/null <"$1"
+		echo -
+	}
+
+	{
+		echo "node=$node"
+		grep -E '^(MemTotal|SwapTotal):' /proc/meminfo
+		echo "/tmp filesystem type: $(stat -f -c %T /tmp 2>/dev/null)"
+		df -k /tmp 2>/dev/null
+	} >"$out_dir/$node-info.txt"
+
+	printf 'time\tpostmaster_pid\tstep_current_kB\tstep_peak_kB\tstep_anon_kB\tstep_file_kB\tstep_shmem_kB\tstep_oom_kills\tjob_current_kB\tjob_peak_kB\tjob_max_kB\tnode_available_kB\tpg_processes\tpg_rss_anon_kB\n' >"$summary"
+	printf 'time\tpid\telapsed_s\trss_anon_kB\trss_shmem_kB\tprocess\n' >"$processes"
+
+	while [[ ! -e "$out_dir/stop" ]]; do
+		now=$(date +%s)
+		ts=$(date '+%F %T')
+		pm=$(head -n 1 "$pgdata/postmaster.pid" 2>/dev/null)
+		if [[ ! "$pm" =~ ^[0-9]+$ || ! -d "/proc/$pm" ]]; then
+			printf '%s\t-\n' "$ts" >>"$summary"
+			sleep "$interval"
+			continue
+		fi
+
+		# Slurm runs the server in .../job_<id>/step_<n>/...; the job's
+		# memory limit is on job_<id>.
+		cg=$(sed -n 's/^0:://p' "/proc/$pm/cgroup" 2>/dev/null)
+		job_dir=-
+		step_dir=-
+		if [[ "$cg" =~ ^(.*/job_[0-9]+)(/step_[^/]+)? ]]; then
+			job_dir="/sys/fs/cgroup${BASH_REMATCH[1]}"
+			[[ -n "${BASH_REMATCH[2]}" ]] && step_dir="$job_dir${BASH_REMATCH[2]}"
+		elif [[ -n "$cg" ]]; then
+			step_dir="/sys/fs/cgroup$cg"
+		fi
+
+		# The postmaster and its children, largest private memory first.
+		rows=$(ps -o pid=,etimes=,args= -p "$pm" --ppid "$pm" 2>/dev/null |
+			while read -r pid et args; do
+				anon=0
+				shmem=0
+				while read -r k v _; do
+					case "$k" in
+					RssAnon:) anon=$v ;;
+					RssShmem:) shmem=$v ;;
+					esac
+				done 2>/dev/null <"/proc/$pid/status"
+				printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$ts" "$pid" "$et" "$anon" "$shmem" "$args"
+			done | sort -t $'\t' -k4,4nr)
+
+		printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+			"$ts" "$pm" \
+			"$(cg_kb "$step_dir/memory.current")" \
+			"$(cg_kb "$step_dir/memory.peak")" \
+			"$(key_value "$step_dir/memory.stat" anon 1024)" \
+			"$(key_value "$step_dir/memory.stat" file 1024)" \
+			"$(key_value "$step_dir/memory.stat" shmem 1024)" \
+			"$(key_value "$step_dir/memory.events" oom_kill)" \
+			"$(cg_kb "$job_dir/memory.current")" \
+			"$(cg_kb "$job_dir/memory.peak")" \
+			"$(cg_kb "$job_dir/memory.max")" \
+			"$(key_value /proc/meminfo MemAvailable:)" \
+			"$(grep -c . <<<"$rows")" \
+			"$(awk -F '\t' '{s += $4} END {print s + 0}' <<<"$rows")" \
+			>>"$summary"
+		head -n "$top" <<<"$rows" >>"$processes"
+
+		if ((ctx_interval > 0 && now - last_ctx >= ctx_interval)); then
+			last_ctx=$now
+			for pid in $(awk -F '\t' -v pm="$pm" '$2 != pm {print $2}' <<<"$rows" | head -n "$ctx_top"); do
+				"$pg_bin/psql" -X -q -A -t -h "$node" -p "$port" -U "$user" -d postgres \
+					-c "SELECT pg_log_backend_memory_contexts($pid);" >/dev/null 2>&1
+			done
+		fi
+
+		sleep "$interval"
+	done
+}
+
+### start memory_monitor_loop on every node, each as a background srun step
+start_memory_monitors() {
+	local n
+
+	((MEMORY_SAMPLE_INTERVAL > 0)) || return 0
+	mkdir -p "$MEMORY_DIR"
+	rm -f "$MEMORY_DIR/stop"
+
+	for n in "${NODES[@]}"; do
+		srun \
+			--overlap \
+			--exact \
+			--nodes=1 \
+			--ntasks=1 \
+			--cpus-per-task=1 \
+			--nodelist="$n" \
+			bash -c "$(declare -f memory_monitor_loop); memory_monitor_loop \"\$@\"" memory-monitor \
+			"$n" "$MEMORY_DIR" "$PGDATA" "$PG_BIN_DIR" "$PGPORT" "$PGUSER" \
+			"$MEMORY_SAMPLE_INTERVAL" "$MEMORY_TOP_PROCESSES" \
+			"$MEMORY_CONTEXT_INTERVAL" "$MEMORY_CONTEXT_TOP" \
+			>"$MEMORY_DIR/$n-monitor.log" 2>&1 &
+		MONITOR_PIDS+=("$!")
+	done
+}
+
+### stop the memory monitors
+stop_memory_monitors() {
+	local p
+
+	((${#MONITOR_PIDS[@]} > 0)) || return 0
+	touch "$MEMORY_DIR/stop" 2>/dev/null
+
+	for p in "${MONITOR_PIDS[@]}"; do
+		kill "$p" 2>/dev/null
+	done
+	for p in "${MONITOR_PIDS[@]}"; do
+		wait "$p" 2>/dev/null
+	done
+
+	rm -f "$MEMORY_DIR/stop"
+	MONITOR_PIDS=()
 }
 
 ### initialize database cluster at node specified by first parameter value
@@ -394,6 +564,8 @@ for n in "${NODES[@]}"; do
 	SERVER_PIDS+=("$!")
 done
 SERVERS_LAUNCHED=1 # servers launched
+
+start_memory_monitors
 
 # create database at each server
 for n in "${NODES[@]}"; do
@@ -1430,6 +1602,10 @@ RESET_BETWEEN_CLIENT_COUNTS=$RESET_BETWEEN_CLIENT_COUNTS
 RESET_AFTER_WARMUP=$RESET_AFTER_WARMUP
 RESTART_SERVERS_BETWEEN_CLIENT_COUNTS=$RESTART_SERVERS_BETWEEN_CLIENT_COUNTS
 SERVER_RESTART_TIMEOUT=$SERVER_RESTART_TIMEOUT
+MEMORY_SAMPLE_INTERVAL=$MEMORY_SAMPLE_INTERVAL
+MEMORY_TOP_PROCESSES=$MEMORY_TOP_PROCESSES
+MEMORY_CONTEXT_INTERVAL=$MEMORY_CONTEXT_INTERVAL
+MEMORY_CONTEXT_TOP=$MEMORY_CONTEXT_TOP
 T1_WEIGHT=$T1_WEIGHT
 T2_WEIGHT=$T2_WEIGHT
 T3_WEIGHT=$T3_WEIGHT
