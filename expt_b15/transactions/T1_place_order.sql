@@ -63,6 +63,8 @@ CREATE OR REPLACE FUNCTION public.place_order(
 )
 RETURNS boolean             -- true when the order was placed
 LANGUAGE plpgsql
+-- Plan each statement afresh on every call.
+SET plan_cache_mode = force_custom_plan
 AS $fn$
 DECLARE
   r              record;
