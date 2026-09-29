@@ -46,7 +46,6 @@ RESULT_ROOT="${RESULT_ROOT:-${SLURM_SUBMIT_DIR}/slurm-results}"
 JOB_RESULT_DIR="${RESULT_ROOT}/job-${SLURM_JOB_ID}"
 RUN_DIR="${JOB_RESULT_DIR}/benchmark-results"
 LOG_DIR="${RUN_DIR}/logs"
-MEMORY_DIR="${JOB_RESULT_DIR}/memory"
 
 SCRIPT_DIR="${SCRIPT_DIR:-${SLURM_SUBMIT_DIR}}"
 TX_DIR="${SCRIPT_DIR}/transactions"
@@ -110,17 +109,6 @@ RESET_AFTER_WARMUP="${RESET_AFTER_WARMUP:-0}"
 RESTART_SERVERS_BETWEEN_CLIENT_COUNTS="${RESTART_SERVERS_BETWEEN_CLIENT_COUNTS:-1}"
 SERVER_RESTART_TIMEOUT="${SERVER_RESTART_TIMEOUT:-60}"
 
-################# Memory monitoring
-# Every MEMORY_SAMPLE_INTERVAL seconds, each node records its Slurm cgroup's
-# memory totals and its MEMORY_TOP_PROCESSES largest PostgreSQL processes in
-# $MEMORY_DIR. Every MEMORY_CONTEXT_INTERVAL seconds, the MEMORY_CONTEXT_TOP
-# largest also write their memory contexts to that node's PostgreSQL log.
-# An interval of 0 turns that part off.
-MEMORY_SAMPLE_INTERVAL="${MEMORY_SAMPLE_INTERVAL:-15}"
-MEMORY_TOP_PROCESSES="${MEMORY_TOP_PROCESSES:-20}"
-MEMORY_CONTEXT_INTERVAL="${MEMORY_CONTEXT_INTERVAL:-60}"
-MEMORY_CONTEXT_TOP="${MEMORY_CONTEXT_TOP:-2}"
-
 # Weights for transaction workloads A & B
 WORKLOAD="${WORKLOAD:-B}"
 if [[ "${WORKLOAD}" == "A" ]]; then
@@ -171,7 +159,6 @@ T7_MAX_TRANSFER_QTY="${T7_MAX_TRANSFER_QTY:-5}"
 CLEANUP_STARTED=0  # clean up has not started
 SERVERS_LAUNCHED=0 # servers have not been launched
 declare -a SERVER_PIDS=()
-declare -a MONITOR_PIDS=()
 declare -a NODES=()
 
 ############### Functions
@@ -202,8 +189,6 @@ cleanup() {
 	else
 		echo "Running cleanup after failure; exit code=$exit_code"
 	fi
-
-	stop_memory_monitors
 
 	if ((SERVERS_LAUNCHED)); then
 		local n
@@ -409,8 +394,6 @@ for n in "${NODES[@]}"; do
 	SERVER_PIDS+=("$!")
 done
 SERVERS_LAUNCHED=1 # servers launched
-
-start_memory_monitors
 
 # create database at each server
 for n in "${NODES[@]}"; do
@@ -1447,10 +1430,6 @@ RESET_BETWEEN_CLIENT_COUNTS=$RESET_BETWEEN_CLIENT_COUNTS
 RESET_AFTER_WARMUP=$RESET_AFTER_WARMUP
 RESTART_SERVERS_BETWEEN_CLIENT_COUNTS=$RESTART_SERVERS_BETWEEN_CLIENT_COUNTS
 SERVER_RESTART_TIMEOUT=$SERVER_RESTART_TIMEOUT
-MEMORY_SAMPLE_INTERVAL=$MEMORY_SAMPLE_INTERVAL
-MEMORY_TOP_PROCESSES=$MEMORY_TOP_PROCESSES
-MEMORY_CONTEXT_INTERVAL=$MEMORY_CONTEXT_INTERVAL
-MEMORY_CONTEXT_TOP=$MEMORY_CONTEXT_TOP
 T1_WEIGHT=$T1_WEIGHT
 T2_WEIGHT=$T2_WEIGHT
 T3_WEIGHT=$T3_WEIGHT
