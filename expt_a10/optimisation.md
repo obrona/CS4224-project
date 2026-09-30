@@ -30,56 +30,73 @@ of 32. Merchant-routed transactions still target their merchant's shard.
 This changes the shard layout at schema creation; existing tables are not
 resharded in place. The run recreates and reloads the database as before.
 
-### What to measure
+### Results: job 892423 versus `expt_a9` job 883120
 
-- Compare overall TPS at 1, 8, 32, and 64 clients with `expt_a9`, especially
-  whether the drop after 8 clients improves.
-- Check `explain.log` for 8 T6 tasks and one routed T1 task.
-- Compare T6 latency and T1 latency. Fewer, larger shards may concentrate
-  writes or change worker balance, so a T6 gain need not become a TPS gain.
-- Check `failed_log_records`, retries, and `pgbench_exit_code`; a run with
-  failed clients should not be treated as a valid throughput comparison.
-- If 8 shards helps, repeat with `CITUS_SHARD_COUNT=4` to test one shard per
-  worker on the same pinned nodes, without changing the transaction code.
+The figures below come from each job's `benchmark-results/summary.csv` and
+`transaction_metrics.csv`. Each client count was configured for 600 seconds.
 
-### Results: job 890809 versus `expt_a9` job 883120
+| Clients | `a9` TPS | `a10` TPS | Change | `a9` p99 (ms) | `a10` p99 (ms) |
+| ------- | -------: | --------: | -----: | ------------: | -------------: |
+| 1       |    191.1 |     191.4 |  +0.2% |          17.0 |           15.3 |
+| 4       |    765.0 |     757.6 |  -1.0% |          19.1 |           21.7 |
+| 8       |   1177.6 |    1454.7 | +23.5% |          37.9 |           19.4 |
+| 16      |   1056.9 |    1768.2 | +67.3% |         109.3 |           44.0 |
+| 32*     |   1045.6 |    1582.7 | +51.4% |         242.2 |          113.7 |
+| 64      |    966.9 |    1428.1 | +47.7% |         562.9 |          334.3 |
 
-Both jobs completed 600-second measurements at each client count with
-`pgbench_exit_code=0`. Throughput and latency below come from each job's
-`benchmark-results/summary.csv` and `transaction_metrics.csv`.
+The peak moved from 1177.6 TPS at 8 clients to 1768.2 TPS at 16 clients.
+At 8 clients, T6 average latency fell from 26.1 to 10.9 ms; at 16 clients,
+from 81.2 to 20.1 ms; and at 64 clients, from 314.6 to 151.4 ms. T1 also
+fell from 111.8 to 82.4 ms at 64 clients, consistent with less contention
+from the all-shard query. T6's share of total measured transaction time
+fell from 19.3% to 9.9% at 8 clients and from 24.6% to 17.6% at 64 clients.
+The one-client result is essentially flat and the
+four-client result is slightly worse: the gain appears under concurrent load.
 
-| Clients | `a9` TPS | `a10` TPS | TPS change | `a9` p99 (ms) | `a10` p99 (ms) |
-| ------- | -------: | --------: | ---------: | ------------: | -------------: |
-| 1       |    191.1 |     191.1 |      +0.0% |          17.0 |           15.2 |
-| 4       |    765.0 |     811.1 |      +6.0% |          19.1 |           14.9 |
-| 8       |   1177.6 |    1487.1 |     +26.3% |          37.9 |           19.1 |
-| 16      |   1056.9 |    1862.2 |     +76.2% |         109.3 |           41.9 |
-| 32      |   1045.6 |    1601.9 |     +53.2% |         242.2 |          132.5 |
-| 64      |    966.9 |    1462.1 |     +51.2% |         562.9 |          332.3 |
+### What the EXPLAIN logs show
 
-The peak moved from 1177.6 TPS at 8 clients to 1862.2 TPS at 16 clients.
-T6's average latency fell from 26.1 to 10.6 ms at 8 clients (-59.3%) and
-from 314.6 to 148.2 ms at 64 clients (-52.9%). T6's share of total measured
-transaction time fell from 19.3% to 9.9% at 8 clients and from 24.6% to
-17.7% at 64 clients. T1 remains the largest contributor: about 68.1% at
-64 clients in `a10`. Its average latency fell from 111.8 to 80.1 ms there.
+The recorded T6 plan confirms the intended change: `Task Count` is 32 in
+`expt_a9/slurm-results/job-883120/explain.log` and 8 in
+`slurm-results/job-892423/explain.log`. In these one-off, untimed plan
+captures, each shard computes local aggregates and a top 20; the coordinator
+sorts the candidates. Citus receives 640 candidate rows (20 kB) from 32
+shards in `a9`, versus 160 rows (5108 bytes) from 8 shards in `a10`. The
+coordinator's T6 planning time falls from 5.693 to 4.185 ms and execution
+time from 37.350 to 23.616 ms. The displayed worker task actually takes
+longer in `a10` (5.306 versus 2.998 ms), as expected when each shard holds
+more rows. It is only one task per plan, so those worker times cannot stand
+for all tasks.
 
-The likely mechanism is less planning, dispatch, and merging for T6's
-all-shard query, which also leaves more capacity for concurrent transactions.
-This is an inference from the timings: `a10` did not capture a plan confirming
-the task count. Its `explain.log` reports that `expt_a10/explain/T*.sql` was
-missing. Plan capture runs outside the timed benchmark and did not stop it.
+The other recorded routed statements remain at `Task Count: 1`, including
+T1's delegated `place_order` call, T5's map lookup and update, and T7's
+map lookup and inventory updates. Thus the plans support fewer T6 task
+dispatches and fewer candidate rows returned to the coordinator, without a
+new fan-out for those transactions. T6 is only 5% of the transaction mix,
+but its long runtime under load used a disproportionate share of concurrent
+client time. Less T6 work plausibly frees coordinator and worker capacity,
+reduces queueing for T1 and the other transactions, and raises overall TPS.
+The plans establish the task and result-size changes; the capacity and
+queueing explanation is an inference from the benchmark latencies.
 
-The runs do not isolate shard count. `a9` used workers `xcnf3` through
-`xcnf6`, whereas `a10` used `xcnf2` through `xcnf5`, according to their
-`topology.txt` files. The one-client latencies for most routed transactions
-were 5-17% higher in `a10`, so node or run conditions may have differed.
-There is one run per configuration, with no estimate of run-to-run variance.
-At 64 clients, failed log records/serialization failures rose from 973 to
-1742, alongside a larger number of successful transactions (580166 to
-877284); neither run recorded deadlock failures.
+### Comparability and failures
 
-Rerun both shard counts on the same pinned nodes, include the `explain/`
-scripts, and verify T6's task count before attributing the full TPS difference
-to shard reduction. A subsequent 4-shard run can test whether reducing the
-count further helps.
+`a9` ran on coordinator `xcnf1` and workers `xcnf3`-`xcnf6`; `a10` used
+`xcnf1` and `xcnf2`-`xcnf5`. There is one run per configuration, so the full
+TPS difference cannot be assigned to shard count alone. Most routed
+transactions were slower at one client in `a10`, which also suggests changed
+node or run conditions.
+
+The asterisk in the table marks the incomplete 32-client result. All
+`a9` client counts and all `a10` counts except 32 have
+`pgbench_exit_code=0`. At 32 clients, `a10` reports exit code 2 and an
+incomplete run: `result-c32.txt` records temporary name-resolution failures
+for `xcnf2` and `xcnf3` that aborted clients. Its 1582.7 TPS is shown for
+context, but is not a valid complete-run comparison. At 64 clients, failed
+log records/serialization failures increased from 973 to 1595, alongside
+more successful transactions (580166 to 856874); neither run records
+deadlock failures.
+
+A paired 32-versus-8-shard rerun on the same worker set would better isolate
+the shard-count effect. It should also replace the incomplete 32-client
+measurement. A 4-shard run on those nodes could test whether one shard per
+worker helps further.

@@ -2,8 +2,9 @@
 
 set -Eeuo pipefail
 
-JUMP_HOST="theodore@stujump.comp.nus.edu.sg"
-REMOTE_HOST="theodore@xlogin.comp.nus.edu.sg"
+USERNAME="theodore"
+JUMP_HOST="$USERNAME@stujump.comp.nus.edu.sg"
+REMOTE_HOST="$USERNAME@xlogin.comp.nus.edu.sg"
 
 # OpenSSH calls this script as its password-prompt helper. Other prompts (for
 # example, first-time host-key confirmation or MFA) are relayed to the terminal.
@@ -70,7 +71,7 @@ if [[ $direction == pull ]]; then
 	mkdir -p -- "$destination_folder"
 fi
 
-read -r -s -p "Password for theodore: " TRANSFER_PASSWORD
+read -r -s -p "Password for $USERNAME: " TRANSFER_PASSWORD
 printf '\n'
 if [[ -z $TRANSFER_PASSWORD ]]; then
 	printf 'Error: password cannot be empty.\n' >&2
