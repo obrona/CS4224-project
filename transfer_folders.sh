@@ -2,7 +2,7 @@
 
 set -Eeuo pipefail
 
-USERNAME="cs04"
+USERNAME="theodore"
 JUMP_HOST="$USERNAME@stujump.comp.nus.edu.sg"
 REMOTE_HOST="$USERNAME@xlogin.comp.nus.edu.sg"
 
