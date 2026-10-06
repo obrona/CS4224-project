@@ -19,7 +19,9 @@
 # from these same five nodes.
 # xcnf2 is deliberately not in the list - it has no /home mount, so initdb is
 # not visible there and the job dies at startup with exit 127.
-#SBATCH --nodelist=xcnf[1,3-6]
+#SBATCH --nodelist=xcnf[0-2,4,5]
+# xcnf3 has no /home mount at the time of this run and xcnf6 is busy with another
+# team's jobs, so this set replaces xcnf[1,3-6]; compare only against runs from it.
 
 # IMPORTANT - replace this with your email
 #SBATCH --mail-user=alice_and_bob@u.nus.edu
@@ -27,13 +29,11 @@
 set -euo pipefail
 
 # IMPORTANT: replace 99 with your project team number (e.g., 1, 2, ..., 20) to ensure a unique PGPORT number for each team
-TEAM_ID=${TEAM_ID:-99}
+TEAM_ID=${TEAM_ID:-4}
 
 ################# PostgreSQL environment variables
-# PGPORT may be overridden so several experiments can share the pinned node set
-# concurrently; each needs its own port because they run on the same hosts.
-# Unset, it is exactly the per-team port the project spec assigns.
-PGPORT="${PGPORT:-$((10#${TEAM_ID} + 5432))}"
+# Port derived from the team ID; concurrent jobs use TEAM_ID 4, 104, 204, ...
+PGPORT=$((10#${TEAM_ID} + 5432))
 PGUSER="${SLURM_JOB_USER:-${USER}}"
 
 DATA_ROOT=/tmp/${PGUSER}/citus-${SLURM_JOB_ID}
@@ -70,12 +70,12 @@ PG_SHARED_BUFFERS="${PG_SHARED_BUFFERS:-1GB}"
 PG_WORK_MEM="${PG_WORK_MEM:-32MB}"
 PG_MAINTENANCE_WORK_MEM="${PG_MAINTENANCE_WORK_MEM:-256MB}"
 PG_MAX_CONNECTIONS="${PG_MAX_CONNECTIONS:-1000}"
-# @ablation-begin !repeatable_read
+# @ablation-begin !rc_lock
 PG_ISOLATION_LEVEL=${PG_ISOLATION_LEVEL:-serializable}
-# @ablation-end !repeatable_read
-# @ablation-begin repeatable_read
-PG_ISOLATION_LEVEL=${PG_ISOLATION_LEVEL:-"repeatable read"}
-# @ablation-end repeatable_read
+# @ablation-end !rc_lock
+# @ablation-begin rc_lock
+PG_ISOLATION_LEVEL="${PG_ISOLATION_LEVEL:-read committed}"
+# @ablation-end rc_lock
 
 PG_MAX_WAL_SIZE="${PG_MAX_WAL_SIZE:-16GB}"
 PG_MIN_WAL_SIZE="${PG_MIN_WAL_SIZE:-2GB}"
@@ -87,6 +87,9 @@ CITUS_ENABLE_REPARTITION_JOINS="${CITUS_ENABLE_REPARTITION_JOINS:-on}"
 CITUS_MAX_SHARED_POOL_SIZE="${CITUS_MAX_SHARED_POOL_SIZE:-300}"
 CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE="${CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE:-4}"
 CITUS_LOCAL_SHARED_POOL_SIZE="${CITUS_LOCAL_SHARED_POOL_SIZE:-150}"
+# @ablation-begin shards8
+CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT:-8}"
+# @ablation-end shards8
 
 ################# Data generation configuration
 SCALE="${SCALE:-1}"          # scaling factor
@@ -555,7 +558,14 @@ CREATE INDEX IF NOT EXISTS idx_mds_period
 # @ablation-end t6_rollup
 SQL
 
+# @ablation-begin !shards8
 	psqlx <<'SQL'
+# @ablation-end !shards8
+# @ablation-begin shards8
+	# Apply the count in the session that distributes every table.
+	psqlx -v shard_count="$CITUS_SHARD_COUNT" <<'SQL'
+SET citus.shard_count = :shard_count;
+# @ablation-end shards8
 DO $$
 BEGIN
 	IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'citus') THEN
@@ -1429,6 +1439,9 @@ CITUS_ENABLE_REPARTITION_JOINS="${CITUS_ENABLE_REPARTITION_JOINS}"
 CITUS_MAX_SHARED_POOL_SIZE="${CITUS_MAX_SHARED_POOL_SIZE}"
 CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE="${CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE}"
 CITUS_LOCAL_SHARED_POOL_SIZE="${CITUS_LOCAL_SHARED_POOL_SIZE}"
+# @ablation-begin shards8
+CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT}"
+# @ablation-end shards8
 
 DATA_SEED="${DATA_SEED}"
 HOT_MERCHANT_PERCENT="${HOT_MERCHANT_PERCENT}"

@@ -1,28 +1,32 @@
 #!/usr/bin/env python3
-"""Generate the cells of the 2^5 workload-A ablation on top of expt_a100.
+"""Generate the cells of the 2^4 x 3 workload-A ablation.
 
-A cell is expt_a<100 + mask>, where mask is the sum of the enabled factor bits
-(see FACTORS). Seven cells are earlier experiments renamed in place (RENAMED);
-this script never writes to them. Every other cell, and the replicates in
-REPLICATES, is written as a standalone experiment directory: run.sh,
-transactions/T1..T9, explain/T1..T9 and optimisations.md. Nothing in a
+Four binary factors (BITS) and a three-level T1 mode m (T1_MODES). A cell is
+expt_a<300 + 16*m + mask>, where mask is the sum of the enabled bits. Three
+cells are earlier experiments renamed in place (RENAMED); this script never
+writes to them, nor to the archived 2^5 grid (ARCHIVE). Every other cell, and
+the replicates in REPLICATES, is written as a standalone experiment directory:
+run.sh, transactions/T1..T9, explain/T1..T9 and optimisations.md. Nothing in a
 generated directory refers back to this script at run time.
 
 Sources, all under ablation/template/:
-  run.sh      expt_a115's run.sh with factor markers. A block between
+  run.sh      expt_a9r's run.sh with factor markers. A block between
               "# @ablation-begin F" and "# @ablation-end F" is kept iff factor
               F is on ("!F": iff F is off); "@{F:text}" inside a line becomes
-              text iff F is on. Every marker is removed from the output.
+              text iff F is on. Every marker is removed from the output. F is
+              a bit name, t1_delegation (m >= 1) or rc_lock (m == 2).
   transactions/, explain/
               <T>.sql is shared by every cell; <T>/<variant>.sql is picked per
-              cell by the functions below.
+              cell by variant_source(). The delegated T1 is stored only with
+              both steps 6 and 7 (fn_both.sql, fn_both_rc.sql); the other
+              levels are derived by remove_steps().
 
 Usage:
   ablation/generate.py                      write all generated cells, the
                                             replicates and ablation/manifest.csv
-  ablation/generate.py --out DIR --masks 0,5
-                                            write those masks as DIR/expt_a1xx
-                                            (for validation; any mask allowed)
+  ablation/generate.py --out DIR --cells 323,331
+                                            write those cell ids as DIR/expt_a<id>
+                                            (for validation; any grid id allowed)
 """
 import argparse
 import csv
@@ -36,7 +40,7 @@ REPO = ABLATION_DIR.parent
 TEMPLATE = ABLATION_DIR / "template"
 
 # (bit value, manifest column, one-line description, source experiment)
-FACTORS = [
+BITS = [
     (1, "t5_routing",
      "T5 routing: T5 looks up `order_merchant_map`; T1 inserts the map row; "
      "`run.sh` creates, distributes, fills and truncates `order_merchant_map`",
@@ -50,43 +54,52 @@ FACTORS = [
      "its two `UPDATE`s; `run.sh` creates, distributes, fills and truncates "
      "`product_merchant_map`",
      "`expt_b7` (identical T7 in `expt_a105`, formerly `expt_a8`)"),
-    (8, "t1_delegation",
-     "T1 delegation: T1 is the `place_order` distributed function, called "
+    (8, "shards8",
+     "Eight shards: `run.sh` sets `citus.shard_count` to `CITUS_SHARD_COUNT` "
+     "(default 8, Citus's own default is 32) in the session that distributes "
+     "every table, and records it in `config.txt`",
+     "`expt_a331` (formerly `expt_a10`)"),
+]
+BIT_NAMES = [b[1] for b in BITS]
+NUM_MASKS = 16
+
+# m -> (manifest t1_mode, description, source experiment)
+T1_MODES = [
+    ("set", "T1 is the set-based CTE T1 inside `BEGIN`/`COMMIT`",
+     "`expt_a100` to `expt_a103`"),
+    ("fn", "T1 delegation: T1 is the `place_order` distributed function, called "
      "outside a transaction block; `run.sh` creates and distributes the function",
      "`expt_a111` (formerly `expt_a7`)"),
-    (16, "repeatable_read",
-     "Repeatable read: `PG_ISOLATION_LEVEL` defaults to `repeatable read` "
-     "instead of `serializable`",
-     "`origin/tl` `expt_a7`"),
+    ("fn_rc", "T1 delegation under READ COMMITTED: as `fn`, plus "
+     "`PG_ISOLATION_LEVEL` defaults to `read committed`, `place_order`'s stock "
+     "check takes `FOR UPDATE OF i`, and the function sets "
+     "`plan_cache_mode = force_custom_plan`",
+     "`expt_a347` (formerly `expt_a11`)"),
 ]
-FACTOR_NAMES = [f[1] for f in FACTORS]
-NUM_CELLS = 32
+TEMPLATE_FACTORS = BIT_NAMES + ["t1_delegation", "rc_lock"]
 
-# mask -> (current directory, directory it was renamed from)
-RENAMED = {
-    0: ("expt_a100", "expt_a3"),
-    1: ("expt_a101", "expt_a4"),
-    2: ("expt_a102", "expt_a5"),
-    3: ("expt_a103", "expt_a6"),
-    5: ("expt_a105", "expt_a8"),
-    11: ("expt_a111", "expt_a7"),
-    15: ("expt_a115", "expt_a9"),
-}
+# Cell name -> directory that holds it. Those directories are renamed to
+# expt_a323/a331/a347 by `git mv` before the generator is run in the repo.
+RENAMED = {"expt_a323": "expt_a9r", "expt_a331": "expt_a10", "expt_a347": "expt_a11"}
 # replicate directory -> the cell it is a second run of
-REPLICATES = {"expt_a200": "expt_a100", "expt_a215": "expt_a115"}
+REPLICATES = {"expt_a400": "expt_a300", "expt_a431": "expt_a331"}
+# The earlier 2^5 grid on xcnf[1,3-6]; never an output of this script.
+ARCHIVE = {f"expt_a{100 + i}" for i in range(32)} | {"expt_a200", "expt_a215"}
 
 TX_NAMES = [
     "T1_place_order", "T2_update_inventory", "T3_order_history",
     "T4_product_lookup", "T5_update_order_status", "T6_global_sales",
     "T7_inventory_transfer", "T8_update_customer", "T9_update_product",
 ]
-# Which step(s) of expt_a111's place_order each delegation variant removes.
-FN_REMOVED_STEPS = {
-    "none": "steps 6 (`merchant_daily_sales` upsert) and 7 (`order_merchant_map` insert)",
-    "map": "step 6 (`merchant_daily_sales` upsert)",
-    "rollup": "step 7 (`order_merchant_map` insert)",
-    "both": None,
+# First line of each removable step of place_order; the step runs to the next
+# blank line inclusive.
+FN_STEP_HEAD = {
+    6: "  -- 6. Keep the T6 rollup in step.",
+    7: "  -- 7. order_merchant_map is sharded by order_id, so this row usually lives",
 }
+FN_STEP_DESC = {6: "6 (`merchant_daily_sales` upsert)", 7: "7 (`order_merchant_map` insert)"}
+# T1 level -> steps of place_order removed for it
+FN_REMOVED = {"none": (6, 7), "map": (6,), "rollup": (7,), "both": ()}
 SET_T1_SOURCE = {
     "none": "`expt_a100`", "map": "`expt_a101`",
     "rollup": "`expt_a102`", "both": "`expt_a103`",
@@ -97,16 +110,47 @@ MARKER_END = re.compile(r"^# @ablation-end (!?)(\w+)$")
 INLINE = re.compile(r"@\{(!?)(\w+):([^}]*)\}")
 
 
-def cell_name(mask):
-    return f"expt_a{100 + mask}"
+def cell_id(m, mask):
+    return 300 + 16 * m + mask
 
 
-def enabled(mask):
-    return {name for bit, name, _, _ in FACTORS if mask & bit}
+def cell_name(m, mask):
+    return f"expt_a{cell_id(m, mask)}"
+
+
+def parse_id(cid):
+    """cell id -> (m, mask)"""
+    if not 300 <= cid < 300 + 16 * len(T1_MODES):
+        raise ValueError(f"cell id {cid} outside the grid 300..{300 + 16 * len(T1_MODES) - 1}")
+    return divmod(cid - 300, 16)
+
+
+def all_cells():
+    return [(m, mask) for m in range(len(T1_MODES)) for mask in range(NUM_MASKS)]
+
+
+def enabled(m, mask):
+    """Template factors that are on for a cell."""
+    on = {name for bit, name, _, _ in BITS if mask & bit}
+    if m >= 1:
+        on.add("t1_delegation")
+    if m == 2:
+        on.add("rc_lock")
+    return on
+
+
+def renamed_dir(cell):
+    """Directory holding a renamed cell: its new name once `git mv` has run,
+    else the pre-rename directory (scratch trees and validation)."""
+    for name in (cell, RENAMED[cell]):
+        if (REPO / name).is_dir():
+            return REPO / name
+    raise FileNotFoundError(f"renamed cell {cell} is missing: neither {REPO / cell} "
+                            f"nor {REPO / RENAMED[cell]} exists")
 
 
 def check_factor(name, where):
-    if name not in FACTOR_NAMES:
+    if name not in TEMPLATE_FACTORS:
         raise ValueError(f"unknown factor {name!r} in {where}")
 
 
@@ -130,9 +174,9 @@ def render(text, on, where):
         if open_block and not open_block[2]:
             continue
 
-        def inline(m):
-            check_factor(m.group(2), f"{where}:{n}")
-            return m.group(3) if (m.group(2) in on) != bool(m.group(1)) else ""
+        def inline(mt):
+            check_factor(mt.group(2), f"{where}:{n}")
+            return mt.group(3) if (mt.group(2) in on) != bool(mt.group(1)) else ""
 
         out.append(INLINE.sub(inline, line))
     if open_block:
@@ -143,23 +187,45 @@ def render(text, on, where):
     return result
 
 
+def remove_steps(text, steps, where):
+    """Delete steps of place_order: from the step's head line to the next
+    blank line inclusive. Each head must occur exactly once."""
+    lines = text.split("\n")
+    for step in steps:
+        head = FN_STEP_HEAD[step]
+        hits = [i for i, l in enumerate(lines) if l == head]
+        if len(hits) != 1:
+            raise ValueError(f"{where}: step {step} head found {len(hits)} times")
+        start = hits[0]
+        stop = lines.index("", start)
+        del lines[start:stop + 1]
+    return "\n".join(lines)
+
+
 def t1_level(on):
     return {(False, False): "none", (True, False): "map",
             (False, True): "rollup", (True, True): "both"}[
         ("t5_routing" in on, "t6_rollup" in on)]
 
 
-def variant_file(kind, tx, on):
-    """Template file for one transaction (kind: transactions | explain)."""
+def variant_source(kind, tx, on):
+    """(template file, steps of place_order removed from it) for one
+    transaction (kind: transactions | explain)."""
     shared = TEMPLATE / kind / f"{tx}.sql"
     if shared.exists():
-        return shared
+        return shared, ()
+    removed = ()
+    rc = "_rc" if "rc_lock" in on else ""
     if tx == "T1_place_order":
-        if "t1_delegation" in on:
-            # Every delegation variant issues the same call, so one explain file.
-            variant = "fn" if kind == "explain" else f"fn_{t1_level(on)}"
-        else:
+        if "t1_delegation" not in on:
             variant = f"set_{t1_level(on)}"
+        elif kind == "explain":
+            # Every delegation level issues the same call, so one explain file
+            # per mode; fn_rc also plans the locking stock check.
+            variant = f"fn{rc}"
+        else:
+            variant = f"fn_both{rc}"
+            removed = FN_REMOVED[t1_level(on)]
     else:
         factor = {"T5_update_order_status": "t5_routing",
                   "T6_global_sales": "t6_rollup",
@@ -168,106 +234,124 @@ def variant_file(kind, tx, on):
     path = TEMPLATE / kind / tx / f"{variant}.sql"
     if not path.exists():
         raise FileNotFoundError(f"missing template file {path}")
-    return path
+    return path, removed
 
 
-def optimisations_md(mask):
-    on = enabled(mask)
+def optimisations_md(m, mask):
+    on = enabled(m, mask)
+    cid = cell_id(m, mask)
+    prev = "expt_a100 (same code as the archived base)" if cid == 300 else "expt_a300 (grid base)"
     lines = [
-        "### Prev: expt_a100 (base)",
+        f"### Prev: {prev}",
         "",
-        f"Cell {mask} of the 2^5 workload-A ablation (`ablation/README.md`); "
-        "every cell's factor levels are in `ablation/manifest.csv`. Generated by "
+        f"Cell {cid} (T1 mode {m} `{T1_MODES[m][0]}`, mask {mask}) of the "
+        "2^4 x 3 workload-A ablation (`ablation/README.md`); every cell's "
+        "factor levels are in `ablation/manifest.csv`. Generated by "
         "`ablation/generate.py` from `ablation/template/`: change the template "
         "and regenerate rather than editing this directory.",
         "",
-        "Everything not listed below is exactly `expt_a100`'s (formerly "
-        "`expt_a3`): schema, distribution, indexes, T2, T3, T4, T8, T9 and "
-        "server parameters. `run.sh` also records plans outside the timed "
-        "benchmark, as `expt_a115` does.",
+        "Everything not listed below is the grid's shared reference: "
+        "`expt_a100`'s (formerly `expt_a3`) schema, distribution, indexes, T2, "
+        "T3, T4, T8, T9 and server parameters, with `expt_a9r`'s run "
+        "configuration (`--nodelist=xcnf[0-2,4,5]`, `TEAM_ID` default 4, "
+        "`PGPORT` derived from `TEAM_ID`). `run.sh` also records plans outside "
+        "the timed benchmark.",
         "",
         "Enabled factors:",
         "",
-        "| Bit (value) | Factor | Source |",
-        "| ----------- | ------ | ------ |",
+        "| Factor | Description | Source |",
+        "| ------ | ----------- | ------ |",
     ]
-    for index, (value, name, desc, source) in enumerate(FACTORS):
+    for value, name, desc, source in BITS:
         if name in on:
-            lines.append(f"| {index} ({value}) | {desc} | {source} |")
+            lines.append(f"| `{name}` (bit {value}) | {desc} | {source} |")
+    mode, desc, source = T1_MODES[m]
+    lines.append(f"| `t1_mode={mode}` (m={m}) | {desc} | {source} |")
     lines.append("")
     level = t1_level(on)
-    if "t1_delegation" in on:
-        removed = FN_REMOVED_STEPS[level]
+    if m == 0:
+        lines.append(f"T1 is {SET_T1_SOURCE[level]}'s set-based T1, unchanged.")
+    else:
+        fn_src = "`expt_a111`" if m == 1 else "`expt_a347`"
+        removed = FN_REMOVED[level]
         if removed:
+            steps = " and ".join(FN_STEP_DESC[s] for s in removed)
             lines.append(
-                f"T1's `place_order` is `expt_a111`'s with {removed} removed from "
-                "the function body. The signature, the pgbench-side statements and "
-                "the rest of the body are unchanged, and the remaining steps keep "
-                "`expt_a111`'s numbering.")
-            if "t6_rollup" not in on:
+                f"T1's `place_order` is {fn_src}'s with step{'s' if len(removed) > 1 else ''} "
+                f"{steps} removed from the function body. The signature, the "
+                "pgbench-side statements and the rest of the body are unchanged, "
+                "and the remaining steps keep the original numbering.")
+            if 6 in removed:
                 lines.append(
                     "Step 4 still has `RETURNING total_amount, created_at INTO "
                     "v_order_total, v_created_at`, although only step 6 read them.")
         else:
-            lines.append("T1 is `expt_a111`'s, unchanged.")
-    else:
-        lines.append(f"T1 is {SET_T1_SOURCE[level]}'s set-based T1, unchanged.")
-    if "repeatable_read" in on:
+            lines.append(f"T1 is {fn_src}'s, unchanged.")
+    if m == 2:
         lines += [
             "",
-            "The default transaction isolation level on every node is "
-            "`repeatable read`, not `serializable`. The teammate's argument for "
-            "why the transactions stay correct under it, and its limits, is in "
-            "`git show origin/tl:expt_a7/optimisations.md`.",
+            "READ COMMITTED is only valid together with the stock lock, which only "
+            "the delegated function has. Without `FOR UPDATE OF i`, two concurrent "
+            "orders can both pass the stock check before either decrements, and the "
+            "decrement has no stock predicate for READ COMMITTED to recheck: the "
+            "second order is accepted against stock that is gone, and only "
+            "`CHECK (quantity >= 0)` stops it, as an error rather than a clean "
+            "rejection. The lock makes the second check wait for the first order "
+            "and read its result. The full argument is in "
+            "`expt_a347/optimisations.md` (formerly `expt_a11`).",
         ]
     return "\n".join(lines) + "\n"
 
 
 def replicate_md(of):
-    lines = [
-        f"### Prev: {of}",
-        "",
-        f"Replicate: a second run of `{of}`, to measure run-to-run variation "
-        "(`ablation/README.md`; levels in `ablation/manifest.csv`). "
-        f"`transactions/` and `explain/` are byte-identical to `{of}`'s.",
-        "",
-    ]
-    if of == "expt_a100":
-        lines.append(
-            "`run.sh` is generated from `ablation/template/run.sh` with every "
-            "factor off, not copied: it is `expt_a100`'s `run.sh` plus the native "
-            "EXPLAIN step, so this run also records plans, which `expt_a100`'s "
-            "run did not.")
+    if of in RENAMED:
+        how = (f"`run.sh`, `transactions/` and `explain/` are copied "
+               f"byte-identical from `{of}` (formerly `{RENAMED[of]}`).")
     else:
-        lines.append(f"`run.sh` is byte-identical to `{of}`'s.")
-    return "\n".join(lines) + "\n"
+        how = (f"`run.sh`, `transactions/` and `explain/` are generated exactly "
+               f"as `{of}`'s and are byte-identical to them.")
+    return (f"### Prev: {of}\n\n"
+            f"Replicate: a second run of `{of}`, to measure run-to-run variation "
+            "(`ablation/README.md`; levels in `ablation/manifest.csv`). "
+            f"{how}\n")
 
 
-def cell_files(mask):
-    """{relative path: content} for one generated cell."""
-    on = enabled(mask)
+def cell_code(m, mask):
+    """{relative path: content} for one cell's run.sh, transactions, explain."""
+    on = enabled(m, mask)
     files = {"run.sh": render((TEMPLATE / "run.sh").read_text(), on,
                               "template/run.sh")}
     for kind in ("transactions", "explain"):
         for tx in TX_NAMES:
-            files[f"{kind}/{tx}.sql"] = variant_file(kind, tx, on).read_text()
-    files["optimisations.md"] = optimisations_md(mask)
+            path, removed = variant_source(kind, tx, on)
+            files[f"{kind}/{tx}.sql"] = remove_steps(
+                path.read_text(), removed, str(path.relative_to(TEMPLATE)))
+    return files
+
+
+def cell_files(m, mask):
+    files = cell_code(m, mask)
+    files["optimisations.md"] = optimisations_md(m, mask)
     return files
 
 
 def replicate_files(of):
-    src = REPO / of
-    files = {}
-    if of == "expt_a100":
-        files["run.sh"] = render((TEMPLATE / "run.sh").read_text(), set(),
-                                 "template/run.sh")
+    if of in RENAMED:
+        src = renamed_dir(of)
+        files = {"run.sh": (src / "run.sh").read_text()}
+        for kind in ("transactions", "explain"):
+            for tx in TX_NAMES:
+                files[f"{kind}/{tx}.sql"] = (src / kind / f"{tx}.sql").read_text()
     else:
-        files["run.sh"] = (src / "run.sh").read_text()
-    for kind in ("transactions", "explain"):
-        for tx in TX_NAMES:
-            files[f"{kind}/{tx}.sql"] = (src / kind / f"{tx}.sql").read_text()
+        files = cell_code(*parse_id(int(of.removeprefix("expt_a"))))
     files["optimisations.md"] = replicate_md(of)
     return files
+
+
+def outputs():
+    """Every directory name the default run writes."""
+    cells = [cell_name(m, mask) for m, mask in all_cells()]
+    return [c for c in cells if c not in RENAMED] + list(REPLICATES)
 
 
 def write_dir(target, files):
@@ -287,48 +371,52 @@ def write_dir(target, files):
             path.chmod(0o755)
 
 
+def levels(m, mask):
+    on = enabled(m, mask)
+    return [*(int(n in on) for n in BIT_NAMES), T1_MODES[m][0]]
+
+
 def manifest():
     buf = io.StringIO()
     w = csv.writer(buf, lineterminator="\n")
-    w.writerow(["experiment", "mask", *FACTOR_NAMES, "source"])
-    for mask in range(NUM_CELLS):
-        on = enabled(mask)
-        source = f"renamed from {RENAMED[mask][1]}" if mask in RENAMED else "generated"
-        w.writerow([cell_name(mask), mask, *(int(n in on) for n in FACTOR_NAMES), source])
+    w.writerow(["experiment", *BIT_NAMES, "t1_mode", "source"])
+    for m, mask in all_cells():
+        name = cell_name(m, mask)
+        source = f"renamed from {RENAMED[name]}" if name in RENAMED else "generated"
+        w.writerow([name, *levels(m, mask), source])
     for name, of in REPLICATES.items():
-        mask = int(of.removeprefix("expt_a")) - 100
-        on = enabled(mask)
-        w.writerow([name, mask, *(int(n in on) for n in FACTOR_NAMES), f"replicate of {of}"])
+        w.writerow([name, *levels(*parse_id(int(of.removeprefix("expt_a")))),
+                    f"replicate of {of}"])
     return buf.getvalue()
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", type=Path,
-                    help="write --masks into this directory instead of the repo")
-    ap.add_argument("--masks", help="comma-separated masks (with --out only)")
+                    help="write --cells into this directory instead of the repo")
+    ap.add_argument("--cells", help="comma-separated cell ids (with --out only)")
     args = ap.parse_args()
 
-    for mask, (current, _) in RENAMED.items():
-        if current != cell_name(mask):
-            raise AssertionError(f"RENAMED[{mask}] is {current}, expected {cell_name(mask)}")
-        if not (REPO / current).is_dir():
-            raise FileNotFoundError(f"renamed cell {current} is missing from {REPO}")
+    for cell in RENAMED:
+        renamed_dir(cell)
+    protected = ARCHIVE | set(RENAMED) | set(RENAMED.values())
+    if set(outputs()) & protected:
+        raise AssertionError(f"outputs overlap archived/renamed dirs: "
+                             f"{sorted(set(outputs()) & protected)}")
 
     if args.out:
-        if not args.masks:
-            ap.error("--out requires --masks")
-        for mask in (int(m) for m in args.masks.split(",")):
-            if not 0 <= mask < NUM_CELLS:
-                ap.error(f"mask {mask} out of range 0..{NUM_CELLS - 1}")
-            write_dir(args.out / cell_name(mask), cell_files(mask))
+        if not args.cells:
+            ap.error("--out requires --cells")
+        for cid in (int(c) for c in args.cells.split(",")):
+            m, mask = parse_id(cid)
+            write_dir(args.out / cell_name(m, mask), cell_files(m, mask))
         return
-    if args.masks:
-        ap.error("--masks requires --out; without --out every generated cell is written")
+    if args.cells:
+        ap.error("--cells requires --out; without --out every generated cell is written")
 
-    for mask in range(NUM_CELLS):
-        if mask not in RENAMED:
-            write_dir(REPO / cell_name(mask), cell_files(mask))
+    for m, mask in all_cells():
+        if cell_name(m, mask) not in RENAMED:
+            write_dir(REPO / cell_name(m, mask), cell_files(m, mask))
     for name, of in REPLICATES.items():
         write_dir(REPO / name, replicate_files(of))
     (ABLATION_DIR / "manifest.csv").write_text(manifest())

@@ -1,7 +1,21 @@
 #!/usr/bin/env python3
-"""Validation 1-3 for the ablation cells. Run from the repo root."""
+"""Validation for the 2^4 x 3 ablation grid. Run from the repo root after
+ablation/generate.py; exits non-zero on any failure.
+
+  1. Renamed cells: the generator's run.sh, transactions/ and explain/ for
+     expt_a323/a331/a347 equal the existing directories byte-for-byte
+     (optimisations.md is hand-written there and excluded).
+  2. Every manifest row: levels, no marker, bash -n, factor-level -> template
+     file selection, structure of run.sh and the transactions, on-disk code
+     equal to the generator's, explained statements present in the cell's own
+     transaction.
+  3. Cells differing in one binary bit or one step of m differ only in lines
+     and files belonging to that factor.
+  4. The archived 2^5 grid is never an output of the generator.
+"""
 import csv
 import difflib
+import itertools
 import re
 import subprocess
 import sys
@@ -9,6 +23,7 @@ import tempfile
 from pathlib import Path
 
 REPO = Path.cwd()
+sys.dont_write_bytecode = True  # no ablation/__pycache__ in the tree
 sys.path.insert(0, str(REPO / "ablation"))
 import generate as g  # noqa: E402
 
@@ -20,117 +35,163 @@ def bad(msg):
     print("  FAIL:", msg)
 
 
+def cell_dir(name):
+    return g.renamed_dir(name) if name in g.RENAMED else REPO / name
+
+
+def code(d):
+    """{relative path: text} of run.sh, transactions/*.sql, explain/*.sql."""
+    files = {"run.sh": (d / "run.sh").read_text()}
+    for kind in ("transactions", "explain"):
+        for p in sorted((d / kind).glob("*.sql")):
+            files[f"{kind}/{p.name}"] = p.read_text()
+    return files
+
+
 # ---------------------------------------------------------------- check 1
-TEMPLATE_RUN = (REPO / "ablation/template/run.sh").read_text().split("\n")
-# Lines of the native explain step, as they appear in the template.
-start = TEMPLATE_RUN.index("#####################  Explain transactions")
-end = next(i for i in range(start, len(TEMPLATE_RUN))
-           if TEMPLATE_RUN[i].startswith("explain_transactions &>"))
-EXPLAIN_LINES = set(TEMPLATE_RUN[start:end + 1]) | {'EXPLAIN_DIR="${SCRIPT_DIR}/explain"', ""}
-MDS_DIST = {"END IF;",
-            "IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'merchant_daily_sales'::regclass) THEN",
-            "PERFORM create_distributed_table('merchant_daily_sales', 'merchant_id', colocate_with => 'merchants');"}
+# Allowed differences between generated output and a renamed directory,
+# as {cell: {relative path: reason}}. None are expected or allowed.
+ALLOWED_DIFFS = {}
 
-
-DIST_LINE = re.compile(r"^(END IF;|IF NOT EXISTS \(SELECT 1 FROM pg_dist_partition WHERE logicalrelid = '\w+'::regclass\) THEN|PERFORM create_distributed_table\('\w+', '\w+', colocate_with => '\w+'\);)$")
-
-
-def classify(removed, added):
-    ch = [l for l in removed + added]
-    if not removed and all(l in EXPLAIN_LINES for l in added):
-        return "native-explain-step"
-    nb = [l.strip() for l in ch if l.strip()]
-    if nb and all(DIST_LINE.match(l) for l in nb):
-        return "distribute-block-reorder"
-    if all(not l.strip() or l.strip().startswith(("#", "--")) for l in ch):
-        return "comment/blank"
-    return "OTHER"
-
-
-def hunks(a, b):
-    sm = difflib.SequenceMatcher(None, a, b, autojunk=False)
-    for tag, i1, i2, j1, j2 in sm.get_opcodes():
-        if tag != "equal":
-            yield (i1 + 1, i2, j1 + 1, j2), a[i1:i2], b[j1:j2]
-
-
-print("=== Check 1: generated masks vs renamed cells")
+print("=== Check 1: generator output vs renamed cells")
 with tempfile.TemporaryDirectory() as tmp:
     tmp = Path(tmp)
-    masks = sorted(g.RENAMED)
+    ids = [int(c.removeprefix("expt_a")) for c in g.RENAMED]
     subprocess.run([sys.executable, "ablation/generate.py", "--out", str(tmp),
-                    "--masks", ",".join(map(str, masks))], check=True)
-    for mask in masks:
-        name = g.RENAMED[mask][0]
-        print(f"-- mask {mask}: {name} (was {g.RENAMED[mask][1]})")
-        a = (REPO / name / "run.sh").read_text().split("\n")
-        b = (tmp / name / "run.sh").read_text().split("\n")
-        moved_rem, moved_add = [], []
-        for (i1, i2, j1, j2), rem, add in hunks(a, b):
-            cat = classify(rem, add)
-            print(f"  run.sh hunk renamed {i1}-{i2} / generated {j1}-{j2}: "
-                  f"-{len(rem)} +{len(add)} lines -> {cat}")
-            if cat == "OTHER":
-                bad(f"{name} run.sh unexplained hunk at {i1}")
-            if cat == "distribute-block-reorder":
-                moved_rem += rem
-                moved_add += add
-                print("     moved:", sorted(set(re.findall(r"logicalrelid = '(\w+)'", " ".join(rem + add)))))
-        if sorted(moved_rem) != sorted(moved_add):
-            bad(f"{name}: distribute hunks are not a pure reorder")
-        # the distribute order itself, renamed vs generated
-        oa = re.findall(r"logicalrelid = '(\w+)'", "\n".join(a))
-        ob = re.findall(r"logicalrelid = '(\w+)'", "\n".join(b))
-        if oa != ob:
-            print(f"     distribute order renamed:  {oa[6:]}")
-            print(f"     distribute order generated: {ob[6:]}")
-        for kind in ("transactions", "explain"):
-            ren = sorted(p.name for p in (REPO / name / kind).glob("*.sql"))
-            gen = sorted(p.name for p in (tmp / name / kind).glob("*.sql"))
-            if ren != gen:
-                bad(f"{name}/{kind} file sets differ: {ren} vs {gen}")
-            for f in ren:
-                if (REPO / name / kind / f).read_bytes() != (tmp / name / kind / f).read_bytes():
-                    bad(f"{name}/{kind}/{f} differs")
-            print(f"  {kind}/*.sql: {len(ren)} files byte-identical" if ren == gen else "")
+                    "--cells", ",".join(map(str, ids))], check=True)
+    for cell in g.RENAMED:
+        have, gen = code(g.renamed_dir(cell)), code(tmp / cell)
+        if set(have) != set(gen):
+            bad(f"{cell}: file sets differ: {sorted(set(have) ^ set(gen))}")
+        diffs = [rel for rel in sorted(set(have) & set(gen)) if have[rel] != gen[rel]]
+        for rel in diffs:
+            if rel in ALLOWED_DIFFS.get(cell, {}):
+                print(f"  {cell}/{rel}: allowed difference: {ALLOWED_DIFFS[cell][rel]}")
+                continue
+            bad(f"{cell}/{rel} differs from {g.renamed_dir(cell).name}/{rel}")
+            for line in difflib.unified_diff(have[rel].split("\n"), gen[rel].split("\n"),
+                                             "renamed", "generated", n=0, lineterm=""):
+                print("     ", line)
+        print(f"  {cell} vs {g.renamed_dir(cell).name}: {len(have)} files, "
+              f"{len(have) - len(diffs)} byte-identical")
 
 # ---------------------------------------------------------------- check 2
 EXTRA = {"order_merchant_map": "t5_routing", "merchant_daily_sales": "t6_rollup",
          "product_merchant_map": "t7_routing"}
 BASE = {"merchants", "customers", "products", "inventory", "orders", "order_items"}
-SQL_KW = re.compile(r"\b(?:FROM|JOIN|INTO|UPDATE)\s+(?:public\.)?([a-z_][a-z0-9_]*)", re.I)
+# "FOR UPDATE OF i" is a row lock, not a table reference.
+SQL_KW = re.compile(r"\b(?:FROM|JOIN|INTO|(?<!FOR )UPDATE)\s+(?:public\.)?([a-z_][a-z0-9_]*)", re.I)
 CTE_DEF = re.compile(r"(?:^|,|\bWITH)\s*([a-z_][a-z0-9_]*)\s*(?:\([^)]*\))?\s+AS\s+(?:MATERIALIZED\s+)?\(", re.I | re.M)
 NOT_TABLES = {"unnest", "generate_series", "set", "input_items"}
 DECLARED = re.compile(r"^\s+(v_\w+)\s", re.M)  # plpgsql locals in place_order
+REFERENCE_CONFIG = ("#SBATCH --nodelist=xcnf[0-2,4,5]", "TEAM_ID=${TEAM_ID:-4}",
+                    "\nPGPORT=$((10#${TEAM_ID} + 5432))\n", 'WORKLOAD="${WORKLOAD:-A}"',
+                    'EXPLAIN_DIR="${SCRIPT_DIR}/explain"',
+                    'explain_transactions &>"$JOB_RESULT_DIR/explain.log"')
+MODES = {mode: m for m, (mode, _, _) in enumerate(g.T1_MODES)}
+EXPLAIN_RE = re.compile(r"EXPLAIN\s*\([^)]*\)\s*(.*?);\s*$", re.S | re.M)
+# fn_rc's explain plans the function body's locking stock check with psql
+# variables in place of the plpgsql parameters, so the statement is not in the
+# transaction file verbatim; its FOR UPDATE clause is checked instead.
+RC_LOCK_EXPLAIN = "SELECT i.quantity, p.price FROM inventory i JOIN products p"
 
 
 def strip_comments(text):
     return "\n".join(re.sub(r"--.*$", "", l) for l in text.split("\n"))
 
 
-def cell_dirs():
-    rows = list(csv.DictReader(open(REPO / "ablation/manifest.csv")))
-    return rows
+def norm(s):
+    return re.sub(r"\s+", " ", strip_comments(s)).strip()
+
+
+def expected_sources(m, on):
+    """Template file (relative to template/) and removed steps per transaction,
+    written out from the contract independently of generate.variant_source."""
+    lvl = {(0, 0): "none", (1, 0): "map", (0, 1): "rollup", (1, 1): "both"}[
+        (int("t5_routing" in on), int("t6_rollup" in on))]
+    removed = {"none": (6, 7), "map": (6,), "rollup": (7,), "both": ()}[lvl]
+    t1_tx = [f"set_{lvl}.sql", "fn_both.sql", "fn_both_rc.sql"][m]
+    t1_ex = [f"set_{lvl}.sql", "fn.sql", "fn_rc.sql"][m]
+    want = {("transactions", "T1_place_order"): (f"transactions/T1_place_order/{t1_tx}",
+                                                 removed if m else ()),
+            ("explain", "T1_place_order"): (f"explain/T1_place_order/{t1_ex}", ())}
+    for tx, f in (("T5_update_order_status", "t5_routing"), ("T6_global_sales", "t6_rollup"),
+                  ("T7_inventory_transfer", "t7_routing")):
+        for kind in ("transactions", "explain"):
+            want[(kind, tx)] = (f"{kind}/{tx}/{'on' if f in on else 'off'}.sql", ())
+    for tx in ("T2_update_inventory", "T3_order_history", "T4_product_lookup",
+               "T8_update_customer", "T9_update_product"):
+        for kind in ("transactions", "explain"):
+            want[(kind, tx)] = (f"{kind}/{tx}.sql", ())
+    return want
 
 
 print("\n=== Check 2: per-cell structure (all manifest rows)")
-rows = cell_dirs()
-if len(rows) != 34:
-    bad(f"manifest has {len(rows)} rows, expected 34")
+rows = list(csv.DictReader(open(REPO / "ablation/manifest.csv")))
+if [list(rows[0])] != [["experiment", *g.BIT_NAMES, "t1_mode", "source"]]:
+    bad(f"manifest columns {list(rows[0])}")
+names = [r["experiment"] for r in rows]
+want_names = [f"expt_a{i}" for i in range(300, 348)] + ["expt_a400", "expt_a431"]
+if names != want_names:
+    bad(f"manifest rows {names} != expt_a300..a347, expt_a400, expt_a431")
+counts = {k: sum(r["source"].startswith(k) for r in rows)
+          for k in ("generated", "renamed", "replicate")}
+print(f"  manifest: {len(rows)} rows: {counts}")
+if counts != {"generated": 45, "renamed": 3, "replicate": 2}:
+    bad(f"manifest source counts {counts}")
+
 for row in rows:
-    name, mask = row["experiment"], int(row["mask"])
-    on = g.enabled(mask)
-    for col in g.FACTOR_NAMES:
-        if int(row[col]) != int(col in on):
-            bad(f"{name}: manifest {col}={row[col]} disagrees with mask {mask}")
-    d = REPO / name
-    run = (d / "run.sh").read_text()
+    name = row["experiment"]
+    if row["source"].startswith("replicate of "):
+        of = row["source"].removeprefix("replicate of ")
+        m, mask = g.parse_id(int(of.removeprefix("expt_a")))
+    else:
+        m, mask = g.parse_id(int(name.removeprefix("expt_a")))
+    on = g.enabled(m, mask)
     errs_before = len(fail)
+    for value, col, _, _ in g.BITS:
+        if row[col] != str(int(bool(mask & value))):
+            bad(f"{name}: manifest {col}={row[col]} disagrees with mask {mask}")
+    if MODES.get(row["t1_mode"]) != m:
+        bad(f"{name}: manifest t1_mode={row['t1_mode']} disagrees with m={m}")
+    want_source = (f"renamed from {g.RENAMED[name]}" if name in g.RENAMED
+                   else row["source"] if name in g.REPLICATES else "generated")
+    if row["source"] != want_source or (name in g.REPLICATES and of != g.REPLICATES[name]):
+        bad(f"{name}: source {row['source']!r}")
+    d = cell_dir(name)
+    files = code(d)
+    run = files["run.sh"]
+
+    # on-disk code is the generator's (generated, replicate) or the source's
+    if name in g.RENAMED:
+        pass  # check 1
+    elif name in g.REPLICATES:
+        src = code(cell_dir(of))
+        if files != src:
+            bad(f"{name}: code differs from {of}: "
+                f"{sorted(k for k in set(files) | set(src) if files.get(k) != src.get(k))}")
+    else:
+        gen = g.cell_files(m, mask)
+        stale = sorted(k for k in gen if not (d / k).exists() or (d / k).read_text() != gen[k])
+        if stale:
+            bad(f"{name}: on disk differs from generator (regenerate): {stale}")
+        # factor level -> template file selection
+        for (kind, tx), (rel, removed) in expected_sources(m, on).items():
+            path, got_removed = g.variant_source(kind, tx, on)
+            if str(path.relative_to(g.TEMPLATE)) != rel or tuple(got_removed) != removed:
+                bad(f"{name}: {kind}/{tx} from {path.relative_to(g.TEMPLATE)} "
+                    f"minus steps {got_removed}, expected {rel} minus {removed}")
+
     r = subprocess.run(["bash", "-n", str(d / "run.sh")], capture_output=True, text=True)
     if r.returncode:
         bad(f"{name}: bash -n: {r.stderr.strip()}")
-    if "@ablation" in run or "@{" in run:
-        bad(f"{name}: marker left in run.sh")
+    if any("@ablation" in t or "@{" in t for t in files.values()):
+        bad(f"{name}: marker left in output")
+    for needle in REFERENCE_CONFIG:
+        if needle not in run:
+            bad(f"{name}: run.sh lacks {needle.strip()}")
+
+    # tables
     created = set(re.findall(r"CREATE TABLE IF NOT EXISTS (\w+)", run))
     dropped = set(re.findall(r"DROP TABLE IF EXISTS (\w+)", run))
     distributed = set(re.findall(r"logicalrelid = '(\w+)'::regclass", run))
@@ -146,84 +207,164 @@ for row in rows:
             bad(f"{name}: {t} created but not filled")
     if ("idx_mds_period" in run) != ("t6_rollup" in on):
         bad(f"{name}: idx_mds_period presence != t6_rollup")
-    # tables referenced by transactions
-    tx = {p.name: p.read_text() for p in (d / "transactions").glob("T*.sql")}
-    for fname, text in tx.items():
+
+    # shards8
+    shard_lines = re.findall(r"^.*(?:CITUS_SHARD_COUNT|citus\.shard_count).*$", run, re.M)
+    want_shard = ['CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT:-8}"',
+                  '\tpsqlx -v shard_count="$CITUS_SHARD_COUNT" <<\'SQL\'',
+                  'SET citus.shard_count = :shard_count;',
+                  'CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT}"']
+    if shard_lines != (want_shard if "shards8" in on else []):
+        bad(f"{name}: shard-count lines {shard_lines} wrong for shards8={'shards8' in on}")
+
+    # isolation, rc lock
+    iso = re.findall(r"^PG_ISOLATION_LEVEL=.*:-.*$", run, re.M)
+    want_iso = ('PG_ISOLATION_LEVEL="${PG_ISOLATION_LEVEL:-read committed}"' if m == 2
+                else "PG_ISOLATION_LEVEL=${PG_ISOLATION_LEVEL:-serializable}")
+    if iso != [want_iso]:
+        bad(f"{name}: isolation default {iso} != [{want_iso}]")
+
+    # transactions reference only created tables
+    for rel, text in files.items():
+        if not rel.startswith("transactions/"):
+            continue
         body = strip_comments(text)
-        ctes = {m.lower() for m in CTE_DEF.findall(body)}
-        refs = {m.lower() for m in SQL_KW.findall(body)} - ctes - NOT_TABLES
+        ctes = {x.lower() for x in CTE_DEF.findall(body)}
+        refs = {x.lower() for x in SQL_KW.findall(body)} - ctes - NOT_TABLES
         refs -= set(DECLARED.findall(body))  # SELECT/RETURNING ... INTO v_x
         refs = {x for x in refs if not x.startswith("pg_")}  # catalogs
         refs = {x for x in refs if not re.search(rf"\b{x}\s*\(", body) or x in created}
-        missing = refs - created
-        if missing:
-            bad(f"{name}/{fname}: references uncreated {sorted(missing)}")
-    t1 = strip_comments(tx["T1_place_order.sql"])
-    ins_map = bool(re.search(r"INSERT INTO (public\.)?order_merchant_map", t1))
-    ins_mds = bool(re.search(r"INSERT INTO (public\.)?merchant_daily_sales", t1))
-    if ins_map != ("t5_routing" in on):
-        bad(f"{name}: T1 map insert {ins_map} != t5_routing")
-    if ins_mds != ("t6_rollup" in on):
-        bad(f"{name}: T1 rollup upsert {ins_mds} != t6_rollup")
+        if refs - created:
+            bad(f"{name}/{rel}: references uncreated {sorted(refs - created)}")
+
+    # T1 by level
+    t1 = strip_comments(files["transactions/T1_place_order.sql"])
+    if bool(re.search(r"INSERT INTO (public\.)?order_merchant_map", t1)) != ("t5_routing" in on):
+        bad(f"{name}: T1 map insert != t5_routing")
+    if bool(re.search(r"INSERT INTO (public\.)?merchant_daily_sales", t1)) != ("t6_rollup" in on):
+        bad(f"{name}: T1 rollup upsert != t6_rollup")
+    delegated = m >= 1
     fn_block = "t1_function=$(sed -n" in run
     fn_def = "create_distributed_function" in t1 and "\\if 0" in t1
-    delegated = "t1_delegation" in on
     if fn_block != delegated or fn_def != delegated:
-        bad(f"{name}: function block {fn_block}/definition {fn_def} != t1_delegation")
+        bad(f"{name}: function block {fn_block}/definition {fn_def} != m>=1")
     if ("\nBEGIN;" in t1) == delegated:
-        bad(f"{name}: T1 transaction block presence wrong for delegation={delegated}")
-    for fname, t, f in (("T5_update_order_status.sql", "order_merchant_map", "t5_routing"),
-                        ("T6_global_sales.sql", "merchant_daily_sales", "t6_rollup"),
-                        ("T7_inventory_transfer.sql", "product_merchant_map", "t7_routing")):
-        if (t in strip_comments(tx[fname])) != (f in on):
-            bad(f"{name}: {fname} uses {t} != {f}")
-    iso = re.findall(r"^PG_ISOLATION_LEVEL=\$\{PG_ISOLATION_LEVEL:-(.*)\}$", run, re.M)
-    want_iso = '"repeatable read"' if "repeatable_read" in on else "serializable"
-    if iso != [want_iso]:
-        bad(f"{name}: isolation defaults {iso} != [{want_iso}]")
-    generated = row["source"] != "" and not row["source"].startswith("renamed")
-    if generated:
-        for needle in ("#SBATCH --nodelist=xcnf[1,3-6]", "#SBATCH --mail-user=alice_and_bob@u.nus.edu",
-                       "TEAM_ID=${TEAM_ID:-99}", 'WORKLOAD="${WORKLOAD:-A}"',
-                       'PGPORT="${PGPORT:-$((10#${TEAM_ID} + 5432))}"',
-                       'EXPLAIN_DIR="${SCRIPT_DIR}/explain"',
-                       'explain_transactions &>"$JOB_RESULT_DIR/explain.log"'):
-            if needle not in run:
-                bad(f"{name}: run.sh lacks {needle}")
+        bad(f"{name}: T1 transaction block presence wrong for m={m}")
+    if ("FOR UPDATE OF i;" in t1) != (m == 2) or \
+            ("SET plan_cache_mode = force_custom_plan" in t1) != (m == 2):
+        bad(f"{name}: T1 stock lock / plan_cache_mode presence wrong for m={m}")
+    for rel, t, f in (("transactions/T5_update_order_status.sql", "order_merchant_map", "t5_routing"),
+                      ("transactions/T6_global_sales.sql", "merchant_daily_sales", "t6_rollup"),
+                      ("transactions/T7_inventory_transfer.sql", "product_merchant_map", "t7_routing")):
+        if (t in strip_comments(files[rel])) != (f in on):
+            bad(f"{name}: {rel} uses {t} != {f}")
+
+    # explained statements appear in the cell's own transaction
+    n_explained = 0
+    for rel, text in files.items():
+        if not rel.startswith("explain/"):
+            continue
+        tx = norm(files["transactions/" + rel.removeprefix("explain/")])
+        for stmt in EXPLAIN_RE.findall(strip_comments(text)):
+            s = norm(stmt)
+            n_explained += 1
+            if m == 2 and rel == "explain/T1_place_order.sql" and s.startswith(RC_LOCK_EXPLAIN):
+                if not s.endswith("FOR UPDATE OF i") or "FOR UPDATE OF i;" not in tx:
+                    bad(f"{name}/{rel}: rc lock-check explain does not match T1")
+                continue
+            pos = tx.find(s)
+            nxt = tx[pos + len(s):].lstrip()[:5] if pos >= 0 else ""
+            if not (nxt.startswith(";") or nxt.startswith("\\gset")):
+                bad(f"{name}/{rel}: statement not in transaction: {s[:80]}...")
     status = "ok" if len(fail) == errs_before else "FAIL"
-    print(f"  {name:10s} mask {mask:2d} {row['source']:24s} {status}  tables={sorted(want - BASE)}")
+    print(f"  {name:10s} m={m} mask={mask:2d} {row['source']:24s} "
+          f"explained={n_explained} {status}")
 
 # ---------------------------------------------------------------- check 3
-print("\n=== Check 3: explained statements appear in the cell's own transaction")
+print("\n=== Check 3: one-factor neighbours differ only in that factor")
+# Lines of template/run.sh each factor controls: lines inside its blocks, and
+# every rendering of a line with an inline marker for it.
+template = (g.TEMPLATE / "run.sh").read_text().split("\n")
+owned_lines = {f: set() for f in g.TEMPLATE_FACTORS}
+block = None
+for line in template:
+    b, e = g.MARKER_BEGIN.match(line), g.MARKER_END.match(line)
+    if b:
+        block = b.group(2)
+    elif e:
+        block = None
+    elif block:
+        owned_lines[block].add(line)
+    else:
+        inl = sorted({x[1] for x in g.INLINE.findall(line)})
+        for bits in itertools.product((False, True), repeat=len(inl)):
+            on = {f for f, b2 in zip(inl, bits) if b2}
+            text = g.render(line, on, "inline")
+            for f in inl:
+                owned_lines[f].add(text)
+OWNED_FILES = {
+    "t5_routing": {"T1_place_order", "T5_update_order_status"},
+    "t6_rollup": {"T1_place_order", "T6_global_sales"},
+    "t7_routing": {"T7_inventory_transfer"},
+    "shards8": set(),
+    "t1_delegation": {"T1_place_order"},
+    "rc_lock": {"T1_place_order"},
+}
+pairs = []
+for m, mask in g.all_cells():
+    for value, f, _, _ in g.BITS:
+        if not mask & value:
+            pairs.append(((m, mask), (m, mask | value), f))
+    if m + 1 < len(g.T1_MODES):
+        pairs.append(((m, mask), (m + 1, mask), ["t1_delegation", "rc_lock"][m]))
+per_factor = {}
+for a, b, f in pairs:
+    na, nb = g.cell_name(*a), g.cell_name(*b)
+    ca, cb = code(cell_dir(na)), code(cell_dir(nb))
+    sm = difflib.SequenceMatcher(None, ca["run.sh"].split("\n"), cb["run.sh"].split("\n"),
+                                 autojunk=False)
+    changed = [l for tag, i1, i2, j1, j2 in sm.get_opcodes() if tag != "equal"
+               for l in ca["run.sh"].split("\n")[i1:i2] + cb["run.sh"].split("\n")[j1:j2]]
+    foreign = [l for l in changed if l not in owned_lines[f]]
+    if not changed:
+        bad(f"{na} -> {nb} ({f}): run.sh identical")
+    if foreign:
+        bad(f"{na} -> {nb} ({f}): run.sh lines not owned by {f}: {foreign[:3]}")
+    diff_files = {k for k in set(ca) | set(cb) if k != "run.sh" and ca.get(k) != cb.get(k)}
+    stray = {k for k in diff_files if Path(k).stem not in OWNED_FILES[f]}
+    if stray:
+        bad(f"{na} -> {nb} ({f}): files outside {f}: {sorted(stray)}")
+    if bool(diff_files) != bool(OWNED_FILES[f]):
+        bad(f"{na} -> {nb} ({f}): changed files {sorted(diff_files)}")
+    st = per_factor.setdefault(f, [0, set()])
+    st[0] += 1
+    st[1].add(len(changed))
+for f, (n, sizes) in per_factor.items():
+    print(f"  {f:14s} {n:3d} pairs, changed run.sh lines per pair: {sorted(sizes)}")
+print(f"  total {len(pairs)} pairs")
 
-
-def norm(s):
-    return re.sub(r"\s+", " ", strip_comments(s)).strip()
-
-
-EXPLAIN_RE = re.compile(r"EXPLAIN\s*\([^)]*\)\s*(.*?);\s*$", re.S | re.M)
-total = 0
-for row in rows:
-    name = row["experiment"]
-    d = REPO / name
-    n_cell = 0
-    for ex in sorted((d / "explain").glob("T*.sql")):
-        tx = norm((d / "transactions" / ex.name).read_text())
-        text = strip_comments(ex.read_text())
-        for stmt in EXPLAIN_RE.findall(text):
-            s = norm(stmt)
-            pos = tx.find(s)
-            ok = pos >= 0 and tx[pos + len(s):pos + len(s) + 1] in (";", "\\", " ")
-            # a match must end the statement: next token is ';' or '\gset'
-            if ok:
-                nxt = tx[pos + len(s):].lstrip()[:5]
-                ok = nxt.startswith(";") or nxt.startswith("\\gset")
-            n_cell += 1
-            if not ok:
-                bad(f"{name}/explain/{ex.name}: statement not in transaction: {s[:80]}...")
-    total += n_cell
-    print(f"  {name:10s} {n_cell} explained statements checked")
-print(f"  total {total}")
+# ---------------------------------------------------------------- check 4
+print("\n=== Check 4: archive is never an output")
+ARCHIVE = {f"expt_a{i}" for i in range(100, 132)} | {"expt_a200", "expt_a215"}
+outs = g.outputs()
+print(f"  generator outputs: {len(outs)} "
+      f"({len([o for o in outs if o not in g.REPLICATES])} cells + {len(g.REPLICATES)} replicates)")
+if len(outs) != 47 or len(set(outs)) != 47:
+    bad(f"expected 45 generated cells + 2 replicates, got {len(outs)}")
+overlap = set(outs) & (ARCHIVE | set(g.RENAMED) | set(g.RENAMED.values()))
+if overlap:
+    bad(f"outputs include archived or renamed dirs: {sorted(overlap)}")
+if g.ARCHIVE != ARCHIVE:
+    bad("generate.ARCHIVE differs from the archive list")
+if (REPO / ".git").exists():
+    present = sorted(p.name for p in REPO.glob("expt_a*") if p.name in ARCHIVE)
+    r = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", *present])
+    if r.returncode:
+        bad("archive dirs have changes against HEAD")
+    else:
+        print(f"  {len(present)} archive dirs unchanged against HEAD")
+else:
+    print("  no .git: archive contents not compared against HEAD")
 
 print("\nRESULT:", "FAIL" if fail else "all checks passed", f"({len(fail)} failures)")
 sys.exit(1 if fail else 0)
