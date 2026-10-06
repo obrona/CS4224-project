@@ -2,7 +2,7 @@
 """Validation for the 2^4 x 3 ablation grid. Run from the repo root after
 ablation/generate.py; exits non-zero on any failure.
 
-  1. Renamed cells: the generator's run.sh, transactions/ and explain/ for
+  1. Existing cells: the generator's run.sh, transactions/ and explain/ for
      expt_a323/a331/a347 equal the existing directories byte-for-byte
      (optimisations.md is hand-written there and excluded).
   2. Every manifest row: levels, no marker, bash -n, factor-level -> template
@@ -11,7 +11,11 @@ ablation/generate.py; exits non-zero on any failure.
      transaction.
   3. Cells differing in one binary bit or one step of m differ only in lines
      and files belonging to that factor.
-  4. The archived 2^5 grid is never an output of the generator.
+  4. The generator's outputs: 45 generated cells and the replicates, never an
+     existing cell; replicates are named expt_a<id>_<k> after their cell.
+  5. A directory with slurm-results/ keeps its code: the generator refuses to
+     change run.sh, transactions/ or explain/ there, but rewrites
+     optimisations.md.
 """
 import csv
 import difflib
@@ -35,10 +39,6 @@ def bad(msg):
     print("  FAIL:", msg)
 
 
-def cell_dir(name):
-    return g.renamed_dir(name) if name in g.RENAMED else REPO / name
-
-
 def code(d):
     """{relative path: text} of run.sh, transactions/*.sql, explain/*.sql."""
     files = {"run.sh": (d / "run.sh").read_text()}
@@ -49,18 +49,18 @@ def code(d):
 
 
 # ---------------------------------------------------------------- check 1
-# Allowed differences between generated output and a renamed directory,
+# Allowed differences between generated output and an existing directory,
 # as {cell: {relative path: reason}}. None are expected or allowed.
 ALLOWED_DIFFS = {}
 
-print("=== Check 1: generator output vs renamed cells")
+print("=== Check 1: generator output vs existing cells")
 with tempfile.TemporaryDirectory() as tmp:
     tmp = Path(tmp)
-    ids = [int(c.removeprefix("expt_a")) for c in g.RENAMED]
+    ids = [int(c.removeprefix("expt_a")) for c in sorted(g.EXISTING)]
     subprocess.run([sys.executable, "ablation/generate.py", "--out", str(tmp),
                     "--cells", ",".join(map(str, ids))], check=True)
-    for cell in g.RENAMED:
-        have, gen = code(g.renamed_dir(cell)), code(tmp / cell)
+    for cell in sorted(g.EXISTING):
+        have, gen = code(REPO / cell), code(tmp / cell)
         if set(have) != set(gen):
             bad(f"{cell}: file sets differ: {sorted(set(have) ^ set(gen))}")
         diffs = [rel for rel in sorted(set(have) & set(gen)) if have[rel] != gen[rel]]
@@ -68,11 +68,11 @@ with tempfile.TemporaryDirectory() as tmp:
             if rel in ALLOWED_DIFFS.get(cell, {}):
                 print(f"  {cell}/{rel}: allowed difference: {ALLOWED_DIFFS[cell][rel]}")
                 continue
-            bad(f"{cell}/{rel} differs from {g.renamed_dir(cell).name}/{rel}")
+            bad(f"{cell}/{rel}: generated differs from the existing directory")
             for line in difflib.unified_diff(have[rel].split("\n"), gen[rel].split("\n"),
-                                             "renamed", "generated", n=0, lineterm=""):
+                                             "existing", "generated", n=0, lineterm=""):
                 print("     ", line)
-        print(f"  {cell} vs {g.renamed_dir(cell).name}: {len(have)} files, "
+        print(f"  {cell}: {len(have)} files, "
               f"{len(have) - len(diffs)} byte-identical")
 
 # ---------------------------------------------------------------- check 2
@@ -88,7 +88,7 @@ REFERENCE_CONFIG = ("#SBATCH --nodelist=xcnf[0-2,4,5]", "TEAM_ID=${TEAM_ID:-4}",
                     "\nPGPORT=$((10#${TEAM_ID} + 5432))\n", 'WORKLOAD="${WORKLOAD:-A}"',
                     'EXPLAIN_DIR="${SCRIPT_DIR}/explain"',
                     'explain_transactions &>"$JOB_RESULT_DIR/explain.log"')
-MODES = {mode: m for m, (mode, _, _) in enumerate(g.T1_MODES)}
+MODES = {mode: m for m, (mode, _) in enumerate(g.T1_MODES)}
 EXPLAIN_RE = re.compile(r"EXPLAIN\s*\([^)]*\)\s*(.*?);\s*$", re.S | re.M)
 # fn_rc's explain plans the function body's locking stock check with psql
 # variables in place of the plpgsql parameters, so the statement is not in the
@@ -131,13 +131,13 @@ rows = list(csv.DictReader(open(REPO / "ablation/manifest.csv")))
 if [list(rows[0])] != [["experiment", *g.BIT_NAMES, "t1_mode", "source"]]:
     bad(f"manifest columns {list(rows[0])}")
 names = [r["experiment"] for r in rows]
-want_names = [f"expt_a{i}" for i in range(300, 348)] + ["expt_a400", "expt_a431"]
+want_names = [f"expt_a{i}" for i in range(300, 348)] + ["expt_a300_1", "expt_a331_1"]
 if names != want_names:
-    bad(f"manifest rows {names} != expt_a300..a347, expt_a400, expt_a431")
+    bad(f"manifest rows {names} != expt_a300..a347, expt_a300_1, expt_a331_1")
 counts = {k: sum(r["source"].startswith(k) for r in rows)
-          for k in ("generated", "renamed", "replicate")}
+          for k in ("generated", "existing", "replicate")}
 print(f"  manifest: {len(rows)} rows: {counts}")
-if counts != {"generated": 45, "renamed": 3, "replicate": 2}:
+if counts != {"generated": 45, "existing": 3, "replicate": 2}:
     bad(f"manifest source counts {counts}")
 
 for row in rows:
@@ -149,24 +149,24 @@ for row in rows:
         m, mask = g.parse_id(int(name.removeprefix("expt_a")))
     on = g.enabled(m, mask)
     errs_before = len(fail)
-    for value, col, _, _ in g.BITS:
+    for value, col, _ in g.BITS:
         if row[col] != str(int(bool(mask & value))):
             bad(f"{name}: manifest {col}={row[col]} disagrees with mask {mask}")
     if MODES.get(row["t1_mode"]) != m:
         bad(f"{name}: manifest t1_mode={row['t1_mode']} disagrees with m={m}")
-    want_source = (f"renamed from {g.RENAMED[name]}" if name in g.RENAMED
+    want_source = ("existing" if name in g.EXISTING
                    else row["source"] if name in g.REPLICATES else "generated")
     if row["source"] != want_source or (name in g.REPLICATES and of != g.REPLICATES[name]):
         bad(f"{name}: source {row['source']!r}")
-    d = cell_dir(name)
+    d = REPO / name
     files = code(d)
     run = files["run.sh"]
 
     # on-disk code is the generator's (generated, replicate) or the source's
-    if name in g.RENAMED:
+    if name in g.EXISTING:
         pass  # check 1
     elif name in g.REPLICATES:
-        src = code(cell_dir(of))
+        src = code(REPO / of)
         if files != src:
             bad(f"{name}: code differs from {of}: "
                 f"{sorted(k for k in set(files) | set(src) if files.get(k) != src.get(k))}")
@@ -312,7 +312,7 @@ OWNED_FILES = {
 }
 pairs = []
 for m, mask in g.all_cells():
-    for value, f, _, _ in g.BITS:
+    for value, f, _ in g.BITS:
         if not mask & value:
             pairs.append(((m, mask), (m, mask | value), f))
     if m + 1 < len(g.T1_MODES):
@@ -320,7 +320,7 @@ for m, mask in g.all_cells():
 per_factor = {}
 for a, b, f in pairs:
     na, nb = g.cell_name(*a), g.cell_name(*b)
-    ca, cb = code(cell_dir(na)), code(cell_dir(nb))
+    ca, cb = code(REPO / na), code(REPO / nb)
     sm = difflib.SequenceMatcher(None, ca["run.sh"].split("\n"), cb["run.sh"].split("\n"),
                                  autojunk=False)
     changed = [l for tag, i1, i2, j1, j2 in sm.get_opcodes() if tag != "equal"
@@ -344,27 +344,46 @@ for f, (n, sizes) in per_factor.items():
 print(f"  total {len(pairs)} pairs")
 
 # ---------------------------------------------------------------- check 4
-print("\n=== Check 4: archive is never an output")
-ARCHIVE = {f"expt_a{i}" for i in range(100, 132)} | {"expt_a200", "expt_a215"}
+print("\n=== Check 4: generator outputs and replicate names")
 outs = g.outputs()
 print(f"  generator outputs: {len(outs)} "
       f"({len([o for o in outs if o not in g.REPLICATES])} cells + {len(g.REPLICATES)} replicates)")
 if len(outs) != 47 or len(set(outs)) != 47:
     bad(f"expected 45 generated cells + 2 replicates, got {len(outs)}")
-overlap = set(outs) & (ARCHIVE | set(g.RENAMED) | set(g.RENAMED.values()))
-if overlap:
-    bad(f"outputs include archived or renamed dirs: {sorted(overlap)}")
-if g.ARCHIVE != ARCHIVE:
-    bad("generate.ARCHIVE differs from the archive list")
-if (REPO / ".git").exists():
-    present = sorted(p.name for p in REPO.glob("expt_a*") if p.name in ARCHIVE)
-    r = subprocess.run(["git", "diff", "--quiet", "HEAD", "--", *present])
-    if r.returncode:
-        bad("archive dirs have changes against HEAD")
+if set(outs) & g.EXISTING:
+    bad(f"outputs include existing cells: {sorted(set(outs) & g.EXISTING)}")
+try:
+    g.check_names()
+except (ValueError, FileNotFoundError) as e:
+    bad(f"names: {e}")
+
+# ---------------------------------------------------------------- check 5
+print("\n=== Check 5: a directory with slurm-results/ keeps its code")
+with tempfile.TemporaryDirectory() as tmp:
+    d = Path(tmp) / "expt_a300"
+    files = g.cell_files(0, 0)
+    g.write_dir(d, files)
+    (d / g.RESULTS_SENTINEL).mkdir()
+    docs = dict(files, **{"optimisations.md": files["optimisations.md"] + "edited\n"})
+    try:
+        g.write_dir(d, docs)
+    except RuntimeError as e:
+        bad(f"docs-only rewrite of a run directory refused: {e}")
+    if (d / "optimisations.md").read_text() != docs["optimisations.md"]:
+        bad("docs-only rewrite of a run directory did not write optimisations.md")
     else:
-        print(f"  {len(present)} archive dirs unchanged against HEAD")
-else:
-    print("  no .git: archive contents not compared against HEAD")
+        print("  optimisations.md rewritten in a directory with slurm-results/")
+    for rel in ("run.sh", "transactions/T1_place_order.sql", "explain/T6_global_sales.sql"):
+        changed = dict(docs, **{rel: files[rel] + "-- changed\n"})
+        try:
+            g.write_dir(d, changed)
+        except RuntimeError:
+            if code(d) != {k: v for k, v in files.items() if k != "optimisations.md"}:
+                bad(f"refused change to {rel} but the directory's code changed anyway")
+            else:
+                print(f"  change to {rel} refused, code untouched")
+        else:
+            bad(f"write_dir changed {rel} in a directory with slurm-results/")
 
 print("\nRESULT:", "FAIL" if fail else "all checks passed", f"({len(fail)} failures)")
 sys.exit(1 if fail else 0)

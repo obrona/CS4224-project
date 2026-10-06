@@ -1,4 +1,6 @@
-### Prev: expt_a9
+### Prev: expt_a9 (history only)
+
+This run was first run as `expt_a10` on branch main, and `a9` below is `expt_a9`, the experiment it was compared against there; neither name is a directory on this branch (see git history). `expt_a323` has `expt_a9`'s code.
 
 This experiment tests the first step of the shard-count reduction for workload A:
 8 shards per distributed table instead of the 32 used by `expt_a9`. It copies
@@ -56,7 +58,7 @@ four-client result is slightly worse: the gain appears under concurrent load.
 ### What the EXPLAIN logs show
 
 The recorded T6 plan confirms the intended change: `Task Count` is 32 in
-`expt_a9/slurm-results/job-883120/explain.log` and 8 in
+`expt_a9`'s `slurm-results/job-883120/explain.log` and 8 in
 `slurm-results/job-892423/explain.log`. In these one-off, untimed plan
 captures, each shard computes local aggregates and a top 20; the coordinator
 sorts the candidates. Citus receives 640 candidate rows (20 kB) from 32
@@ -101,12 +103,12 @@ the shard-count effect. It should also replace the incomplete 32-client
 measurement. A 4-shard run on those nodes could test whether one shard per
 worker helps further.
 
-### Rerun on one node set: job 904117 versus `expt_a9r` job 904119
+### Rerun on one node set: job 904117 versus `expt_a323` job 904119
 
 The results above compare different node sets, so they are not attributable.
-This rerun ran `expt_a10`, `expt_a11` and `expt_a9r` (a control with
-`expt_a115`'s code) concurrently on `xcnf[0-2,4,5]`, with team IDs 4, 104 and
-204. From each job's `summary.csv`:
+This rerun ran this experiment, `expt_a347` and `expt_a323` (a control with
+`expt_a9`'s code) concurrently on `xcnf[0-2,4,5]`, with team IDs 4, 104 and
+204. From each job's `summary.csv` (`a9r` is `expt_a323`, `a10` this experiment):
 
 | Clients | `a9r` TPS | `a10` TPS | Change | `a9r` failed | `a10` failed |
 | ------- | -------: | --------: | -----: | ----------: | ----------: |

@@ -3,14 +3,14 @@
 
 Four binary factors (BITS) and a three-level T1 mode m (T1_MODES). A cell is
 expt_a<300 + 16*m + mask>, where mask is the sum of the enabled bits. Three
-cells are earlier experiments renamed in place (RENAMED); this script never
-writes to them, nor to the archived 2^5 grid (ARCHIVE). Every other cell, and
-the replicates in REPLICATES, is written as a standalone experiment directory:
-run.sh, transactions/T1..T9, explain/T1..T9 and optimisations.md. Nothing in a
-generated directory refers back to this script at run time.
+cells were run before this script existed (EXISTING); it never writes to them.
+Every other cell, and the replicates in REPLICATES, is written as a standalone
+experiment directory: run.sh, transactions/T1..T9, explain/T1..T9 and
+optimisations.md. Nothing in a generated directory refers back to this script
+at run time.
 
 Sources, all under ablation/template/:
-  run.sh      expt_a9r's run.sh with factor markers. A block between
+  run.sh      expt_a323's run.sh with factor markers. A block between
               "# @ablation-begin F" and "# @ablation-end F" is kept iff factor
               F is on ("!F": iff F is off); "@{F:text}" inside a line becomes
               text iff F is on. Every marker is removed from the output. F is
@@ -39,52 +39,49 @@ ABLATION_DIR = Path(__file__).resolve().parent
 REPO = ABLATION_DIR.parent
 TEMPLATE = ABLATION_DIR / "template"
 
-# (bit value, manifest column, one-line description, source experiment)
+# (bit value, manifest column, one-line description)
 BITS = [
     (1, "t5_routing",
      "T5 routing: T5 looks up `order_merchant_map`; T1 inserts the map row; "
-     "`run.sh` creates, distributes, fills and truncates `order_merchant_map`",
-     "`expt_a101` (formerly `expt_a4`)"),
+     "`run.sh` creates, distributes, fills and truncates `order_merchant_map`"),
     (2, "t6_rollup",
      "T6 rollup: T6 reads `merchant_daily_sales`; T1 upserts the rollup row; "
-     "`run.sh` creates it with `idx_mds_period`, distributes, fills and truncates it",
-     "`expt_a102` (formerly `expt_a5`)"),
+     "`run.sh` creates it with `idx_mds_period`, distributes, fills and truncates it"),
     (4, "t7_routing",
-     "T7 routing: T7 looks up `product_merchant_map` before `BEGIN` and routes "
-     "its two `UPDATE`s; `run.sh` creates, distributes, fills and truncates "
-     "`product_merchant_map`",
-     "`expt_b7` (identical T7 in `expt_a105`, formerly `expt_a8`)"),
+     "T7 routing: T7 is `expt_b7`'s: it looks up `product_merchant_map` before "
+     "`BEGIN` and routes its two `UPDATE`s; `run.sh` creates, distributes, fills "
+     "and truncates `product_merchant_map`"),
     (8, "shards8",
      "Eight shards: `run.sh` sets `citus.shard_count` to `CITUS_SHARD_COUNT` "
      "(default 8, Citus's own default is 32) in the session that distributes "
-     "every table, and records it in `config.txt`",
-     "`expt_a331` (formerly `expt_a10`)"),
+     "every table, and records it in `config.txt`"),
 ]
 BIT_NAMES = [b[1] for b in BITS]
 NUM_MASKS = 16
 
-# m -> (manifest t1_mode, description, source experiment)
+# m -> (manifest t1_mode, description)
 T1_MODES = [
-    ("set", "T1 is the set-based CTE T1 inside `BEGIN`/`COMMIT`",
-     "`expt_a100` to `expt_a103`"),
+    ("set", "T1 is the set-based CTE T1 inside `BEGIN`/`COMMIT`"),
     ("fn", "T1 delegation: T1 is the `place_order` distributed function, called "
-     "outside a transaction block; `run.sh` creates and distributes the function",
-     "`expt_a111` (formerly `expt_a7`)"),
+     "outside a transaction block; `run.sh` creates and distributes the function"),
     ("fn_rc", "T1 delegation under READ COMMITTED: as `fn`, plus "
      "`PG_ISOLATION_LEVEL` defaults to `read committed`, `place_order`'s stock "
      "check takes `FOR UPDATE OF i`, and the function sets "
-     "`plan_cache_mode = force_custom_plan`",
-     "`expt_a347` (formerly `expt_a11`)"),
+     "`plan_cache_mode = force_custom_plan`"),
 ]
 TEMPLATE_FACTORS = BIT_NAMES + ["t1_delegation", "rc_lock"]
 
-# Cell name -> directory that holds it. Those directories are renamed to
-# expt_a323/a331/a347 by `git mv` before the generator is run in the repo.
-RENAMED = {"expt_a323": "expt_a9r", "expt_a331": "expt_a10", "expt_a347": "expt_a11"}
-# replicate directory -> the cell it is a second run of
-REPLICATES = {"expt_a400": "expt_a300", "expt_a431": "expt_a331"}
-# The earlier 2^5 grid on xcnf[1,3-6]; never an output of this script.
-ARCHIVE = {f"expt_a{100 + i}" for i in range(32)} | {"expt_a200", "expt_a215"}
+# Cells that were run before this script existed. Their directories hold
+# results and a hand-written optimisations.md; this script never writes to them.
+# Their code equals this script's output (ablation/validate.py, check 1).
+EXISTING = {"expt_a323", "expt_a331", "expt_a347"}
+# replicate directory expt_a<id>_<k> (the k-th extra run) -> the cell it reruns
+REPLICATES = {"expt_a300_1": "expt_a300", "expt_a331_1": "expt_a331"}
+REPLICATE_NAME = re.compile(r"^(expt_a\d+)_([1-9]\d*)$")
+# A directory with this entry holds the results of a run: its code must not change.
+RESULTS_SENTINEL = "slurm-results"
+# Files of a cell that are documentation; every other file is code.
+DOC_FILES = {"optimisations.md"}
 
 TX_NAMES = [
     "T1_place_order", "T2_update_inventory", "T3_order_history",
@@ -100,10 +97,6 @@ FN_STEP_HEAD = {
 FN_STEP_DESC = {6: "6 (`merchant_daily_sales` upsert)", 7: "7 (`order_merchant_map` insert)"}
 # T1 level -> steps of place_order removed for it
 FN_REMOVED = {"none": (6, 7), "map": (6,), "rollup": (7,), "both": ()}
-SET_T1_SOURCE = {
-    "none": "`expt_a100`", "map": "`expt_a101`",
-    "rollup": "`expt_a102`", "both": "`expt_a103`",
-}
 
 MARKER_BEGIN = re.compile(r"^# @ablation-begin (!?)(\w+)$")
 MARKER_END = re.compile(r"^# @ablation-end (!?)(\w+)$")
@@ -131,22 +124,12 @@ def all_cells():
 
 def enabled(m, mask):
     """Template factors that are on for a cell."""
-    on = {name for bit, name, _, _ in BITS if mask & bit}
+    on = {name for bit, name, _ in BITS if mask & bit}
     if m >= 1:
         on.add("t1_delegation")
     if m == 2:
         on.add("rc_lock")
     return on
-
-
-def renamed_dir(cell):
-    """Directory holding a renamed cell: its new name once `git mv` has run,
-    else the pre-rename directory (scratch trees and validation)."""
-    for name in (cell, RENAMED[cell]):
-        if (REPO / name).is_dir():
-            return REPO / name
-    raise FileNotFoundError(f"renamed cell {cell} is missing: neither {REPO / cell} "
-                            f"nor {REPO / RENAMED[cell]} exists")
 
 
 def check_factor(name, where):
@@ -240,7 +223,7 @@ def variant_source(kind, tx, on):
 def optimisations_md(m, mask):
     on = enabled(m, mask)
     cid = cell_id(m, mask)
-    prev = "expt_a100 (same code as the archived base)" if cid == 300 else "expt_a300 (grid base)"
+    prev = "none (grid base)" if cid == 300 else "expt_a300 (grid base)"
     lines = [
         f"### Prev: {prev}",
         "",
@@ -250,29 +233,30 @@ def optimisations_md(m, mask):
         "`ablation/generate.py` from `ablation/template/`: change the template "
         "and regenerate rather than editing this directory.",
         "",
-        "Everything not listed below is the grid's shared reference: "
-        "`expt_a100`'s (formerly `expt_a3`) schema, distribution, indexes, T2, "
-        "T3, T4, T8, T9 and server parameters, with `expt_a9r`'s run "
-        "configuration (`--nodelist=xcnf[0-2,4,5]`, `TEAM_ID` default 4, "
-        "`PGPORT` derived from `TEAM_ID`). `run.sh` also records plans outside "
-        "the timed benchmark.",
+        "Everything not listed below is the grid's shared reference: the schema, "
+        "distribution, indexes, T2, T3, T4, T8, T9 and server parameters of the "
+        "workload-A base design (formerly `expt_a3`, see git history), with "
+        "`expt_a323`'s run configuration (`--nodelist=xcnf[0-2,4,5]`, `TEAM_ID` "
+        "default 4, `PGPORT` derived from `TEAM_ID`). `run.sh` also records plans "
+        "outside the timed benchmark.",
         "",
         "Enabled factors:",
         "",
-        "| Factor | Description | Source |",
-        "| ------ | ----------- | ------ |",
+        "| Factor | Description |",
+        "| ------ | ----------- |",
     ]
-    for value, name, desc, source in BITS:
+    for value, name, desc in BITS:
         if name in on:
-            lines.append(f"| `{name}` (bit {value}) | {desc} | {source} |")
-    mode, desc, source = T1_MODES[m]
-    lines.append(f"| `t1_mode={mode}` (m={m}) | {desc} | {source} |")
+            lines.append(f"| `{name}` (bit {value}) | {desc} |")
+    mode, desc = T1_MODES[m]
+    lines.append(f"| `t1_mode={mode}` (m={m}) | {desc} |")
     lines.append("")
     level = t1_level(on)
     if m == 0:
-        lines.append(f"T1 is {SET_T1_SOURCE[level]}'s set-based T1, unchanged.")
+        lines.append(f"T1 is `ablation/template/transactions/T1_place_order/set_{level}.sql`, "
+                     "unchanged.")
     else:
-        fn_src = "`expt_a111`" if m == 1 else "`expt_a347`"
+        fn_src = "`expt_a323`" if m == 1 else "`expt_a347`"
         removed = FN_REMOVED[level]
         if removed:
             steps = " and ".join(FN_STEP_DESC[s] for s in removed)
@@ -298,15 +282,15 @@ def optimisations_md(m, mask):
             "`CHECK (quantity >= 0)` stops it, as an error rather than a clean "
             "rejection. The lock makes the second check wait for the first order "
             "and read its result. The full argument is in "
-            "`expt_a347/optimisations.md` (formerly `expt_a11`).",
+            "`expt_a347/optimisations.md`.",
         ]
     return "\n".join(lines) + "\n"
 
 
 def replicate_md(of):
-    if of in RENAMED:
+    if of in EXISTING:
         how = (f"`run.sh`, `transactions/` and `explain/` are copied "
-               f"byte-identical from `{of}` (formerly `{RENAMED[of]}`).")
+               f"byte-identical from `{of}`.")
     else:
         how = (f"`run.sh`, `transactions/` and `explain/` are generated exactly "
                f"as `{of}`'s and are byte-identical to them.")
@@ -336,8 +320,8 @@ def cell_files(m, mask):
 
 
 def replicate_files(of):
-    if of in RENAMED:
-        src = renamed_dir(of)
+    if of in EXISTING:
+        src = REPO / of
         files = {"run.sh": (src / "run.sh").read_text()}
         for kind in ("transactions", "explain"):
             for tx in TX_NAMES:
@@ -351,17 +335,33 @@ def replicate_files(of):
 def outputs():
     """Every directory name the default run writes."""
     cells = [cell_name(m, mask) for m, mask in all_cells()]
-    return [c for c in cells if c not in RENAMED] + list(REPLICATES)
+    return [c for c in cells if c not in EXISTING] + list(REPLICATES)
+
+
+def check_names():
+    """Raise unless every EXISTING cell is a grid cell with a directory and every
+    replicate is named expt_a<id>_<k> after the grid cell it reruns."""
+    for cell in sorted(EXISTING):
+        parse_id(int(cell.removeprefix("expt_a")))
+        if not (REPO / cell).is_dir():
+            raise FileNotFoundError(f"existing cell {cell} is missing: {REPO / cell}")
+    for name, of in REPLICATES.items():
+        mt = REPLICATE_NAME.match(name)
+        if not mt or mt.group(1) != of:
+            raise ValueError(f"replicate {name} of {of} must be named {of}_<k>, k >= 1")
+        parse_id(int(of.removeprefix("expt_a")))
 
 
 def write_dir(target, files):
-    """Write files into target, leaving anything else there (results) alone."""
-    if (target / "slurm-results").exists():
-        stale = [rel for rel, text in files.items()
-                 if not (target / rel).exists() or (target / rel).read_text() != text]
+    """Write files into target, leaving anything else there (results) alone.
+    A directory with RESULTS_SENTINEL holds a run: refuse if any code file would
+    change; its documentation (DOC_FILES) may still be rewritten."""
+    if (target / RESULTS_SENTINEL).exists():
+        stale = [rel for rel, text in files.items() if rel not in DOC_FILES
+                 and (not (target / rel).exists() or (target / rel).read_text() != text)]
         if stale:
             raise RuntimeError(
-                f"{target} has slurm-results/ but its code would change "
+                f"{target} has {RESULTS_SENTINEL}/ but its code would change "
                 f"({', '.join(stale)}); refusing to rewrite a run experiment")
     for rel, text in files.items():
         path = target / rel
@@ -382,8 +382,7 @@ def manifest():
     w.writerow(["experiment", *BIT_NAMES, "t1_mode", "source"])
     for m, mask in all_cells():
         name = cell_name(m, mask)
-        source = f"renamed from {RENAMED[name]}" if name in RENAMED else "generated"
-        w.writerow([name, *levels(m, mask), source])
+        w.writerow([name, *levels(m, mask), "existing" if name in EXISTING else "generated"])
     for name, of in REPLICATES.items():
         w.writerow([name, *levels(*parse_id(int(of.removeprefix("expt_a")))),
                     f"replicate of {of}"])
@@ -397,12 +396,7 @@ def main():
     ap.add_argument("--cells", help="comma-separated cell ids (with --out only)")
     args = ap.parse_args()
 
-    for cell in RENAMED:
-        renamed_dir(cell)
-    protected = ARCHIVE | set(RENAMED) | set(RENAMED.values())
-    if set(outputs()) & protected:
-        raise AssertionError(f"outputs overlap archived/renamed dirs: "
-                             f"{sorted(set(outputs()) & protected)}")
+    check_names()
 
     if args.out:
         if not args.cells:
@@ -415,7 +409,7 @@ def main():
         ap.error("--cells requires --out; without --out every generated cell is written")
 
     for m, mask in all_cells():
-        if cell_name(m, mask) not in RENAMED:
+        if cell_name(m, mask) not in EXISTING:
             write_dir(REPO / cell_name(m, mask), cell_files(m, mask))
     for name, of in REPLICATES.items():
         write_dir(REPO / name, replicate_files(of))

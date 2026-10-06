@@ -1,5 +1,7 @@
 # Experiment A11: READ COMMITTED with locked stock checks
 
+This run was first run as `expt_a11` on branch main; see git history. A10 below is `expt_a331`.
+
 ## Base and change
 
 A11 copies A10's schema, eight-shard layout, transaction mix, and all other transaction SQL. It changes the default transaction isolation on every PostgreSQL node from `serializable` to `read committed` and adds `FOR UPDATE OF i` to the inventory stock check in `place_order`. The function uses `plan_cache_mode = force_custom_plan` so its parameterized locking query is planned for the current merchant and remains routable to one Citus shard. `explain/T1_place_order.sql` plans that locking query separately, without executing it.
@@ -16,4 +18,4 @@ The rollup upsert can wait for another T1 and add to its committed count and rev
 
 Run from this folder so `SLURM_SUBMIT_DIR` resolves `transactions/` and `explain/` here. Keep A10 and A11 on the same five nodes and use the same benchmark settings. Check `config.txt` for `PG_ISOLATION_LEVEL=read committed` and `CITUS_SHARD_COUNT=8`. Confirm `explain.log` shows one Citus task and `LockRows` for T1's stock check. Compare throughput and T1 latency at 8, 16, 32, and 64 clients, along with `retried_transactions`, `failed_log_records`, and `pgbench_exit_code`. A failed client count is not a valid throughput comparison. Confirm no stock-check constraint errors appear in the PostgreSQL or benchmark logs.
 
-Run as job 904118 on `xcnf[0-2,4,5]`, concurrently with `expt_a10` and `expt_a9r`. Overall TPS at 1/8/64 clients is 197.8 / 1466.1 / 2036.6 against `expt_a10`'s 196.2 / 1376.5 / 1461.5, with 0 failed and 0 retried transactions at every client count (`expt_a10` fails 1778 at 64 clients). `config.txt` records `PG_ISOLATION_LEVEL=read committed` and `CITUS_SHARD_COUNT=8`.
+Run as job 904118 on `xcnf[0-2,4,5]`, concurrently with `expt_a331` and `expt_a323`. Overall TPS at 1/8/64 clients is 197.8 / 1466.1 / 2036.6 against `expt_a331`'s 196.2 / 1376.5 / 1461.5, with 0 failed and 0 retried transactions at every client count (`expt_a331` fails 1778 at 64 clients). `config.txt` records `PG_ISOLATION_LEVEL=read committed` and `CITUS_SHARD_COUNT=8`.

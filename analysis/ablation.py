@@ -8,9 +8,9 @@ and one three-level factor, the T1 mode (t1_mode): set, fn (place_order delegate
 to a function) and fn_rc (delegated + READ COMMITTED + stock lock). fn_rc exists
 only with delegation, so the T1 mode is one 3-level factor, not two bits. Cell
 expt_a<300 + 16*m + mask>, m = 0/1/2 for set/fn/fn_rc, mask bits T5R=1, T6R=2,
-T7R=4, SH8=8. Replicates expt_a<original + 100> ("replicate of expt_aNNN") are a
-second run of the same code; they are reported separately (replicate_check) and
-are not part of the 48-cell fit.
+T7R=4, SH8=8. Replicates expt_a<index>_<k> ("replicate of expt_a<index>", k >= 1)
+are a further run of cell expt_a<index> with the same code; they are reported
+separately (replicate_check) and are not part of the 48-cell fit.
 
 Each cell is loaded with plot_results.load_experiment, so its cross-checks and its
 validity rule (pgbench exit code 0 and no aborted client) are the ones used
@@ -98,9 +98,9 @@ N_MASKS = 2 ** NB
 N_CELLS = N_MASKS * len(T1_MODES)          # 48
 MANIFEST_COLUMNS = ["experiment"] + [f for f, _ in BINARY] + [T1_COLUMN, "source"]
 CELL_OFFSET = 300            # factorial cell name: expt_a<300 + 16*m + mask>
-REPLICATE_SHIFT = 100        # replicate name: expt_a<original index + 100>
 REPLICATE_SOURCE = re.compile(r"^replicate of (expt_a\d+)$")
 ABLATION_NAME = re.compile(r"^expt_a(\d+)$")
+REPLICATE_NAME = re.compile(r"^expt_a(\d+)_([1-9]\d*)$")   # k-th replicate of expt_a<index>
 
 # Every contrast: (binary factor indices, T1 contrast or None), by number of the
 # 5 factors involved, then T1 contrast (none, DEL, RCL), then binary combination.
@@ -137,16 +137,17 @@ NOT_RUN = "not run yet"
 # ---- Manifest --------------------------------------------------------------
 @dataclass(frozen=True)
 class Cell:
-    name: str                 # expt_a315
-    index: int                # 315
+    name: str                 # expt_a315, or expt_a300_1 for a replicate
+    index: int                # 315; a replicate has its original's index
     mask: int                 # binary factors, bit k = BINARY[k]
     mode: int                 # T1 mode, index into T1_MODES
     replicate_of: str | None  # id of the original cell, e.g. "a300"
+    run: int | None           # replicate number k of expt_a<index>_<k>; None for a cell
     path: Path
 
     @property
     def id(self):
-        return f"a{self.index}"
+        return f"a{self.index}" if self.run is None else f"a{self.index}_{self.run}"
 
     @property
     def levels(self):
@@ -185,9 +186,12 @@ def read_manifest(repo):
                            f"{sorted(m.experiment[m.experiment.duplicated()])}")
     cells, replicates = {}, []
     for r in m.itertuples(index=False):
-        name_m = ABLATION_NAME.match(r.experiment)
+        rep = REPLICATE_SOURCE.match(r.source)
+        name_m = (REPLICATE_NAME if rep else ABLATION_NAME).match(r.experiment)
         if not name_m:
-            raise RuntimeError(f"{path}: experiment {r.experiment!r} is not expt_a<integer>")
+            raise RuntimeError(f"{path}: experiment {r.experiment!r} with source {r.source!r} "
+                               f"is not " + ("expt_a<integer>_<k>, k >= 1" if rep
+                                             else "expt_a<integer>"))
         levels = tuple(int(getattr(r, f)) for f, _ in BINARY)
         if any(v not in (0, 1) for v in levels):
             raise RuntimeError(f"{path}: {r.experiment} has binary levels {levels}, not 0/1")
@@ -197,11 +201,15 @@ def read_manifest(repo):
         mask = sum(v << k for k, v in enumerate(levels))
         mode = T1_MODES.index(t1)
         index = int(name_m.group(1))
-        cell = Cell(r.experiment, index, mask, mode, None, repo / r.experiment)
-        rep = REPLICATE_SOURCE.match(r.source)
         if rep:
-            replicates.append((cell, rep.group(1)))
+            orig = f"expt_a{index}"
+            if rep.group(1) != orig:
+                raise RuntimeError(f"{path}: {r.experiment} is named as a replicate of {orig} "
+                                   f"but its source says {r.source!r}")
+            replicates.append((Cell(r.experiment, index, mask, mode, None,
+                                    int(name_m.group(2)), repo / r.experiment), orig))
             continue
+        cell = Cell(r.experiment, index, mask, mode, None, None, repo / r.experiment)
         if index != cell_index(mask, mode):
             raise RuntimeError(f"{path}: {r.experiment} should be named "
                                f"expt_a{cell_index(mask, mode)} for mask {mask}, t1_mode {t1}")
@@ -216,20 +224,20 @@ def read_manifest(repo):
         o = by_name[orig]
         if (o.mask, o.mode) != (rc.mask, rc.mode):
             raise RuntimeError(f"{path}: {rc.name} levels ({rc.label}) != {orig} ({o.label})")
-        if rc.index != o.index + REPLICATE_SHIFT:
-            raise RuntimeError(f"{path}: replicate {rc.name} of {orig} should be named "
-                               f"expt_a{o.index + REPLICATE_SHIFT}")
-        reps.append(Cell(rc.name, rc.index, rc.mask, rc.mode, o.id, rc.path))
+        reps.append(Cell(rc.name, rc.index, rc.mask, rc.mode, o.id, rc.run, rc.path))
 
+    # Every grid-range cell directory and every replicate-named directory must be listed.
     listed = set(m.experiment)
-    lo, hi = CELL_OFFSET, CELL_OFFSET + REPLICATE_SHIFT + N_CELLS
+    lo, hi = CELL_OFFSET, CELL_OFFSET + N_CELLS
     stray = sorted(p.name for p in repo.iterdir()
-                   if p.is_dir() and ABLATION_NAME.match(p.name)
-                   and lo <= int(ABLATION_NAME.match(p.name).group(1)) < hi
-                   and p.name not in listed)
+                   if p.is_dir() and p.name not in listed
+                   and (REPLICATE_NAME.match(p.name)
+                        or (ABLATION_NAME.match(p.name)
+                            and lo <= int(ABLATION_NAME.match(p.name).group(1)) < hi)))
     if stray:
-        raise RuntimeError(f"{path} does not list ablation-range directories {stray}")
-    return sorted(cells.values(), key=lambda c: c.index), sorted(reps, key=lambda c: c.index)
+        raise RuntimeError(f"{path} does not list ablation directories {stray}")
+    return (sorted(cells.values(), key=lambda c: c.index),
+            sorted(reps, key=lambda c: (c.index, c.run)))
 
 
 # ---- Loading and responses -------------------------------------------------
@@ -261,6 +269,9 @@ def load(cells):
             continue
         s, t = pr.load_experiment(pr.Experiment("a", c.index, c.path))
         for df in (s, t):
+            # plot_results names a run a<index>, which a replicate shares with its
+            # original; every lookup here is by c.id, which tells them apart.
+            df["exp"] = c.id
             df["label"] = c.label
         summaries.append(s)
         txs.append(t)
@@ -1081,8 +1092,8 @@ def run(repo, out):
         if status[c.id] != "complete":
             print(f"  {c.id} {c.label}: {status[c.id]}")
     bad = summary[~summary.valid]
-    for e, g in bad.groupby("exp_index"):
-        print(f"  a{e}: not valid at " + ", ".join(
+    for e, g in bad.groupby("exp", sort=False):
+        print(f"  {e}: not valid at " + ", ".join(
             f"{r.clients} [exit {r.pgbench_exit_code}, {r.aborted_clients} aborted]"
             for r in g.itertuples()))
 
