@@ -1,0 +1,942 @@
+2026-10-07 10:01:09.755 +08 [1255441] LOG:  There is no designated Main database.
+2026-10-07 10:01:09.755 +08 [1255441] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 10:01:09.755 +08 [1255441] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 10:01:09.872 +08 [1255441] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 10:01:09.872 +08 [1255441] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 10:01:09.872 +08 [1255441] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 10:01:09.872 +08 [1255441] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 10:01:09.876 +08 [1255448] LOG:  database system was shut down at 2026-10-07 10:01:08 +08
+2026-10-07 10:01:09.880 +08 [1255441] LOG:  database system is ready to accept connections
+2026-10-07 10:01:12.339 +08 [1255462] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 10:01:12.339 +08 [1255462] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:14:07.801 +08 [1255462] WARNING:  terminating connection due to administrator command
+2026-10-07 10:14:07.801 +08 [1255462] CONTEXT:  while executing command on xcnf19:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:14:07.801 +08 [1255462] WARNING:  terminating connection due to administrator command
+2026-10-07 10:14:07.801 +08 [1255462] CONTEXT:  while executing command on xcnf18:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:14:07.805 +08 [1255462] WARNING:  could not issue cancel request
+2026-10-07 10:14:07.805 +08 [1255462] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-10-07 10:14:07.805 +08 [1255462] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:14:08.996 +08 [1255441] LOG:  received fast shutdown request
+2026-10-07 10:14:08.997 +08 [1255441] LOG:  aborting any active transactions
+2026-10-07 10:14:08.997 +08 [1374641] FATAL:  terminating connection due to administrator command
+2026-10-07 10:14:08.997 +08 [1357364] FATAL:  terminating connection due to administrator command
+2026-10-07 10:14:09.003 +08 [1255441] LOG:  background worker "logical replication launcher" (PID 1255451) exited with exit code 1
+2026-10-07 10:14:09.006 +08 [1255446] LOG:  shutting down
+2026-10-07 10:14:09.006 +08 [1255446] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 10:14:09.768 +08 [1381370] LOG:  PID 1357364 in cancel request did not match any process
+2026-10-07 10:14:09.951 +08 [1255446] LOG:  checkpoint complete: wrote 121489 buffers (92.7%), wrote 16 SLRU buffers; 0 WAL file(s) added, 0 removed, 227 recycled; write=0.898 s, sync=0.006 s, total=0.946 s; sync files=1165, longest=0.001 s, average=0.001 s; distance=3727500 kB, estimate=3727500 kB; lsn=0/E4F82060, redo lsn=0/E4F82060
+2026-10-07 10:14:10.253 +08 [1255441] LOG:  database system is shut down
+2026-10-07 10:14:11.689 +08 [1381596] LOG:  There is no designated Main database.
+2026-10-07 10:14:11.689 +08 [1381596] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 10:14:11.689 +08 [1381596] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 10:14:11.808 +08 [1381596] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 10:14:11.809 +08 [1381596] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 10:14:11.809 +08 [1381596] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 10:14:11.809 +08 [1381596] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 10:14:11.813 +08 [1381629] LOG:  database system was shut down at 2026-10-07 10:14:09 +08
+2026-10-07 10:14:11.817 +08 [1381596] LOG:  database system is ready to accept connections
+2026-10-07 10:14:12.744 +08 [1381726] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 10:14:12.744 +08 [1381726] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:16:51.579 +08 [1403533] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:16:51.579 +08 [1403533] DETAIL:  Reason code: Canceled on conflict out to pivot 37263, during read.
+2026-10-07 10:16:51.579 +08 [1403533] HINT:  The transaction might succeed if retried.
+2026-10-07 10:16:51.579 +08 [1403533] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102150 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:18:33.095 +08 [1453741] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:18:38.526 +08 [1418305] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:18:38.526 +08 [1418305] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:18:38.526 +08 [1418305] HINT:  The transaction might succeed if retried.
+2026-10-07 10:18:38.526 +08 [1418305] STATEMENT:  PREPARE TRANSACTION 'citus_0_77127_25513_10939'
+2026-10-07 10:19:10.123 +08 [1466615] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:19:10.123 +08 [1466613] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:19:32.133 +08 [1403527] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:19:32.133 +08 [1403527] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:19:32.133 +08 [1403527] HINT:  The transaction might succeed if retried.
+2026-10-07 10:19:32.133 +08 [1403527] STATEMENT:  PREPARE TRANSACTION 'citus_0_77125_32320_14773'
+2026-10-07 10:20:03.905 +08 [1455894] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:20:03.905 +08 [1455894] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:20:03.905 +08 [1455894] HINT:  The transaction might succeed if retried.
+2026-10-07 10:20:03.905 +08 [1455894] STATEMENT:  PREPARE TRANSACTION 'citus_0_77127_36089_16653'
+2026-10-07 10:20:22.568 +08 [1453736] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:20:22.568 +08 [1453736] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:20:22.568 +08 [1453736] HINT:  The transaction might succeed if retried.
+2026-10-07 10:20:22.568 +08 [1453736] STATEMENT:  PREPARE TRANSACTION 'citus_0_77128_38244_17890'
+2026-10-07 10:20:46.885 +08 [1473576] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:20:46.885 +08 [1473576] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:20:46.885 +08 [1473576] HINT:  The transaction might succeed if retried.
+2026-10-07 10:20:46.885 +08 [1473576] CONTEXT:  SQL statement "INSERT INTO public.orders (
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  VALUES (
+	    p_order_id, p_merchant_id, p_customer_id, 'PENDING',
+	    v_total::numeric(12,2), CURRENT_TIMESTAMP
+	  )
+	  RETURNING total_amount, created_at"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 69 at SQL statement
+2026-10-07 10:20:46.885 +08 [1473576] STATEMENT:  SELECT public.place_order('88'::bigint, '626088'::bigint, '5010254'::bigint, 3, '{173088,185088,146088,419088,339088}'::bigint[], '{1,4,3,1,3}'::integer[], '{15030442,15030443,15030444,0,0}'::bigint[]) AS place_order
+2026-10-07 10:20:55.830 +08 [1499811] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:20:55.830 +08 [1499811] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-10-07 10:20:55.830 +08 [1499811] HINT:  The transaction might succeed if retried.
+2026-10-07 10:22:10.452 +08 [1529992] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:23:11.887 +08 [1550053] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:23:11.887 +08 [1550054] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:23:47.887 +08 [1530015] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:23:47.887 +08 [1530015] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:23:47.887 +08 [1530015] HINT:  The transaction might succeed if retried.
+2026-10-07 10:23:47.887 +08 [1530015] STATEMENT:  PREPARE TRANSACTION 'citus_0_77126_61906_30237'
+2026-10-07 10:23:51.220 +08 [1563921] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:23:51.220 +08 [1563921] DETAIL:  Reason code: Canceled on conflict out to pivot 77124, during read.
+2026-10-07 10:23:51.220 +08 [1563921] HINT:  The transaction might succeed if retried.
+2026-10-07 10:23:51.220 +08 [1563921] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102158 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:23:51.246 +08 [1563931] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:23:51.246 +08 [1563931] DETAIL:  Reason code: Canceled on conflict out to pivot 77124, during read.
+2026-10-07 10:23:51.246 +08 [1563931] HINT:  The transaction might succeed if retried.
+2026-10-07 10:23:51.246 +08 [1563931] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102158 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:23:51.269 +08 [1563925] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:25:34.819 +08 [1563945] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:25:34.819 +08 [1563945] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:25:34.819 +08 [1563945] HINT:  The transaction might succeed if retried.
+2026-10-07 10:25:34.819 +08 [1563945] STATEMENT:  PREPARE TRANSACTION 'citus_0_77126_73047_36247'
+2026-10-07 10:26:06.585 +08 [1381726] WARNING:  terminating connection due to administrator command
+2026-10-07 10:26:06.585 +08 [1381726] CONTEXT:  while executing command on xcnf18:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:26:08.364 +08 [1381596] LOG:  received fast shutdown request
+2026-10-07 10:26:08.366 +08 [1381596] LOG:  aborting any active transactions
+2026-10-07 10:26:08.367 +08 [1571599] FATAL:  terminating connection due to administrator command
+2026-10-07 10:26:08.369 +08 [1584158] FATAL:  terminating connection due to administrator command
+2026-10-07 10:26:08.372 +08 [1381596] LOG:  background worker "logical replication launcher" (PID 1381632) exited with exit code 1
+2026-10-07 10:26:08.374 +08 [1381626] LOG:  shutting down
+2026-10-07 10:26:08.374 +08 [1381626] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 10:26:08.842 +08 [1598841] LOG:  PID 1571599 in cancel request did not match any process
+2026-10-07 10:26:09.255 +08 [1381626] LOG:  checkpoint complete: wrote 120928 buffers (92.3%), wrote 35 SLRU buffers; 0 WAL file(s) added, 0 removed, 116 recycled; write=0.860 s, sync=0.002 s, total=0.881 s; sync files=319, longest=0.001 s, average=0.001 s; distance=1891137 kB, estimate=1891137 kB; lsn=1/586525E8, redo lsn=1/586525E8
+2026-10-07 10:26:09.530 +08 [1381596] LOG:  database system is shut down
+2026-10-07 10:26:10.947 +08 [1599329] LOG:  There is no designated Main database.
+2026-10-07 10:26:10.947 +08 [1599329] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 10:26:10.947 +08 [1599329] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 10:26:11.069 +08 [1599329] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 10:26:11.069 +08 [1599329] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 10:26:11.069 +08 [1599329] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 10:26:11.069 +08 [1599329] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 10:26:11.073 +08 [1599383] LOG:  database system was shut down at 2026-10-07 10:26:09 +08
+2026-10-07 10:26:11.077 +08 [1599329] LOG:  database system is ready to accept connections
+2026-10-07 10:26:12.003 +08 [1599636] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 10:26:12.003 +08 [1599636] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:27:19.477 +08 [1618331] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:28:24.060 +08 [1633061] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:28:24.060 +08 [1633061] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:28:24.060 +08 [1633061] HINT:  The transaction might succeed if retried.
+2026-10-07 10:28:24.060 +08 [1633061] STATEMENT:  PREPARE TRANSACTION 'citus_0_79665_7631_848'
+2026-10-07 10:28:36.211 +08 [1633096] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:28:36.211 +08 [1633096] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:28:36.211 +08 [1633096] HINT:  The transaction might succeed if retried.
+2026-10-07 10:28:36.211 +08 [1633096] STATEMENT:  PREPARE TRANSACTION 'citus_0_79663_9482_1223'
+2026-10-07 10:29:01.854 +08 [1633060] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:29:01.854 +08 [1633060] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:29:01.854 +08 [1633060] HINT:  The transaction might succeed if retried.
+2026-10-07 10:29:01.854 +08 [1633060] STATEMENT:  PREPARE TRANSACTION 'citus_0_79662_13113_2373'
+2026-10-07 10:29:04.012 +08 [1633078] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:29:04.012 +08 [1633078] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:29:04.012 +08 [1633078] HINT:  The transaction might succeed if retried.
+2026-10-07 10:29:04.012 +08 [1633078] STATEMENT:  PREPARE TRANSACTION 'citus_0_79668_13407_2442'
+2026-10-07 10:29:06.400 +08 [1651986] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:29:06.400 +08 [1651986] DETAIL:  Reason code: Canceled on conflict out to pivot 99475, during read.
+2026-10-07 10:29:06.400 +08 [1651986] HINT:  The transaction might succeed if retried.
+2026-10-07 10:29:06.400 +08 [1651986] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102158 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:29:06.453 +08 [1651993] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:29:10.472 +08 [1653269] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:29:10.478 +08 [1653271] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:29:33.209 +08 [1658729] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:29:33.209 +08 [1658729] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:29:33.209 +08 [1658729] HINT:  The transaction might succeed if retried.
+2026-10-07 10:29:33.209 +08 [1658729] STATEMENT:  PREPARE TRANSACTION 'citus_0_79667_17348_3436'
+2026-10-07 10:29:57.354 +08 [1667325] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:30:03.898 +08 [1660213] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:30:03.898 +08 [1660213] DETAIL:  Reason code: Canceled on conflict out to pivot 105876, during read.
+2026-10-07 10:30:03.898 +08 [1660213] HINT:  The transaction might succeed if retried.
+2026-10-07 10:30:03.898 +08 [1660213] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102142 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:30:13.630 +08 [1658582] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:30:13.630 +08 [1658582] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:30:13.630 +08 [1658582] HINT:  The transaction might succeed if retried.
+2026-10-07 10:30:13.630 +08 [1658582] STATEMENT:  PREPARE TRANSACTION 'citus_0_79661_22918_5080'
+2026-10-07 10:30:40.423 +08 [1679125] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:30:42.014 +08 [1658677] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:30:42.014 +08 [1658677] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:30:42.014 +08 [1658677] HINT:  The transaction might succeed if retried.
+2026-10-07 10:30:42.014 +08 [1658677] STATEMENT:  PREPARE TRANSACTION 'citus_0_79662_26815_6113'
+2026-10-07 10:30:47.388 +08 [1679160] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:30:47.388 +08 [1679160] DETAIL:  Reason code: Canceled on conflict out to pivot 110601, during read.
+2026-10-07 10:30:47.388 +08 [1679160] HINT:  The transaction might succeed if retried.
+2026-10-07 10:30:47.388 +08 [1679160] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102142 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:30:47.391 +08 [1639629] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:30:47.391 +08 [1639629] DETAIL:  Reason code: Canceled on conflict out to pivot 110601, during read.
+2026-10-07 10:30:47.391 +08 [1639629] HINT:  The transaction might succeed if retried.
+2026-10-07 10:30:47.391 +08 [1639629] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102142 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:31:02.934 +08 [1651271] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:31:02.934 +08 [1651271] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:31:02.934 +08 [1651271] HINT:  The transaction might succeed if retried.
+2026-10-07 10:31:02.934 +08 [1651271] STATEMENT:  PREPARE TRANSACTION 'citus_0_79668_29616_7264'
+2026-10-07 10:31:16.189 +08 [1689373] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:31:28.408 +08 [1652015] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:31:28.408 +08 [1652015] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:31:28.408 +08 [1652015] HINT:  The transaction might succeed if retried.
+2026-10-07 10:31:28.408 +08 [1652015] STATEMENT:  UPDATE public.orders_102158 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (107255)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 10:31:53.244 +08 [1681068] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:31:53.244 +08 [1681068] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:31:53.244 +08 [1681068] HINT:  The transaction might succeed if retried.
+2026-10-07 10:31:53.244 +08 [1681068] STATEMENT:  PREPARE TRANSACTION 'citus_0_79661_36432_8929'
+2026-10-07 10:32:21.735 +08 [1675031] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:32:21.735 +08 [1675031] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:32:21.735 +08 [1675031] HINT:  The transaction might succeed if retried.
+2026-10-07 10:32:21.735 +08 [1675031] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (191297)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 10:32:21.747 +08 [1708675] ERROR:  canceling statement due to user request
+2026-10-07 10:32:21.747 +08 [1708675] STATEMENT:  BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;SELECT assign_distributed_transaction_id(0, 40053, '2026-10-07 10:32:21.613696+08');
+2026-10-07 10:32:21.754 +08 [1708677] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:32:21.849 +08 [1701511] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:32:21.849 +08 [1701511] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:32:21.849 +08 [1701511] HINT:  The transaction might succeed if retried.
+2026-10-07 10:32:21.849 +08 [1701511] STATEMENT:  PREPARE TRANSACTION 'citus_0_79665_40085_9886'
+2026-10-07 10:32:38.374 +08 [1685601] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:32:38.374 +08 [1685601] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:32:38.374 +08 [1685601] HINT:  The transaction might succeed if retried.
+2026-10-07 10:32:38.374 +08 [1685601] STATEMENT:  PREPARE TRANSACTION 'citus_0_79668_42241_10768'
+2026-10-07 10:32:56.489 +08 [1721709] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:32:56.490 +08 [1721712] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:33:15.030 +08 [1700090] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:33:15.030 +08 [1700090] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:33:15.030 +08 [1700090] HINT:  The transaction might succeed if retried.
+2026-10-07 10:33:15.030 +08 [1700090] STATEMENT:  PREPARE TRANSACTION 'citus_0_79661_46795_11696'
+2026-10-07 10:33:18.090 +08 [1728828] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:33:18.091 +08 [1728823] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:33:25.594 +08 [1633055] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:33:25.594 +08 [1633055] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:33:25.594 +08 [1633055] HINT:  The transaction might succeed if retried.
+2026-10-07 10:33:25.594 +08 [1633055] STATEMENT:  PREPARE TRANSACTION 'citus_0_79664_48107_12450'
+2026-10-07 10:33:41.803 +08 [1689399] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:33:41.803 +08 [1689399] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:33:41.803 +08 [1689399] HINT:  The transaction might succeed if retried.
+2026-10-07 10:33:41.803 +08 [1689399] STATEMENT:  PREPARE TRANSACTION 'citus_0_79666_50040_12658'
+2026-10-07 10:33:47.508 +08 [1692783] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:33:47.508 +08 [1692783] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:33:47.508 +08 [1692783] HINT:  The transaction might succeed if retried.
+2026-10-07 10:33:47.508 +08 [1692783] STATEMENT:  PREPARE TRANSACTION 'citus_0_79662_50715_12784'
+2026-10-07 10:33:47.699 +08 [1719617] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:33:47.699 +08 [1719617] DETAIL:  Reason code: Canceled on conflict out to pivot 129331, during read.
+2026-10-07 10:33:47.699 +08 [1719617] HINT:  The transaction might succeed if retried.
+2026-10-07 10:33:47.699 +08 [1719617] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102138 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:33:57.828 +08 [1743274] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:34:02.738 +08 [1714492] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:34:02.738 +08 [1714492] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:34:02.738 +08 [1714492] HINT:  The transaction might succeed if retried.
+2026-10-07 10:34:02.738 +08 [1714492] STATEMENT:  PREPARE TRANSACTION 'citus_0_79668_52514_13657'
+2026-10-07 10:34:07.693 +08 [1746510] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:34:07.694 +08 [1746511] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:34:23.578 +08 [1745022] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:34:23.578 +08 [1745022] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:34:23.578 +08 [1745022] HINT:  The transaction might succeed if retried.
+2026-10-07 10:34:23.578 +08 [1745022] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (3695997)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:34:41.324 +08 [1758406] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:34:41.324 +08 [1758406] DETAIL:  Reason code: Canceled on conflict out to pivot 134571, during read.
+2026-10-07 10:34:41.324 +08 [1758406] HINT:  The transaction might succeed if retried.
+2026-10-07 10:34:41.324 +08 [1758406] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102162 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:34:41.355 +08 [1758408] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:34:45.457 +08 [1759917] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:34:45.457 +08 [1759918] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:34:48.524 +08 [1760995] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:34:48.524 +08 [1760995] DETAIL:  Reason code: Canceled on conflict out to pivot 135249, during read.
+2026-10-07 10:34:48.524 +08 [1760995] HINT:  The transaction might succeed if retried.
+2026-10-07 10:34:48.524 +08 [1760995] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102166 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:34:52.858 +08 [1736712] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:34:52.858 +08 [1736712] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:34:52.858 +08 [1736712] HINT:  The transaction might succeed if retried.
+2026-10-07 10:34:52.858 +08 [1736712] STATEMENT:  PREPARE TRANSACTION 'citus_0_79666_58632_15068'
+2026-10-07 10:35:08.302 +08 [1721061] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:35:08.302 +08 [1721061] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:35:08.302 +08 [1721061] HINT:  The transaction might succeed if retried.
+2026-10-07 10:35:08.302 +08 [1721061] STATEMENT:  PREPARE TRANSACTION 'citus_0_79667_60419_15519'
+2026-10-07 10:35:15.792 +08 [1768193] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:35:15.792 +08 [1768193] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:35:15.792 +08 [1768193] HINT:  The transaction might succeed if retried.
+2026-10-07 10:35:15.792 +08 [1768193] STATEMENT:  PREPARE TRANSACTION 'citus_0_79667_61332_15755'
+2026-10-07 10:35:46.211 +08 [1779645] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:35:46.211 +08 [1779645] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:35:46.211 +08 [1779645] HINT:  The transaction might succeed if retried.
+2026-10-07 10:35:46.211 +08 [1779645] STATEMENT:  PREPARE TRANSACTION 'citus_0_79664_64985_17070'
+2026-10-07 10:36:12.481 +08 [1745022] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:36:12.481 +08 [1745022] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:36:12.481 +08 [1745022] HINT:  The transaction might succeed if retried.
+2026-10-07 10:36:12.481 +08 [1745022] STATEMENT:  PREPARE TRANSACTION 'citus_0_79668_67961_17986'
+2026-10-07 10:36:43.080 +08 [1758429] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:36:43.080 +08 [1758429] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:36:43.080 +08 [1758429] HINT:  The transaction might succeed if retried.
+2026-10-07 10:36:43.080 +08 [1758429] STATEMENT:  PREPARE TRANSACTION 'citus_0_79662_71460_18544'
+2026-10-07 10:37:13.976 +08 [1795550] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:37:13.976 +08 [1795550] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:37:13.976 +08 [1795550] HINT:  The transaction might succeed if retried.
+2026-10-07 10:37:13.976 +08 [1795550] STATEMENT:  PREPARE TRANSACTION 'citus_0_79666_74726_19752'
+2026-10-07 10:37:38.348 +08 [1799449] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:37:38.348 +08 [1799449] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:37:38.348 +08 [1799449] HINT:  The transaction might succeed if retried.
+2026-10-07 10:37:38.348 +08 [1799449] STATEMENT:  PREPARE TRANSACTION 'citus_0_79662_77358_20205'
+2026-10-07 10:37:38.874 +08 [1728018] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:37:38.874 +08 [1728018] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:37:38.874 +08 [1728018] HINT:  The transaction might succeed if retried.
+2026-10-07 10:37:38.874 +08 [1728018] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (4310220)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:37:41.729 +08 [1805067] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:37:41.729 +08 [1805067] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:37:41.729 +08 [1805067] HINT:  The transaction might succeed if retried.
+2026-10-07 10:37:41.729 +08 [1805067] STATEMENT:  PREPARE TRANSACTION 'citus_0_79666_77729_20638'
+2026-10-07 10:37:50.109 +08 [1771318] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:37:50.109 +08 [1771318] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:37:50.109 +08 [1771318] HINT:  The transaction might succeed if retried.
+2026-10-07 10:37:50.109 +08 [1771318] STATEMENT:  PREPARE TRANSACTION 'citus_0_79667_78735_20612'
+2026-10-07 10:38:08.222 +08 [1599636] WARNING:  terminating connection due to administrator command
+2026-10-07 10:38:08.222 +08 [1599636] CONTEXT:  while executing command on xcnf19:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:38:08.222 +08 [1599636] WARNING:  terminating connection due to administrator command
+2026-10-07 10:38:08.222 +08 [1599636] CONTEXT:  while executing command on xcnf18:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:38:08.226 +08 [1599636] WARNING:  could not issue cancel request
+2026-10-07 10:38:08.226 +08 [1599636] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-10-07 10:38:08.226 +08 [1599636] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:38:09.552 +08 [1599329] LOG:  received fast shutdown request
+2026-10-07 10:38:09.553 +08 [1599329] LOG:  aborting any active transactions
+2026-10-07 10:38:09.553 +08 [1790906] FATAL:  terminating connection due to administrator command
+2026-10-07 10:38:09.553 +08 [1805056] FATAL:  terminating connection due to administrator command
+2026-10-07 10:38:09.556 +08 [1599329] LOG:  background worker "logical replication launcher" (PID 1599389) exited with exit code 1
+2026-10-07 10:38:09.560 +08 [1599381] LOG:  shutting down
+2026-10-07 10:38:09.560 +08 [1599381] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 10:38:10.249 +08 [1819618] LOG:  PID 1790906 in cancel request did not match any process
+2026-10-07 10:38:10.475 +08 [1599381] LOG:  checkpoint complete: wrote 121111 buffers (92.4%), wrote 36 SLRU buffers; 0 WAL file(s) added, 0 removed, 116 recycled; write=0.895 s, sync=0.002 s, total=0.915 s; sync files=320, longest=0.001 s, average=0.001 s; distance=1894682 kB, estimate=1894682 kB; lsn=1/CC099180, redo lsn=1/CC099180
+2026-10-07 10:38:10.761 +08 [1599329] LOG:  database system is shut down
+2026-10-07 10:38:12.542 +08 [1820090] LOG:  There is no designated Main database.
+2026-10-07 10:38:12.542 +08 [1820090] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 10:38:12.542 +08 [1820090] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 10:38:12.678 +08 [1820090] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 10:38:12.678 +08 [1820090] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 10:38:12.678 +08 [1820090] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 10:38:12.678 +08 [1820090] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 10:38:12.682 +08 [1820141] LOG:  database system was shut down at 2026-10-07 10:38:10 +08
+2026-10-07 10:38:12.687 +08 [1820090] LOG:  database system is ready to accept connections
+2026-10-07 10:38:13.594 +08 [1820325] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 10:38:13.594 +08 [1820325] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:39:18.761 +08 [1838412] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:39:18.761 +08 [1838412] DETAIL:  Reason code: Canceled on conflict out to pivot 153994, during read.
+2026-10-07 10:39:18.761 +08 [1838412] HINT:  The transaction might succeed if retried.
+2026-10-07 10:39:18.761 +08 [1838412] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102166 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:39:19.655 +08 [1834052] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:39:19.655 +08 [1834052] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:39:19.655 +08 [1834052] HINT:  The transaction might succeed if retried.
+2026-10-07 10:39:19.655 +08 [1834052] STATEMENT:  PREPARE TRANSACTION 'citus_0_82214_986_156'
+2026-10-07 10:39:38.674 +08 [1838462] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:39:38.674 +08 [1838462] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:39:38.674 +08 [1838462] HINT:  The transaction might succeed if retried.
+2026-10-07 10:39:38.674 +08 [1838462] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (1848734)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 10:39:40.084 +08 [1834053] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:39:40.084 +08 [1834053] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:39:40.084 +08 [1834053] HINT:  The transaction might succeed if retried.
+2026-10-07 10:39:40.084 +08 [1834053] STATEMENT:  PREPARE TRANSACTION 'citus_0_82217_2312_371'
+2026-10-07 10:39:44.580 +08 [1844824] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:39:44.580 +08 [1844824] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:39:44.580 +08 [1844824] HINT:  The transaction might succeed if retried.
+2026-10-07 10:39:44.580 +08 [1844824] STATEMENT:  PREPARE TRANSACTION 'citus_0_82217_2633_428'
+2026-10-07 10:40:58.117 +08 [1853700] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:40:58.117 +08 [1853700] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:40:58.117 +08 [1853700] HINT:  The transaction might succeed if retried.
+2026-10-07 10:40:58.117 +08 [1853700] STATEMENT:  PREPARE TRANSACTION 'citus_0_82279_11779_1008'
+2026-10-07 10:40:59.053 +08 [1853705] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:40:59.053 +08 [1853705] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-10-07 10:40:59.053 +08 [1853705] HINT:  The transaction might succeed if retried.
+2026-10-07 10:40:59.754 +08 [1853721] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:40:59.754 +08 [1853721] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:40:59.754 +08 [1853721] HINT:  The transaction might succeed if retried.
+2026-10-07 10:40:59.754 +08 [1853721] STATEMENT:  PREPARE TRANSACTION 'citus_0_82270_11983_1062'
+2026-10-07 10:41:07.340 +08 [1853727] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:41:07.340 +08 [1853727] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:41:07.340 +08 [1853727] HINT:  The transaction might succeed if retried.
+2026-10-07 10:41:07.340 +08 [1853727] STATEMENT:  UPDATE public.orders_102150 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (4873098)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:41:29.173 +08 [1863613] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:41:29.173 +08 [1863613] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:41:29.173 +08 [1863613] HINT:  The transaction might succeed if retried.
+2026-10-07 10:41:29.173 +08 [1863613] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (2694446)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:41:44.829 +08 [1890069] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:41:44.829 +08 [1890069] DETAIL:  Reason code: Canceled on conflict out to pivot 167829, during read.
+2026-10-07 10:41:44.829 +08 [1890069] HINT:  The transaction might succeed if retried.
+2026-10-07 10:41:44.829 +08 [1890069] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102146 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:41:44.867 +08 [1890073] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:41:49.272 +08 [1869561] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:41:49.272 +08 [1869561] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:41:49.272 +08 [1869561] HINT:  The transaction might succeed if retried.
+2026-10-07 10:41:49.272 +08 [1869561] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (4279898)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:41:53.405 +08 [1873706] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:41:53.405 +08 [1873706] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-10-07 10:41:53.405 +08 [1873706] HINT:  The transaction might succeed if retried.
+2026-10-07 10:41:57.828 +08 [1872990] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:41:57.828 +08 [1872990] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:41:57.828 +08 [1872990] HINT:  The transaction might succeed if retried.
+2026-10-07 10:41:57.828 +08 [1872990] STATEMENT:  PREPARE TRANSACTION 'citus_0_82279_19497_2099'
+2026-10-07 10:42:08.676 +08 [1898639] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:42:08.676 +08 [1898641] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:42:20.543 +08 [1853732] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:42:20.543 +08 [1853732] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:42:20.543 +08 [1853732] HINT:  The transaction might succeed if retried.
+2026-10-07 10:42:20.543 +08 [1853732] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (1576744)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 10:42:46.480 +08 [1853722] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:42:46.480 +08 [1853722] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:42:46.480 +08 [1853722] HINT:  The transaction might succeed if retried.
+2026-10-07 10:42:46.480 +08 [1853722] STATEMENT:  PREPARE TRANSACTION 'citus_0_82278_25806_3138'
+2026-10-07 10:42:57.816 +08 [1863613] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:42:57.816 +08 [1863613] DETAIL:  Reason code: Canceled on conflict out to pivot 175316, during read.
+2026-10-07 10:42:57.816 +08 [1863613] HINT:  The transaction might succeed if retried.
+2026-10-07 10:42:57.816 +08 [1863613] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102162 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:42:57.848 +08 [1853701] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:42:57.848 +08 [1853701] DETAIL:  Reason code: Canceled on conflict out to pivot 175323, during read.
+2026-10-07 10:42:57.848 +08 [1853701] HINT:  The transaction might succeed if retried.
+2026-10-07 10:42:57.848 +08 [1853701] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102146 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:42:57.871 +08 [1916961] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:42:57.874 +08 [1916981] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:42:57.878 +08 [1916982] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:43:22.472 +08 [1853732] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:43:22.472 +08 [1853732] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:43:22.472 +08 [1853732] HINT:  The transaction might succeed if retried.
+2026-10-07 10:43:22.472 +08 [1853732] STATEMENT:  PREPARE TRANSACTION 'citus_0_82269_30417_3591'
+2026-10-07 10:43:24.255 +08 [1853708] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:43:24.255 +08 [1853708] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:43:24.255 +08 [1853708] HINT:  The transaction might succeed if retried.
+2026-10-07 10:43:24.255 +08 [1853708] STATEMENT:  PREPARE TRANSACTION 'citus_0_82274_30598_3712'
+2026-10-07 10:43:54.741 +08 [1883132] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:43:54.741 +08 [1883132] DETAIL:  Reason code: Canceled on conflict out to pivot 181368, during read.
+2026-10-07 10:43:54.741 +08 [1883132] HINT:  The transaction might succeed if retried.
+2026-10-07 10:43:54.741 +08 [1883132] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102142 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:44:06.455 +08 [1894607] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:44:06.455 +08 [1894607] DETAIL:  Reason code: Canceled on conflict out to pivot 182594, during read.
+2026-10-07 10:44:06.455 +08 [1894607] HINT:  The transaction might succeed if retried.
+2026-10-07 10:44:06.455 +08 [1894607] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102162 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:44:10.615 +08 [1926987] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:44:10.615 +08 [1926987] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:44:10.615 +08 [1926987] HINT:  The transaction might succeed if retried.
+2026-10-07 10:44:10.615 +08 [1926987] STATEMENT:  PREPARE TRANSACTION 'citus_0_82269_36732_4467'
+2026-10-07 10:44:15.590 +08 [1941697] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:44:16.737 +08 [1942016] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:44:16.740 +08 [1942015] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:44:36.122 +08 [1892920] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:44:36.122 +08 [1892920] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:44:36.122 +08 [1892920] HINT:  The transaction might succeed if retried.
+2026-10-07 10:44:36.122 +08 [1892920] STATEMENT:  PREPARE TRANSACTION 'citus_0_82270_40195_4794'
+2026-10-07 10:45:00.771 +08 [1881059] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:45:00.771 +08 [1881059] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:45:00.771 +08 [1881059] HINT:  The transaction might succeed if retried.
+2026-10-07 10:45:00.771 +08 [1881059] STATEMENT:  PREPARE TRANSACTION 'citus_0_82271_43392_5563'
+2026-10-07 10:45:07.539 +08 [1956149] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:45:07.539 +08 [1956149] DETAIL:  Reason code: Canceled on conflict out to pivot 189131, during read.
+2026-10-07 10:45:07.539 +08 [1956149] HINT:  The transaction might succeed if retried.
+2026-10-07 10:45:07.539 +08 [1956149] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102158 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:45:07.594 +08 [1956158] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:45:18.090 +08 [1936045] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:45:18.090 +08 [1936045] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:45:18.090 +08 [1936045] HINT:  The transaction might succeed if retried.
+2026-10-07 10:45:18.090 +08 [1936045] STATEMENT:  UPDATE public.orders_102158 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (1561374)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:45:18.108 +08 [1959051] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:45:18.112 +08 [1959052] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:45:19.893 +08 [1853727] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:45:19.893 +08 [1853727] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:45:19.893 +08 [1853727] HINT:  The transaction might succeed if retried.
+2026-10-07 10:45:19.893 +08 [1853727] STATEMENT:  PREPARE TRANSACTION 'citus_0_82273_45885_6099'
+2026-10-07 10:46:03.238 +08 [1954361] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:46:03.238 +08 [1954361] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-10-07 10:46:03.238 +08 [1954361] HINT:  The transaction might succeed if retried.
+2026-10-07 10:46:18.841 +08 [1974863] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:46:18.847 +08 [1974867] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:46:41.599 +08 [1980954] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:46:41.599 +08 [1980954] DETAIL:  Reason code: Canceled on conflict out to pivot 197923, during read.
+2026-10-07 10:46:41.599 +08 [1980954] HINT:  The transaction might succeed if retried.
+2026-10-07 10:46:41.599 +08 [1980954] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102158 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:47:00.206 +08 [1927462] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:47:00.206 +08 [1927462] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:47:00.206 +08 [1927462] HINT:  The transaction might succeed if retried.
+2026-10-07 10:47:00.206 +08 [1927462] STATEMENT:  PREPARE TRANSACTION 'citus_0_82274_57457_7539'
+2026-10-07 10:47:10.883 +08 [1853726] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:47:10.883 +08 [1853726] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:47:10.883 +08 [1853726] HINT:  The transaction might succeed if retried.
+2026-10-07 10:47:10.883 +08 [1853726] STATEMENT:  PREPARE TRANSACTION 'citus_0_82272_58692_7802'
+2026-10-07 10:47:12.730 +08 [1916994] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:47:12.730 +08 [1916994] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:47:12.730 +08 [1916994] HINT:  The transaction might succeed if retried.
+2026-10-07 10:47:12.730 +08 [1916994] STATEMENT:  PREPARE TRANSACTION 'citus_0_82283_58879_7818'
+2026-10-07 10:47:37.129 +08 [1959500] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:47:37.129 +08 [1959500] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:47:37.129 +08 [1959500] HINT:  The transaction might succeed if retried.
+2026-10-07 10:47:37.129 +08 [1959500] STATEMENT:  PREPARE TRANSACTION 'citus_0_82273_61536_8331'
+2026-10-07 10:47:38.094 +08 [1986091] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:47:38.094 +08 [1986091] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:47:38.094 +08 [1986091] HINT:  The transaction might succeed if retried.
+2026-10-07 10:47:38.094 +08 [1986091] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (2025934)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 10:47:38.119 +08 [1996208] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:48:03.153 +08 [1988928] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:48:03.153 +08 [1988928] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:48:03.153 +08 [1988928] HINT:  The transaction might succeed if retried.
+2026-10-07 10:48:03.153 +08 [1988928] STATEMENT:  PREPARE TRANSACTION 'citus_0_82272_64459_8642'
+2026-10-07 10:49:36.915 +08 [1912790] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:49:36.915 +08 [1912790] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:49:36.915 +08 [1912790] HINT:  The transaction might succeed if retried.
+2026-10-07 10:49:36.915 +08 [1912790] STATEMENT:  PREPARE TRANSACTION 'citus_0_82278_74123_10212'
+2026-10-07 10:49:45.447 +08 [2029175] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:49:45.450 +08 [2029176] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:50:02.771 +08 [1853725] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:50:02.771 +08 [1853725] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:50:02.771 +08 [1853725] HINT:  The transaction might succeed if retried.
+2026-10-07 10:50:02.771 +08 [1853725] STATEMENT:  PREPARE TRANSACTION 'citus_0_82280_76788_10439'
+2026-10-07 10:50:07.919 +08 [1820325] WARNING:  terminating connection due to administrator command
+2026-10-07 10:50:07.919 +08 [1820325] CONTEXT:  while executing command on xcnf18:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:50:09.926 +08 [1820325] WARNING:  connection to the remote node cs04@xcnf18:5536 failed with the following error: server closed the connection unexpectedly
+		This probably means the server terminated abnormally
+		before or while processing the request.
+2026-10-07 10:50:09.926 +08 [1820325] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:50:09.926 +08 [1820325] WARNING:  terminating connection due to administrator command
+2026-10-07 10:50:09.926 +08 [1820325] CONTEXT:  while executing command on xcnf19:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:50:09.926 +08 [1820325] WARNING:  server closed the connection unexpectedly
+		This probably means the server terminated abnormally
+		before or while processing the request.
+2026-10-07 10:50:09.926 +08 [1820325] CONTEXT:  while executing command on xcnf18:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:50:10.591 +08 [1820090] LOG:  received fast shutdown request
+2026-10-07 10:50:10.974 +08 [1820090] LOG:  aborting any active transactions
+2026-10-07 10:50:10.976 +08 [2008284] FATAL:  terminating connection due to administrator command
+2026-10-07 10:50:10.976 +08 [2023537] FATAL:  terminating connection due to administrator command
+2026-10-07 10:50:10.977 +08 [1820090] LOG:  background worker "logical replication launcher" (PID 1820145) exited with exit code 1
+2026-10-07 10:50:10.982 +08 [1820139] LOG:  shutting down
+2026-10-07 10:50:10.996 +08 [1820139] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 10:50:11.903 +08 [1820139] LOG:  checkpoint complete: wrote 121142 buffers (92.4%), wrote 36 SLRU buffers; 0 WAL file(s) added, 0 removed, 115 recycled; write=0.886 s, sync=0.002 s, total=0.922 s; sync files=321, longest=0.001 s, average=0.001 s; distance=1892680 kB, estimate=1892680 kB; lsn=2/3F8EB418, redo lsn=2/3F8EB418
+2026-10-07 10:50:12.194 +08 [1820090] LOG:  database system is shut down
+2026-10-07 10:50:13.857 +08 [2036404] LOG:  There is no designated Main database.
+2026-10-07 10:50:13.857 +08 [2036404] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 10:50:13.857 +08 [2036404] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 10:50:13.977 +08 [2036404] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 10:50:13.977 +08 [2036404] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 10:50:13.977 +08 [2036404] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 10:50:13.978 +08 [2036404] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 10:50:13.982 +08 [2036449] LOG:  database system was shut down at 2026-10-07 10:50:11 +08
+2026-10-07 10:50:13.986 +08 [2036404] LOG:  database system is ready to accept connections
+2026-10-07 10:50:14.913 +08 [2036665] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 10:50:14.913 +08 [2036665] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 10:51:14.332 +08 [2048908] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:51:14.332 +08 [2048908] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:51:14.332 +08 [2048908] HINT:  The transaction might succeed if retried.
+2026-10-07 10:51:14.332 +08 [2048908] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (1864358)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:51:39.017 +08 [2048852] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:51:39.017 +08 [2048852] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:51:39.017 +08 [2048852] HINT:  The transaction might succeed if retried.
+2026-10-07 10:51:39.017 +08 [2048852] STATEMENT:  PREPARE TRANSACTION 'citus_0_85188_2120_195'
+2026-10-07 10:51:48.718 +08 [2048824] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:51:48.718 +08 [2048824] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:51:48.718 +08 [2048824] HINT:  The transaction might succeed if retried.
+2026-10-07 10:51:48.718 +08 [2048824] STATEMENT:  PREPARE TRANSACTION 'citus_0_85187_2714_194'
+2026-10-07 10:52:24.254 +08 [2072001] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:52:24.254 +08 [2072001] DETAIL:  Reason code: Canceled on conflict out to pivot 221466, during read.
+2026-10-07 10:52:24.254 +08 [2072001] HINT:  The transaction might succeed if retried.
+2026-10-07 10:52:24.254 +08 [2072001] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102158 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:52:24.323 +08 [2072006] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:52:52.120 +08 [2066451] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:52:52.120 +08 [2066451] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:52:52.120 +08 [2066451] HINT:  The transaction might succeed if retried.
+2026-10-07 10:52:52.120 +08 [2066451] STATEMENT:  UPDATE public.orders_102150 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (622678)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:53:32.256 +08 [2066461] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:53:32.256 +08 [2066461] DETAIL:  Reason code: Canceled on conflict out to pivot 228804, during read.
+2026-10-07 10:53:32.256 +08 [2066461] HINT:  The transaction might succeed if retried.
+2026-10-07 10:53:32.256 +08 [2066461] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102138 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:53:39.666 +08 [2066470] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:53:39.666 +08 [2066470] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:53:39.666 +08 [2066470] HINT:  The transaction might succeed if retried.
+2026-10-07 10:53:39.666 +08 [2066470] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (206771)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:53:49.913 +08 [2066463] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:53:49.913 +08 [2066463] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:53:49.913 +08 [2066463] HINT:  The transaction might succeed if retried.
+2026-10-07 10:53:49.913 +08 [2066463] STATEMENT:  PREPARE TRANSACTION 'citus_0_85243_18526_950'
+2026-10-07 10:53:56.350 +08 [2066448] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:53:56.350 +08 [2066448] DETAIL:  Reason code: Canceled on conflict out to pivot 231494, during read.
+2026-10-07 10:53:56.350 +08 [2066448] HINT:  The transaction might succeed if retried.
+2026-10-07 10:53:56.350 +08 [2066448] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102146 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:53:59.919 +08 [2066510] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:53:59.919 +08 [2066510] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:53:59.919 +08 [2066510] HINT:  The transaction might succeed if retried.
+2026-10-07 10:53:59.919 +08 [2066510] STATEMENT:  PREPARE TRANSACTION 'citus_0_85270_20148_1077'
+2026-10-07 10:54:05.704 +08 [2066528] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:54:05.704 +08 [2066528] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:54:05.704 +08 [2066528] HINT:  The transaction might succeed if retried.
+2026-10-07 10:54:05.704 +08 [2066528] STATEMENT:  PREPARE TRANSACTION 'citus_0_85268_20385_1197'
+2026-10-07 10:54:06.977 +08 [2066530] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:54:06.977 +08 [2066530] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:54:06.977 +08 [2066530] HINT:  The transaction might succeed if retried.
+2026-10-07 10:54:06.977 +08 [2066530] STATEMENT:  PREPARE TRANSACTION 'citus_0_85249_20563_1060'
+2026-10-07 10:54:07.972 +08 [2103926] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:54:07.972 +08 [2103926] DETAIL:  Reason code: Canceled on conflict out to pivot 232433, during read.
+2026-10-07 10:54:07.972 +08 [2103926] HINT:  The transaction might succeed if retried.
+2026-10-07 10:54:07.972 +08 [2103926] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102166 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:54:27.301 +08 [2066550] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:54:27.301 +08 [2066550] DETAIL:  Reason code: Canceled on conflict out to pivot 234406, during read.
+2026-10-07 10:54:27.301 +08 [2066550] HINT:  The transaction might succeed if retried.
+2026-10-07 10:54:27.301 +08 [2066550] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102146 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:54:32.658 +08 [2066548] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:54:32.658 +08 [2066548] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:54:32.658 +08 [2066548] HINT:  The transaction might succeed if retried.
+2026-10-07 10:54:32.658 +08 [2066548] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (1936663)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:54:53.980 +08 [2066564] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:54:53.980 +08 [2066564] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:54:53.980 +08 [2066564] HINT:  The transaction might succeed if retried.
+2026-10-07 10:54:53.980 +08 [2066564] STATEMENT:  PREPARE TRANSACTION 'citus_0_85262_26730_1491'
+2026-10-07 10:55:14.134 +08 [2072047] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:55:14.134 +08 [2072047] DETAIL:  Reason code: Canceled on conflict out to pivot 239354, during read.
+2026-10-07 10:55:14.134 +08 [2072047] HINT:  The transaction might succeed if retried.
+2026-10-07 10:55:14.134 +08 [2072047] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102150 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:55:14.167 +08 [2124913] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:55:14.168 +08 [2124912] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:55:16.550 +08 [2102242] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:55:16.550 +08 [2102242] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:55:16.550 +08 [2102242] HINT:  The transaction might succeed if retried.
+2026-10-07 10:55:16.550 +08 [2102242] STATEMENT:  PREPARE TRANSACTION 'citus_0_85270_29596_1727'
+2026-10-07 10:55:19.901 +08 [2071734] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:55:19.901 +08 [2071734] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:55:19.901 +08 [2071734] HINT:  The transaction might succeed if retried.
+2026-10-07 10:55:19.901 +08 [2071734] STATEMENT:  PREPARE TRANSACTION 'citus_0_85247_30034_1632'
+2026-10-07 10:55:44.443 +08 [2066511] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:55:44.443 +08 [2066511] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:55:44.443 +08 [2066511] HINT:  The transaction might succeed if retried.
+2026-10-07 10:55:44.443 +08 [2066511] STATEMENT:  PREPARE TRANSACTION 'citus_0_85248_33000_2202'
+2026-10-07 10:56:14.327 +08 [2066458] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:56:14.327 +08 [2066458] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:56:14.327 +08 [2066458] HINT:  The transaction might succeed if retried.
+2026-10-07 10:56:14.327 +08 [2066458] STATEMENT:  PREPARE TRANSACTION 'citus_0_85257_36757_2374'
+2026-10-07 10:56:24.199 +08 [2100978] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:56:24.199 +08 [2100978] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:56:24.199 +08 [2100978] HINT:  The transaction might succeed if retried.
+2026-10-07 10:56:24.199 +08 [2100978] STATEMENT:  PREPARE TRANSACTION 'citus_0_85245_38109_2406'
+2026-10-07 10:56:34.555 +08 [2066465] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:56:34.555 +08 [2066465] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:56:34.555 +08 [2066465] HINT:  The transaction might succeed if retried.
+2026-10-07 10:56:34.555 +08 [2066465] STATEMENT:  PREPARE TRANSACTION 'citus_0_85269_39468_2467'
+2026-10-07 10:56:50.771 +08 [2066566] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:56:50.771 +08 [2066566] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:56:50.771 +08 [2066566] HINT:  The transaction might succeed if retried.
+2026-10-07 10:56:50.771 +08 [2066566] STATEMENT:  PREPARE TRANSACTION 'citus_0_85271_41513_2528'
+2026-10-07 10:56:52.987 +08 [2092907] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:56:52.987 +08 [2092907] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:56:52.987 +08 [2092907] HINT:  The transaction might succeed if retried.
+2026-10-07 10:56:52.987 +08 [2092907] STATEMENT:  PREPARE TRANSACTION 'citus_0_85244_41828_2602'
+2026-10-07 10:56:54.073 +08 [2066483] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:56:54.073 +08 [2066483] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:56:54.073 +08 [2066483] HINT:  The transaction might succeed if retried.
+2026-10-07 10:56:54.073 +08 [2066483] STATEMENT:  UPDATE public.orders_102150 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (488582)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:56:57.784 +08 [2071735] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:56:57.784 +08 [2071735] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:56:57.784 +08 [2071735] HINT:  The transaction might succeed if retried.
+2026-10-07 10:56:57.784 +08 [2071735] STATEMENT:  PREPARE TRANSACTION 'citus_0_85258_42441_2653'
+2026-10-07 10:57:06.674 +08 [2153313] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:57:06.674 +08 [2153313] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:57:06.674 +08 [2153313] HINT:  The transaction might succeed if retried.
+2026-10-07 10:57:06.674 +08 [2153313] STATEMENT:  PREPARE TRANSACTION 'citus_0_85246_43605_2781'
+2026-10-07 10:57:10.349 +08 [2159151] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:57:10.349 +08 [2159151] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:57:10.349 +08 [2159151] HINT:  The transaction might succeed if retried.
+2026-10-07 10:57:10.349 +08 [2159151] STATEMENT:  PREPARE TRANSACTION 'citus_0_85271_44100_2702'
+2026-10-07 10:57:10.429 +08 [2103370] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:57:10.429 +08 [2103370] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-10-07 10:57:10.429 +08 [2103370] HINT:  The transaction might succeed if retried.
+2026-10-07 10:57:30.307 +08 [2074695] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:57:30.307 +08 [2074695] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:57:30.307 +08 [2074695] HINT:  The transaction might succeed if retried.
+2026-10-07 10:57:30.307 +08 [2074695] STATEMENT:  UPDATE public.orders_102146 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (1085752)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 10:57:36.517 +08 [2066450] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:57:36.517 +08 [2066450] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:57:36.517 +08 [2066450] HINT:  The transaction might succeed if retried.
+2026-10-07 10:57:36.517 +08 [2066450] STATEMENT:  PREPARE TRANSACTION 'citus_0_85256_47217_2956'
+2026-10-07 10:58:39.390 +08 [2172289] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:58:39.390 +08 [2172289] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:58:39.390 +08 [2172289] HINT:  The transaction might succeed if retried.
+2026-10-07 10:58:39.390 +08 [2172289] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (3809241)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 10:59:00.972 +08 [2199812] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:59:00.972 +08 [2199812] DETAIL:  Reason code: Canceled on conflict out to pivot 261916, during read.
+2026-10-07 10:59:00.972 +08 [2199812] HINT:  The transaction might succeed if retried.
+2026-10-07 10:59:00.972 +08 [2199812] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102154 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:59:03.168 +08 [2066611] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:59:03.168 +08 [2066611] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:59:03.168 +08 [2066611] HINT:  The transaction might succeed if retried.
+2026-10-07 10:59:03.168 +08 [2066611] STATEMENT:  PREPARE TRANSACTION 'citus_0_85260_57536_3827'
+2026-10-07 10:59:09.514 +08 [2066483] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:59:09.514 +08 [2066483] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:59:09.514 +08 [2066483] HINT:  The transaction might succeed if retried.
+2026-10-07 10:59:09.514 +08 [2066483] STATEMENT:  PREPARE TRANSACTION 'citus_0_85252_58302_3655'
+2026-10-07 10:59:13.277 +08 [2066459] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:59:13.277 +08 [2066459] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 10:59:13.277 +08 [2066459] HINT:  The transaction might succeed if retried.
+2026-10-07 10:59:13.277 +08 [2066459] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (3252231)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 10:59:23.419 +08 [2164210] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:59:23.419 +08 [2164210] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 10:59:23.419 +08 [2164210] HINT:  The transaction might succeed if retried.
+2026-10-07 10:59:23.419 +08 [2164210] STATEMENT:  PREPARE TRANSACTION 'citus_0_85271_59916_3907'
+2026-10-07 10:59:39.659 +08 [2177149] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:59:39.659 +08 [2177149] DETAIL:  Reason code: Canceled on conflict out to pivot 265663, during read.
+2026-10-07 10:59:39.659 +08 [2177149] HINT:  The transaction might succeed if retried.
+2026-10-07 10:59:39.659 +08 [2177149] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102150 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:59:39.672 +08 [2212344] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:59:39.672 +08 [2212346] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 10:59:50.615 +08 [2215372] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 10:59:50.615 +08 [2215372] DETAIL:  Reason code: Canceled on conflict out to pivot 266650, during read.
+2026-10-07 10:59:50.615 +08 [2215372] HINT:  The transaction might succeed if retried.
+2026-10-07 10:59:50.615 +08 [2215372] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102166 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 10:59:58.799 +08 [2217414] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:01:00.234 +08 [2066459] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:01:00.234 +08 [2066459] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:01:00.234 +08 [2066459] HINT:  The transaction might succeed if retried.
+2026-10-07 11:01:00.234 +08 [2066459] STATEMENT:  PREPARE TRANSACTION 'citus_0_85251_71328_4633'
+2026-10-07 11:01:07.912 +08 [2121394] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:01:07.912 +08 [2121394] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:01:07.912 +08 [2121394] HINT:  The transaction might succeed if retried.
+2026-10-07 11:01:07.912 +08 [2121394] STATEMENT:  PREPARE TRANSACTION 'citus_0_85242_72259_4786'
+2026-10-07 11:01:15.083 +08 [2066563] ERROR:  could not serialize access due to concurrent update
+2026-10-07 11:01:15.083 +08 [2066563] STATEMENT:  WITH credit AS (UPDATE public.inventory_102134 inventory SET quantity = (inventory.quantity OPERATOR(pg_catalog.+) 4), updated_at = '2026-10-07 11:01:15.075619'::timestamp without time zone WHERE ((inventory.merchant_id OPERATOR(pg_catalog.=) '12'::bigint) AND (inventory.product_id OPERATOR(pg_catalog.=) '459012'::bigint)) RETURNING 1 AS "?column?") SELECT (EXISTS (SELECT 1 AS "?column?" FROM credit credit("?column?"))) AS credit_ok
+2026-10-07 11:01:47.811 +08 [2235344] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:01:47.811 +08 [2235346] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:02:11.349 +08 [2036665] WARNING:  terminating connection due to administrator command
+2026-10-07 11:02:11.349 +08 [2036665] CONTEXT:  while executing command on xcnf19:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 11:02:11.349 +08 [2036665] WARNING:  terminating connection due to administrator command
+2026-10-07 11:02:11.349 +08 [2036665] CONTEXT:  while executing command on xcnf18:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 11:02:11.354 +08 [2036665] WARNING:  could not issue cancel request
+2026-10-07 11:02:11.354 +08 [2036665] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-10-07 11:02:11.354 +08 [2036665] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 11:02:12.138 +08 [2036404] LOG:  received fast shutdown request
+2026-10-07 11:02:12.139 +08 [2036404] LOG:  aborting any active transactions
+2026-10-07 11:02:12.139 +08 [2221996] FATAL:  terminating connection due to administrator command
+2026-10-07 11:02:12.139 +08 [2230513] FATAL:  terminating connection due to administrator command
+2026-10-07 11:02:12.143 +08 [2036404] LOG:  background worker "logical replication launcher" (PID 2036454) exited with exit code 1
+2026-10-07 11:02:12.147 +08 [2036447] LOG:  shutting down
+2026-10-07 11:02:12.147 +08 [2036447] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 11:02:13.047 +08 [2036447] LOG:  checkpoint complete: wrote 121266 buffers (92.5%), wrote 36 SLRU buffers; 0 WAL file(s) added, 0 removed, 116 recycled; write=0.880 s, sync=0.002 s, total=0.900 s; sync files=320, longest=0.001 s, average=0.001 s; distance=1893638 kB, estimate=1893638 kB; lsn=2/B322CF50, redo lsn=2/B322CF50
+2026-10-07 11:02:13.329 +08 [2036404] LOG:  database system is shut down
+2026-10-07 11:02:15.172 +08 [2239661] LOG:  There is no designated Main database.
+2026-10-07 11:02:15.172 +08 [2239661] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 11:02:15.172 +08 [2239661] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 11:02:15.307 +08 [2239661] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 11:02:15.308 +08 [2239661] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 11:02:15.308 +08 [2239661] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 11:02:15.342 +08 [2239661] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 11:02:15.387 +08 [2239686] LOG:  database system was shut down at 2026-10-07 11:02:13 +08
+2026-10-07 11:02:15.415 +08 [2239661] LOG:  database system is ready to accept connections
+2026-10-07 11:02:16.190 +08 [2239775] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 11:02:16.190 +08 [2239775] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 11:03:32.384 +08 [2250260] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:03:32.392 +08 [2250261] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:03:50.336 +08 [2246110] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:03:50.336 +08 [2246110] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:03:50.336 +08 [2246110] HINT:  The transaction might succeed if retried.
+2026-10-07 11:03:50.336 +08 [2246110] STATEMENT:  PREPARE TRANSACTION 'citus_0_88511_2734_134'
+2026-10-07 11:03:50.431 +08 [2246219] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:03:50.431 +08 [2246219] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:03:50.431 +08 [2246219] HINT:  The transaction might succeed if retried.
+2026-10-07 11:03:50.431 +08 [2246219] STATEMENT:  PREPARE TRANSACTION 'citus_0_88514_2736_90'
+2026-10-07 11:03:56.203 +08 [2246786] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:03:56.203 +08 [2246786] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:03:56.203 +08 [2246786] HINT:  The transaction might succeed if retried.
+2026-10-07 11:03:56.203 +08 [2246786] STATEMENT:  PREPARE TRANSACTION 'citus_0_88523_3154_129'
+2026-10-07 11:04:27.196 +08 [2260949] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:04:28.236 +08 [2255908] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:04:28.236 +08 [2255908] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 11:04:28.236 +08 [2255908] HINT:  The transaction might succeed if retried.
+2026-10-07 11:04:28.236 +08 [2255908] CONTEXT:  SQL statement "INSERT INTO public.orders (
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  VALUES (
+	    p_order_id, p_merchant_id, p_customer_id, 'PENDING',
+	    v_total::numeric(12,2), CURRENT_TIMESTAMP
+	  )
+	  RETURNING total_amount, created_at"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 69 at SQL statement
+2026-10-07 11:04:28.236 +08 [2255908] STATEMENT:  SELECT public.place_order('693'::bigint, '870693'::bigint, '5001884'::bigint, 5, '{162693,479693,125693,123693,419693}'::bigint[], '{3,5,4,3,4}'::integer[], '{15005651,15005652,15005653,15005654,15005655}'::bigint[]) AS place_order
+2026-10-07 11:04:28.529 +08 [2255941] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:04:28.529 +08 [2255941] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 11:04:28.529 +08 [2255941] HINT:  The transaction might succeed if retried.
+2026-10-07 11:04:28.529 +08 [2255941] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (717227)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 11:04:30.781 +08 [2255913] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:04:30.781 +08 [2255913] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:04:30.781 +08 [2255913] HINT:  The transaction might succeed if retried.
+2026-10-07 11:04:30.781 +08 [2255913] STATEMENT:  PREPARE TRANSACTION 'citus_0_88657_7519_117'
+2026-10-07 11:04:31.956 +08 [2256097] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:04:31.956 +08 [2256097] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:04:31.956 +08 [2256097] HINT:  The transaction might succeed if retried.
+2026-10-07 11:04:31.956 +08 [2256097] STATEMENT:  PREPARE TRANSACTION 'citus_0_88630_7621_141'
+2026-10-07 11:04:45.452 +08 [2256382] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:04:45.452 +08 [2256382] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:04:45.452 +08 [2256382] HINT:  The transaction might succeed if retried.
+2026-10-07 11:04:45.452 +08 [2256382] STATEMENT:  PREPARE TRANSACTION 'citus_0_88642_9785_174'
+2026-10-07 11:04:52.102 +08 [2267739] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:04:52.105 +08 [2267740] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:05:32.388 +08 [2255944] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:05:32.388 +08 [2255944] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:05:32.388 +08 [2255944] HINT:  The transaction might succeed if retried.
+2026-10-07 11:05:32.388 +08 [2255944] STATEMENT:  PREPARE TRANSACTION 'citus_0_88618_16145_458'
+2026-10-07 11:06:00.689 +08 [2255907] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:06:00.689 +08 [2255907] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 11:06:00.689 +08 [2255907] HINT:  The transaction might succeed if retried.
+2026-10-07 11:06:00.689 +08 [2255907] STATEMENT:  UPDATE public.orders_102158 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (2147145)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 11:06:35.624 +08 [2255909] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:06:35.624 +08 [2255909] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:06:35.624 +08 [2255909] HINT:  The transaction might succeed if retried.
+2026-10-07 11:06:35.624 +08 [2255909] STATEMENT:  PREPARE TRANSACTION 'citus_0_88634_24985_836'
+2026-10-07 11:06:57.607 +08 [2256025] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:06:57.607 +08 [2256025] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:06:57.607 +08 [2256025] HINT:  The transaction might succeed if retried.
+2026-10-07 11:06:57.607 +08 [2256025] STATEMENT:  PREPARE TRANSACTION 'citus_0_88668_28056_768'
+2026-10-07 11:06:58.944 +08 [2255940] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:06:58.944 +08 [2255940] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:06:58.944 +08 [2255940] HINT:  The transaction might succeed if retried.
+2026-10-07 11:06:58.944 +08 [2255940] STATEMENT:  PREPARE TRANSACTION 'citus_0_88616_28194_811'
+2026-10-07 11:07:03.825 +08 [2265665] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:07:03.825 +08 [2265665] DETAIL:  Reason code: Canceled on conflict out to pivot 302814, during read.
+2026-10-07 11:07:03.825 +08 [2265665] HINT:  The transaction might succeed if retried.
+2026-10-07 11:07:03.825 +08 [2265665] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102142 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 11:07:13.628 +08 [2255937] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:07:13.628 +08 [2255937] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:07:13.628 +08 [2255937] HINT:  The transaction might succeed if retried.
+2026-10-07 11:07:13.628 +08 [2255937] STATEMENT:  PREPARE TRANSACTION 'citus_0_88655_30097_913'
+2026-10-07 11:07:17.128 +08 [2255980] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:07:17.128 +08 [2255980] DETAIL:  Reason code: Canceled on conflict out to pivot 304188, during read.
+2026-10-07 11:07:17.128 +08 [2255980] HINT:  The transaction might succeed if retried.
+2026-10-07 11:07:17.128 +08 [2255980] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102162 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 11:07:24.787 +08 [2255906] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:07:24.787 +08 [2255906] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:07:24.787 +08 [2255906] HINT:  The transaction might succeed if retried.
+2026-10-07 11:07:24.787 +08 [2255906] STATEMENT:  PREPARE TRANSACTION 'citus_0_88632_31595_956'
+2026-10-07 11:07:27.818 +08 [2255907] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:07:27.818 +08 [2255907] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 11:07:27.818 +08 [2255907] HINT:  The transaction might succeed if retried.
+2026-10-07 11:07:27.818 +08 [2255907] STATEMENT:  UPDATE public.orders_102162 orders SET order_status = 'PENDING'::text WHERE ((order_id OPERATOR(pg_catalog.=) (4542710)::bigint) AND (order_status IS DISTINCT FROM 'PENDING'::text))
+2026-10-07 11:08:04.579 +08 [2329017] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:08:24.118 +08 [2255917] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:08:24.118 +08 [2255917] DETAIL:  Reason code: Canceled on conflict out to pivot 311440, during read.
+2026-10-07 11:08:24.118 +08 [2255917] HINT:  The transaction might succeed if retried.
+2026-10-07 11:08:24.118 +08 [2255917] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102150 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 11:08:29.028 +08 [2330946] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:08:29.028 +08 [2330946] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:08:29.028 +08 [2330946] HINT:  The transaction might succeed if retried.
+2026-10-07 11:08:29.028 +08 [2330946] STATEMENT:  PREPARE TRANSACTION 'citus_0_88626_40121_1240'
+2026-10-07 11:09:15.841 +08 [2336577] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:09:15.841 +08 [2336577] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 11:09:15.841 +08 [2336577] HINT:  The transaction might succeed if retried.
+2026-10-07 11:09:15.841 +08 [2336577] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (1357260)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 11:09:21.648 +08 [2256291] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:09:21.648 +08 [2256291] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:09:21.648 +08 [2256291] HINT:  The transaction might succeed if retried.
+2026-10-07 11:09:21.648 +08 [2256291] STATEMENT:  PREPARE TRANSACTION 'citus_0_88661_46888_1486'
+2026-10-07 11:09:23.308 +08 [2350317] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:09:23.324 +08 [2350318] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:09:32.225 +08 [2352848] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:09:32.461 +08 [2260947] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:09:32.461 +08 [2260947] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:09:32.461 +08 [2260947] HINT:  The transaction might succeed if retried.
+2026-10-07 11:09:32.461 +08 [2260947] STATEMENT:  PREPARE TRANSACTION 'citus_0_88664_48236_1674'
+2026-10-07 11:09:41.901 +08 [2255896] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:09:41.901 +08 [2255896] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 11:09:41.901 +08 [2255896] HINT:  The transaction might succeed if retried.
+2026-10-07 11:09:41.901 +08 [2255896] STATEMENT:  UPDATE public.orders_102146 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (2518322)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 11:09:48.939 +08 [2261261] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:09:48.939 +08 [2261261] DETAIL:  Reason code: Canceled on conflict out to pivot 320015, during read.
+2026-10-07 11:09:48.939 +08 [2261261] HINT:  The transaction might succeed if retried.
+2026-10-07 11:09:48.939 +08 [2261261] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102158 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 11:09:48.974 +08 [2357496] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:10:11.548 +08 [2363943] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:10:11.551 +08 [2363944] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:10:21.542 +08 [2329043] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:10:21.542 +08 [2329043] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:10:21.542 +08 [2329043] HINT:  The transaction might succeed if retried.
+2026-10-07 11:10:21.542 +08 [2329043] STATEMENT:  PREPARE TRANSACTION 'citus_0_88668_54314_1720'
+2026-10-07 11:10:36.648 +08 [2256022] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:10:36.648 +08 [2256022] DETAIL:  Reason code: Canceled on conflict out to pivot 324806, during read.
+2026-10-07 11:10:36.648 +08 [2256022] HINT:  The transaction might succeed if retried.
+2026-10-07 11:10:36.648 +08 [2256022] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102158 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 11:10:44.078 +08 [2374196] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:10:57.938 +08 [2334542] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:10:57.938 +08 [2334542] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 11:10:57.938 +08 [2334542] HINT:  The transaction might succeed if retried.
+2026-10-07 11:10:57.938 +08 [2334542] STATEMENT:  UPDATE public.orders_102166 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (4991321)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 11:11:05.438 +08 [2255919] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:11:05.438 +08 [2255919] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:11:05.438 +08 [2255919] HINT:  The transaction might succeed if retried.
+2026-10-07 11:11:05.438 +08 [2255919] STATEMENT:  PREPARE TRANSACTION 'citus_0_88644_59483_1843'
+2026-10-07 11:11:12.292 +08 [2255896] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:11:12.292 +08 [2255896] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-10-07 11:11:12.292 +08 [2255896] HINT:  The transaction might succeed if retried.
+2026-10-07 11:11:33.283 +08 [2256344] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:11:33.283 +08 [2256344] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:11:33.283 +08 [2256344] HINT:  The transaction might succeed if retried.
+2026-10-07 11:11:33.283 +08 [2256344] STATEMENT:  PREPARE TRANSACTION 'citus_0_88631_62842_2011'
+2026-10-07 11:11:34.868 +08 [2350704] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:11:34.868 +08 [2350704] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:11:34.868 +08 [2350704] HINT:  The transaction might succeed if retried.
+2026-10-07 11:11:34.868 +08 [2350704] STATEMENT:  PREPARE TRANSACTION 'citus_0_88613_63061_2121'
+2026-10-07 11:11:50.301 +08 [2393708] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:11:51.305 +08 [2255929] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:11:51.305 +08 [2255929] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:11:51.305 +08 [2255929] HINT:  The transaction might succeed if retried.
+2026-10-07 11:11:51.305 +08 [2255929] STATEMENT:  PREPARE TRANSACTION 'citus_0_88669_64908_2153'
+2026-10-07 11:11:52.272 +08 [2255901] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:11:52.272 +08 [2255901] DETAIL:  Reason code: Canceled on conflict out to pivot 332042, during read.
+2026-10-07 11:11:52.272 +08 [2255901] HINT:  The transaction might succeed if retried.
+2026-10-07 11:11:52.272 +08 [2255901] STATEMENT:  SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102146 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+2026-10-07 11:11:52.301 +08 [2394324] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:11:59.009 +08 [2394344] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:11:59.009 +08 [2394344] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:11:59.009 +08 [2394344] HINT:  The transaction might succeed if retried.
+2026-10-07 11:11:59.009 +08 [2394344] STATEMENT:  PREPARE TRANSACTION 'citus_0_88670_65731_2308'
+2026-10-07 11:12:06.051 +08 [2255902] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:12:06.051 +08 [2255902] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:12:06.051 +08 [2255902] HINT:  The transaction might succeed if retried.
+2026-10-07 11:12:06.051 +08 [2255902] STATEMENT:  PREPARE TRANSACTION 'citus_0_88672_66474_2206'
+2026-10-07 11:12:20.717 +08 [2361094] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:12:20.717 +08 [2361094] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 11:12:20.717 +08 [2361094] HINT:  The transaction might succeed if retried.
+2026-10-07 11:12:20.717 +08 [2361094] STATEMENT:  UPDATE public.orders_102158 orders SET order_status = 'SHIPPED'::text WHERE ((order_id OPERATOR(pg_catalog.=) (2264228)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+2026-10-07 11:12:26.230 +08 [2389838] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:12:26.230 +08 [2389838] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:12:26.230 +08 [2389838] HINT:  The transaction might succeed if retried.
+2026-10-07 11:12:26.230 +08 [2389838] STATEMENT:  PREPARE TRANSACTION 'citus_0_88613_68905_2333'
+2026-10-07 11:13:21.365 +08 [2415312] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:13:25.983 +08 [2415896] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:13:45.032 +08 [2255905] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:13:45.032 +08 [2255905] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:13:45.032 +08 [2255905] HINT:  The transaction might succeed if retried.
+2026-10-07 11:13:45.032 +08 [2255905] STATEMENT:  PREPARE TRANSACTION 'citus_0_88666_77128_2543'
+2026-10-07 11:13:45.500 +08 [2255986] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:13:45.500 +08 [2255986] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:13:45.500 +08 [2255986] HINT:  The transaction might succeed if retried.
+2026-10-07 11:13:45.500 +08 [2255986] STATEMENT:  PREPARE TRANSACTION 'citus_0_88619_77179_2441'
+2026-10-07 11:13:56.502 +08 [2421100] LOG:  could not receive data from client: Connection reset by peer
+2026-10-07 11:14:06.155 +08 [2330973] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 11:14:06.155 +08 [2330973] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 11:14:06.155 +08 [2330973] HINT:  The transaction might succeed if retried.
+2026-10-07 11:14:06.155 +08 [2330973] STATEMENT:  PREPARE TRANSACTION 'citus_0_88665_79262_2758'
+2026-10-07 11:14:12.856 +08 [2239775] WARNING:  terminating connection due to administrator command
+2026-10-07 11:14:12.856 +08 [2239775] CONTEXT:  while executing command on xcnf19:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 11:14:12.856 +08 [2239775] WARNING:  terminating connection due to administrator command
+2026-10-07 11:14:12.856 +08 [2239775] CONTEXT:  while executing command on xcnf18:5536
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 11:14:12.860 +08 [2239775] WARNING:  could not issue cancel request
+2026-10-07 11:14:12.860 +08 [2239775] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-10-07 11:14:12.860 +08 [2239775] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 11:14:13.781 +08 [2239661] LOG:  received fast shutdown request
+2026-10-07 11:14:13.785 +08 [2239661] LOG:  aborting any active transactions
+2026-10-07 11:14:13.785 +08 [2401807] FATAL:  terminating connection due to administrator command
+2026-10-07 11:14:13.785 +08 [2401622] FATAL:  terminating connection due to administrator command
+2026-10-07 11:14:13.789 +08 [2239661] LOG:  background worker "logical replication launcher" (PID 2239689) exited with exit code 1
+2026-10-07 11:14:13.793 +08 [2239684] LOG:  shutting down
+2026-10-07 11:14:13.793 +08 [2239684] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 11:14:15.451 +08 [2239684] LOG:  checkpoint complete: wrote 121274 buffers (92.5%), wrote 36 SLRU buffers; 0 WAL file(s) added, 0 removed, 115 recycled; write=1.195 s, sync=0.107 s, total=1.659 s; sync files=321, longest=0.054 s, average=0.001 s; distance=1893814 kB, estimate=1893814 kB; lsn=3/26B9A9C0, redo lsn=3/26B9A9C0
+2026-10-07 11:14:15.454 +08 [2424107] LOG:  PID 2401807 in cancel request did not match any process
+2026-10-07 11:14:15.750 +08 [2239661] LOG:  database system is shut down

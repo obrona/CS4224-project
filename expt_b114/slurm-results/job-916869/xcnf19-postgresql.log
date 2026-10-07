@@ -1,0 +1,1489 @@
+2026-10-07 13:39:21.123 +08 [894383] LOG:  There is no designated Main database.
+2026-10-07 13:39:21.123 +08 [894383] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 13:39:21.123 +08 [894383] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 13:39:21.245 +08 [894383] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 13:39:21.245 +08 [894383] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 13:39:21.246 +08 [894383] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 13:39:21.246 +08 [894383] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 13:39:21.250 +08 [894451] LOG:  database system was shut down at 2026-10-07 13:39:19 +08
+2026-10-07 13:39:21.254 +08 [894383] LOG:  database system is ready to accept connections
+2026-10-07 13:39:23.537 +08 [895424] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 13:39:23.537 +08 [895424] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:52:18.669 +08 [894383] LOG:  received fast shutdown request
+2026-10-07 13:52:18.671 +08 [894383] LOG:  aborting any active transactions
+2026-10-07 13:52:18.671 +08 [971633] FATAL:  terminating connection due to administrator command
+2026-10-07 13:52:18.671 +08 [958960] FATAL:  terminating connection due to administrator command
+2026-10-07 13:52:18.671 +08 [958959] FATAL:  terminating connection due to administrator command
+2026-10-07 13:52:18.675 +08 [894383] LOG:  background worker "logical replication launcher" (PID 894457) exited with exit code 1
+2026-10-07 13:52:18.682 +08 [894446] LOG:  shutting down
+2026-10-07 13:52:18.682 +08 [894446] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 13:52:18.756 +08 [977684] LOG:  PID 958960 in cancel request did not match any process
+2026-10-07 13:52:18.758 +08 [977687] LOG:  PID 958959 in cancel request did not match any process
+2026-10-07 13:52:19.660 +08 [894446] LOG:  checkpoint complete: wrote 126362 buffers (96.4%), wrote 32 SLRU buffers; 0 WAL file(s) added, 0 removed, 239 recycled; write=0.933 s, sync=0.006 s, total=0.979 s; sync files=1256, longest=0.001 s, average=0.001 s; distance=3910053 kB, estimate=3910053 kB; lsn=0/F01C8608, redo lsn=0/F01C8608
+2026-10-07 13:52:19.969 +08 [894383] LOG:  database system is shut down
+2026-10-07 13:52:22.830 +08 [978126] LOG:  There is no designated Main database.
+2026-10-07 13:52:22.830 +08 [978126] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 13:52:22.830 +08 [978126] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 13:52:22.945 +08 [978126] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 13:52:22.946 +08 [978126] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 13:52:22.946 +08 [978126] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 13:52:22.946 +08 [978126] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 13:52:22.950 +08 [978148] LOG:  database system was shut down at 2026-10-07 13:52:19 +08
+2026-10-07 13:52:22.954 +08 [978126] LOG:  database system is ready to accept connections
+2026-10-07 13:52:23.871 +08 [978270] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 13:52:23.871 +08 [978270] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:55:53.047 +08 [987255] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:55:53.047 +08 [987255] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 13:55:53.047 +08 [987255] STATEMENT:  SELECT public.place_order('21'::bigint, '532021'::bigint, '5017263'::bigint, 4, '{318021,426021,179021,142021,460021}'::bigint[], '{1,3,3,2,2}'::integer[], '{15051438,15051439,15051440,15051441,0}'::bigint[]) AS place_order
+2026-10-07 13:56:41.373 +08 [987251] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:56:41.373 +08 [987251] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 13:56:41.373 +08 [987251] STATEMENT:  SELECT public.place_order('34'::bigint, '435034'::bigint, '5022837'::bigint, 2, '{230034,209034,173034,378034,62034}'::bigint[], '{2,3,2,1,2}'::integer[], '{15068038,15068039,0,0,0}'::bigint[]) AS place_order
+2026-10-07 13:56:53.888 +08 [987250] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:56:53.888 +08 [987250] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 13:56:53.888 +08 [987250] STATEMENT:  SELECT public.place_order('34'::bigint, '624034'::bigint, '5024220'::bigint, 5, '{265034,475034,130034,129034,157034}'::bigint[], '{2,5,2,3,2}'::integer[], '{15072192,15072193,15072194,15072195,15072196}'::bigint[]) AS place_order
+2026-10-07 13:58:11.703 +08 [987252] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:58:11.703 +08 [987252] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 13:58:11.703 +08 [987252] STATEMENT:  SELECT public.place_order('48'::bigint, '598048'::bigint, '5033134'::bigint, 4, '{463048,257048,412048,58048,190048}'::bigint[], '{5,5,4,3,5}'::integer[], '{15098905,15098906,15098907,15098908,0}'::bigint[]) AS place_order
+2026-10-07 13:59:13.097 +08 [1047545] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:59:13.097 +08 [1047545] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+2026-10-07 13:59:13.097 +08 [1047545] STATEMENT:  SELECT public.place_order('82'::bigint, '878082'::bigint, '5040263'::bigint, 5, '{48082,122082,300082,459082,408082}'::bigint[], '{3,4,2,5,4}'::integer[], '{15119987,15119988,15119989,15119990,15119991}'::bigint[]) AS place_order
+2026-10-07 14:01:07.172 +08 [1065471] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:01:07.172 +08 [1065471] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:01:07.172 +08 [1065471] STATEMENT:  SELECT public.place_order('1'::bigint, '296001'::bigint, '5053373'::bigint, 3, '{2001,21001,103001,347001,112001}'::bigint[], '{5,1,2,1,3}'::integer[], '{15159084,15159085,15159086,0,0}'::bigint[]) AS place_order
+2026-10-07 14:02:22.996 +08 [1020797] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:02:22.996 +08 [1020797] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:02:22.996 +08 [1020797] STATEMENT:  SELECT public.place_order('95'::bigint, '304095'::bigint, '5062084'::bigint, 3, '{49095,301095,145095,493095,102095}'::bigint[], '{3,1,2,3,4}'::integer[], '{15185222,15185223,15185224,0,0}'::bigint[]) AS place_order
+2026-10-07 14:03:13.148 +08 [1118572] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:03:13.148 +08 [1118572] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:03:13.148 +08 [1118572] STATEMENT:  SELECT public.place_order('70'::bigint, '680070'::bigint, '5067833'::bigint, 2, '{239070,25070,29070,216070,13070}'::bigint[], '{3,5,1,4,5}'::integer[], '{15202494,15202495,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:04:18.751 +08 [978270] WARNING:  terminating connection due to administrator command
+2026-10-07 14:04:18.751 +08 [978270] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 14:04:19.098 +08 [978126] LOG:  received fast shutdown request
+2026-10-07 14:04:19.099 +08 [978126] LOG:  aborting any active transactions
+2026-10-07 14:04:19.099 +08 [1119007] FATAL:  terminating connection due to administrator command
+2026-10-07 14:04:19.099 +08 [1135136] FATAL:  terminating connection due to administrator command
+2026-10-07 14:04:19.100 +08 [1119003] FATAL:  terminating connection due to administrator command
+2026-10-07 14:04:19.104 +08 [978126] LOG:  background worker "logical replication launcher" (PID 978151) exited with exit code 1
+2026-10-07 14:04:19.108 +08 [978146] LOG:  shutting down
+2026-10-07 14:04:19.109 +08 [978146] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 14:04:20.049 +08 [978146] LOG:  checkpoint complete: wrote 126936 buffers (96.8%), wrote 127 SLRU buffers; 0 WAL file(s) added, 0 removed, 130 recycled; write=0.921 s, sync=0.002 s, total=0.941 s; sync files=359, longest=0.001 s, average=0.001 s; distance=2141343 kB, estimate=2141343 kB; lsn=1/72CF0298, redo lsn=1/72CF0298
+2026-10-07 14:04:20.352 +08 [978126] LOG:  database system is shut down
+2026-10-07 14:04:23.246 +08 [1150825] LOG:  There is no designated Main database.
+2026-10-07 14:04:23.246 +08 [1150825] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 14:04:23.246 +08 [1150825] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 14:04:23.365 +08 [1150825] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 14:04:23.365 +08 [1150825] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 14:04:23.365 +08 [1150825] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 14:04:23.373 +08 [1150825] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 14:04:23.404 +08 [1150894] LOG:  database system was shut down at 2026-10-07 14:04:20 +08
+2026-10-07 14:04:23.408 +08 [1150825] LOG:  database system is ready to accept connections
+2026-10-07 14:04:24.288 +08 [1151111] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 14:04:24.288 +08 [1151111] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 14:05:15.141 +08 [1159085] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:05:15.141 +08 [1159085] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+2026-10-07 14:05:15.141 +08 [1159085] STATEMENT:  SELECT public.place_order('55'::bigint, '919055'::bigint, '5000101'::bigint, 3, '{61055,352055,120055,98055,2055}'::bigint[], '{5,5,1,4,1}'::integer[], '{15000301,15000302,15000303,0,0}'::bigint[]) AS place_order
+2026-10-07 14:05:53.178 +08 [1159096] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:05:53.178 +08 [1159096] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:05:53.178 +08 [1159096] STATEMENT:  SELECT public.place_order('15'::bigint, '840015'::bigint, '5005470'::bigint, 4, '{476015,410015,181015,26015,160015}'::bigint[], '{2,2,5,1,4}'::integer[], '{15016287,15016288,15016289,15016290,0}'::bigint[]) AS place_order
+2026-10-07 14:05:54.595 +08 [1159086] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:05:54.595 +08 [1159086] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:05:54.595 +08 [1159086] STATEMENT:  SELECT public.place_order('34'::bigint, '332034'::bigint, '5005705'::bigint, 5, '{262034,308034,126034,321034,379034}'::bigint[], '{5,4,3,2,2}'::integer[], '{15017000,15017001,15017002,15017003,15017004}'::bigint[]) AS place_order
+2026-10-07 14:06:21.170 +08 [1167951] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 14:06:21.170 +08 [1167951] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 14:06:21.170 +08 [1167951] HINT:  The transaction might succeed if retried.
+2026-10-07 14:06:21.170 +08 [1167951] CONTEXT:  SQL statement "INSERT INTO public.orders (
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  VALUES (
+	    p_order_id, p_merchant_id, p_customer_id, 'PENDING',
+	    v_total::numeric(12,2), CURRENT_TIMESTAMP
+	  )
+	  RETURNING total_amount, created_at"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 69 at SQL statement
+2026-10-07 14:06:21.170 +08 [1167951] STATEMENT:  SELECT public.place_order('114'::bigint, '208114'::bigint, '5010015'::bigint, 4, '{448114,367114,293114,33114,249114}'::bigint[], '{2,1,2,1,1}'::integer[], '{15029892,15029893,15029894,15029895,0}'::bigint[]) AS place_order
+2026-10-07 14:06:32.351 +08 [1167952] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:06:32.351 +08 [1167952] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:06:32.351 +08 [1167952] STATEMENT:  SELECT public.place_order('260'::bigint, '385260'::bigint, '5011824'::bigint, 4, '{441260,192260,99260,238260,134260}'::bigint[], '{1,4,1,1,1}'::integer[], '{15035417,15035418,15035419,15035420,0}'::bigint[]) AS place_order
+2026-10-07 14:07:57.089 +08 [1167946] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:07:57.089 +08 [1167946] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:07:57.089 +08 [1167946] STATEMENT:  SELECT public.place_order('48'::bigint, '23048'::bigint, '5026012'::bigint, 1, '{211048,401048,244048,131048,186048}'::bigint[], '{5,2,4,2,5}'::integer[], '{15078024,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:07:57.133 +08 [1167961] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:07:57.133 +08 [1167961] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:07:57.133 +08 [1167961] STATEMENT:  SELECT public.place_order('48'::bigint, '667048'::bigint, '5026018'::bigint, 2, '{453048,467048,110048,468048,410048}'::bigint[], '{2,2,5,3,3}'::integer[], '{15078040,15078041,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:07:59.189 +08 [1170159] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:07:59.189 +08 [1170159] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:07:59.189 +08 [1170159] STATEMENT:  SELECT public.place_order('183'::bigint, '266183'::bigint, '5026403'::bigint, 1, '{388183,8183,9183,190183,399183}'::bigint[], '{3,2,2,3,2}'::integer[], '{15079166,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:08:13.337 +08 [1167949] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:08:13.337 +08 [1167949] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:08:13.337 +08 [1167949] STATEMENT:  SELECT public.place_order('99'::bigint, '398099'::bigint, '5028696'::bigint, 2, '{45099,109099,191099,428099,189099}'::bigint[], '{2,1,3,4,2}'::integer[], '{15086128,15086129,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:08:44.819 +08 [1167959] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:08:44.819 +08 [1167959] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:08:44.819 +08 [1167959] STATEMENT:  SELECT public.place_order('95'::bigint, '544095'::bigint, '5034024'::bigint, 5, '{59095,405095,79095,2095,376095}'::bigint[], '{3,5,5,2,4}'::integer[], '{15102210,15102211,15102212,15102213,15102214}'::bigint[]) AS place_order
+2026-10-07 14:08:46.420 +08 [1189424] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:08:46.420 +08 [1189424] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:08:46.420 +08 [1189424] STATEMENT:  SELECT public.place_order('867'::bigint, '106867'::bigint, '5034283'::bigint, 5, '{357867,287867,75867,449867,143867}'::bigint[], '{5,3,4,2,5}'::integer[], '{15102987,15102988,15102989,15102990,15102991}'::bigint[]) AS place_order
+2026-10-07 14:08:49.772 +08 [1188841] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:08:49.772 +08 [1188841] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:08:49.772 +08 [1188841] STATEMENT:  SELECT public.place_order('21'::bigint, '992021'::bigint, '5034858'::bigint, 4, '{460021,408021,257021,33021,384021}'::bigint[], '{3,3,3,1,1}'::integer[], '{15104733,15104734,15104735,15104736,0}'::bigint[]) AS place_order
+2026-10-07 14:08:53.468 +08 [1188819] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:08:53.468 +08 [1188819] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:08:53.468 +08 [1188819] STATEMENT:  SELECT public.place_order('25'::bigint, '48025'::bigint, '5035443'::bigint, 3, '{410025,424025,137025,407025,356025}'::bigint[], '{2,1,5,1,2}'::integer[], '{15106474,15106475,15106476,0,0}'::bigint[]) AS place_order
+2026-10-07 14:10:00.643 +08 [1204934] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:10:00.643 +08 [1204934] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:10:00.643 +08 [1204934] STATEMENT:  SELECT public.place_order('51'::bigint, '784051'::bigint, '5046923'::bigint, 5, '{337051,109051,174051,212051,450051}'::bigint[], '{2,4,5,1,5}'::integer[], '{15140894,15140895,15140896,15140897,15140898}'::bigint[]) AS place_order
+2026-10-07 14:10:05.597 +08 [1167960] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:10:05.597 +08 [1167960] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:10:05.597 +08 [1167960] STATEMENT:  SELECT public.place_order('827'::bigint, '729827'::bigint, '5047738'::bigint, 2, '{238827,239827,429827,89827,61827}'::bigint[], '{5,4,1,5,1}'::integer[], '{15143339,15143340,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:10:06.759 +08 [1168725] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:10:06.759 +08 [1168725] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:10:06.759 +08 [1168725] STATEMENT:  SELECT public.place_order('51'::bigint, '709051'::bigint, '5047915'::bigint, 3, '{77051,71051,11051,425051,435051}'::bigint[], '{2,1,1,3,3}'::integer[], '{15143879,15143880,15143881,0,0}'::bigint[]) AS place_order
+2026-10-07 14:10:36.501 +08 [1228361] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:10:36.501 +08 [1228361] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:10:36.501 +08 [1228361] STATEMENT:  SELECT public.place_order('27'::bigint, '684027'::bigint, '5052754'::bigint, 4, '{326027,295027,236027,39027,192027}'::bigint[], '{2,2,4,3,2}'::integer[], '{15158352,15158353,15158354,15158355,0}'::bigint[]) AS place_order
+2026-10-07 14:10:36.532 +08 [1239489] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:10:36.532 +08 [1239489] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:10:36.532 +08 [1239489] STATEMENT:  SELECT public.place_order('27'::bigint, '684027'::bigint, '5052757'::bigint, 4, '{326027,295027,236027,39027,192027}'::bigint[], '{2,2,4,3,2}'::integer[], '{15158366,15158367,15158368,15158369,0}'::bigint[]) AS place_order
+2026-10-07 14:11:13.205 +08 [1239501] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:11:13.205 +08 [1239501] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:11:13.205 +08 [1239501] STATEMENT:  SELECT public.place_order('15'::bigint, '942015'::bigint, '5058539'::bigint, 4, '{497015,33015,163015,328015,24015}'::bigint[], '{4,4,1,4,4}'::integer[], '{15175581,15175582,15175583,15175584,0}'::bigint[]) AS place_order
+2026-10-07 14:12:47.003 +08 [1250742] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:12:47.003 +08 [1250742] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:12:47.003 +08 [1250742] STATEMENT:  SELECT public.place_order('63'::bigint, '628063'::bigint, '5073710'::bigint, 5, '{428063,215063,315063,401063,14063}'::bigint[], '{2,5,4,3,4}'::integer[], '{15221120,15221121,15221122,15221123,15221124}'::bigint[]) AS place_order
+2026-10-07 14:13:08.665 +08 [1229918] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:13:08.665 +08 [1229918] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:13:08.665 +08 [1229918] STATEMENT:  SELECT public.place_order('1'::bigint, '463001'::bigint, '5077249'::bigint, 4, '{353001,237001,403001,454001,240001}'::bigint[], '{1,2,2,3,3}'::integer[], '{15231781,15231782,15231783,15231784,0}'::bigint[]) AS place_order
+2026-10-07 14:13:24.947 +08 [1206100] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:13:24.947 +08 [1206100] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:13:24.947 +08 [1206100] STATEMENT:  SELECT public.place_order('99'::bigint, '675099'::bigint, '5079874'::bigint, 5, '{284099,128099,80099,29099,122099}'::bigint[], '{1,4,3,3,4}'::integer[], '{15239607,15239608,15239609,15239610,15239611}'::bigint[]) AS place_order
+2026-10-07 14:13:33.312 +08 [1204402] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:13:33.312 +08 [1204402] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:13:33.312 +08 [1204402] STATEMENT:  SELECT public.place_order('22'::bigint, '605022'::bigint, '5081240'::bigint, 4, '{355022,429022,355022,375022,426022}'::bigint[], '{2,5,3,2,1}'::integer[], '{15243761,15243762,15243763,15243764,0}'::bigint[]) AS place_order
+2026-10-07 14:13:34.628 +08 [1278911] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:13:34.628 +08 [1278911] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:13:34.628 +08 [1278911] STATEMENT:  SELECT public.place_order('99'::bigint, '372099'::bigint, '5081479'::bigint, 3, '{465099,393099,167099,313099,345099}'::bigint[], '{2,3,4,3,4}'::integer[], '{15244521,15244522,15244523,0,0}'::bigint[]) AS place_order
+2026-10-07 14:13:38.410 +08 [1167948] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:13:38.410 +08 [1167948] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:13:38.410 +08 [1167948] STATEMENT:  SELECT public.place_order('82'::bigint, '373082'::bigint, '5082114'::bigint, 1, '{223082,237082,179082,15082,299082}'::bigint[], '{3,2,3,3,1}'::integer[], '{15246388,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:13:52.699 +08 [1292499] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:13:52.699 +08 [1292499] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:13:52.699 +08 [1292499] STATEMENT:  SELECT public.place_order('63'::bigint, '842063'::bigint, '5084436'::bigint, 3, '{298063,195063,493063,313063,446063}'::bigint[], '{2,1,1,3,1}'::integer[], '{15253304,15253305,15253306,0,0}'::bigint[]) AS place_order
+2026-10-07 14:14:01.286 +08 [1194129] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:14:01.286 +08 [1194129] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:14:01.286 +08 [1194129] STATEMENT:  SELECT public.place_order('25'::bigint, '655025'::bigint, '5085891'::bigint, 2, '{277025,355025,465025,482025,282025}'::bigint[], '{3,2,4,3,5}'::integer[], '{15257641,15257642,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:14:23.319 +08 [1292910] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:14:23.319 +08 [1292910] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:14:23.319 +08 [1292910] STATEMENT:  SELECT public.place_order('34'::bigint, '684034'::bigint, '5089667'::bigint, 1, '{272034,393034,147034,183034,270034}'::bigint[], '{5,3,2,1,5}'::integer[], '{15269014,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:14:24.703 +08 [1294002] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:14:24.703 +08 [1294002] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:14:24.703 +08 [1294002] STATEMENT:  SELECT public.place_order('34'::bigint, '505034'::bigint, '5089927'::bigint, 3, '{494034,336034,215034,341034,224034}'::bigint[], '{2,3,5,2,5}'::integer[], '{15269765,15269766,15269767,0,0}'::bigint[]) AS place_order
+2026-10-07 14:14:41.958 +08 [1306778] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:14:41.958 +08 [1306778] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:14:41.958 +08 [1306778] STATEMENT:  SELECT public.place_order('919'::bigint, '400919'::bigint, '5092901'::bigint, 4, '{110919,374919,151919,55919,279919}'::bigint[], '{5,1,4,2,4}'::integer[], '{15278764,15278765,15278766,15278767,0}'::bigint[]) AS place_order
+2026-10-07 14:15:13.787 +08 [1285246] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:15:13.787 +08 [1285246] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:15:13.787 +08 [1285246] STATEMENT:  SELECT public.place_order('1'::bigint, '398001'::bigint, '5097971'::bigint, 5, '{285001,10001,231001,163001,215001}'::bigint[], '{5,1,2,5,2}'::integer[], '{15293773,15293774,15293775,15293776,15293777}'::bigint[]) AS place_order
+2026-10-07 14:15:28.634 +08 [1290042] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:15:28.634 +08 [1290042] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:15:28.634 +08 [1290042] STATEMENT:  SELECT public.place_order('55'::bigint, '646055'::bigint, '5100444'::bigint, 4, '{9055,245055,67055,214055,41055}'::bigint[], '{2,1,1,5,1}'::integer[], '{15301093,15301094,15301095,15301096,0}'::bigint[]) AS place_order
+2026-10-07 14:15:33.301 +08 [1320858] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:15:33.301 +08 [1320858] STATEMENT:  UPDATE public.inventory_102105 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 20), updated_at = '2026-10-07 14:15:33.313001'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '386001'::bigint) AND (merchant_id OPERATOR(pg_catalog.=) '1'::bigint) AND (product_id OPERATOR(pg_catalog.=) '386001'::bigint) AND ((quantity OPERATOR(pg_catalog.+) 20) OPERATOR(pg_catalog.>=) 0))
+2026-10-07 14:15:42.072 +08 [1298147] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:15:42.072 +08 [1298147] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:15:42.072 +08 [1298147] STATEMENT:  SELECT public.place_order('59'::bigint, '772059'::bigint, '5102704'::bigint, 5, '{182059,411059,58059,125059,278059}'::bigint[], '{1,2,4,5,2}'::integer[], '{15307835,15307836,15307837,15307838,15307839}'::bigint[]) AS place_order
+2026-10-07 14:16:21.311 +08 [1151111] WARNING:  terminating connection due to administrator command
+2026-10-07 14:16:21.311 +08 [1151111] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 14:16:22.144 +08 [1150825] LOG:  received fast shutdown request
+2026-10-07 14:16:22.146 +08 [1150825] LOG:  aborting any active transactions
+2026-10-07 14:16:22.146 +08 [1307320] FATAL:  terminating connection due to administrator command
+2026-10-07 14:16:22.146 +08 [1323998] FATAL:  terminating connection due to administrator command
+2026-10-07 14:16:22.146 +08 [1307307] FATAL:  terminating connection due to administrator command
+2026-10-07 14:16:22.150 +08 [1150825] LOG:  background worker "logical replication launcher" (PID 1150898) exited with exit code 1
+2026-10-07 14:16:22.154 +08 [1150892] LOG:  shutting down
+2026-10-07 14:16:22.154 +08 [1150892] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 14:16:23.103 +08 [1150892] LOG:  checkpoint complete: wrote 127638 buffers (97.4%), wrote 181 SLRU buffers; 0 WAL file(s) added, 0 removed, 137 recycled; write=0.926 s, sync=0.002 s, total=0.950 s; sync files=361, longest=0.001 s, average=0.001 s; distance=2245017 kB, estimate=2245017 kB; lsn=1/FBD56A40, redo lsn=1/FBD56A40
+2026-10-07 14:16:23.401 +08 [1150825] LOG:  database system is shut down
+2026-10-07 14:16:26.283 +08 [1340960] LOG:  There is no designated Main database.
+2026-10-07 14:16:26.283 +08 [1340960] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 14:16:26.283 +08 [1340960] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 14:16:26.402 +08 [1340960] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 14:16:26.403 +08 [1340960] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 14:16:26.403 +08 [1340960] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 14:16:26.403 +08 [1340960] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 14:16:26.407 +08 [1341010] LOG:  database system was shut down at 2026-10-07 14:16:23 +08
+2026-10-07 14:16:26.411 +08 [1340960] LOG:  database system is ready to accept connections
+2026-10-07 14:16:27.331 +08 [1341241] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 14:16:27.331 +08 [1341241] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 14:17:18.914 +08 [1349436] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:17:18.914 +08 [1349436] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:17:18.914 +08 [1349436] STATEMENT:  SELECT public.place_order('104'::bigint, '361104'::bigint, '5000233'::bigint, 5, '{200104,19104,386104,351104,439104}'::bigint[], '{1,5,5,3,1}'::integer[], '{15000713,15000714,15000715,15000716,15000717}'::bigint[]) AS place_order
+2026-10-07 14:17:32.801 +08 [1349453] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:17:32.801 +08 [1349453] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:17:32.801 +08 [1349453] STATEMENT:  SELECT public.place_order('22'::bigint, '337022'::bigint, '5002117'::bigint, 5, '{339022,218022,100022,277022,53022}'::bigint[], '{1,5,5,1,3}'::integer[], '{15006248,15006249,15006250,15006251,15006252}'::bigint[]) AS place_order
+2026-10-07 14:18:06.071 +08 [1349454] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:18:06.071 +08 [1349454] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:18:06.071 +08 [1349454] STATEMENT:  SELECT public.place_order('55'::bigint, '712055'::bigint, '5006801'::bigint, 2, '{349055,51055,28055,492055,470055}'::bigint[], '{5,5,5,1,5}'::integer[], '{15020499,15020500,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:18:12.544 +08 [1349730] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 14:18:12.544 +08 [1349730] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 14:18:12.544 +08 [1349730] HINT:  The transaction might succeed if retried.
+2026-10-07 14:18:12.544 +08 [1349730] CONTEXT:  SQL statement "INSERT INTO public.order_items (
+	      order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+	    )
+	    VALUES (
+	      p_item_ids[k], p_merchant_id, p_order_id, p_product_ids[k],
+	      p_quantities[k], v_price
+	    )"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 82 at SQL statement
+2026-10-07 14:18:12.544 +08 [1349730] STATEMENT:  SELECT public.place_order('728'::bigint, '642728'::bigint, '5007763'::bigint, 3, '{193728,419728,269728,107728,343728}'::bigint[], '{3,4,3,5,1}'::integer[], '{15023388,15023389,15023390,0,0}'::bigint[]) AS place_order
+2026-10-07 14:18:18.596 +08 [1358828] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:18:18.596 +08 [1358828] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:18:18.596 +08 [1358828] STATEMENT:  SELECT public.place_order('70'::bigint, '502070'::bigint, '5008679'::bigint, 3, '{218070,28070,70,276070,423070}'::bigint[], '{1,5,4,3,3}'::integer[], '{15026063,15026064,15026065,0,0}'::bigint[]) AS place_order
+2026-10-07 14:18:30.932 +08 [1358806] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:18:30.932 +08 [1358806] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:18:30.932 +08 [1358806] STATEMENT:  SELECT public.place_order('62'::bigint, '299062'::bigint, '5010779'::bigint, 3, '{409062,278062,258062,67062,178062}'::bigint[], '{4,5,4,4,3}'::integer[], '{15032356,15032357,15032358,0,0}'::bigint[]) AS place_order
+2026-10-07 14:18:33.878 +08 [1358862] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:18:33.878 +08 [1358862] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:18:33.878 +08 [1358862] STATEMENT:  SELECT public.place_order('25'::bigint, '550025'::bigint, '5011207'::bigint, 5, '{97025,170025,236025,434025,224025}'::bigint[], '{1,1,5,1,4}'::integer[], '{15033659,15033660,15033661,15033662,15033663}'::bigint[]) AS place_order
+2026-10-07 14:18:50.180 +08 [1358814] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:18:50.180 +08 [1358814] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+2026-10-07 14:18:50.180 +08 [1358814] STATEMENT:  SELECT public.place_order('546'::bigint, '942546'::bigint, '5013697'::bigint, 3, '{33546,10546,43546,87546,111546}'::bigint[], '{4,5,2,5,1}'::integer[], '{15041089,15041090,15041091,0,0}'::bigint[]) AS place_order
+2026-10-07 14:18:58.566 +08 [1358799] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:18:58.566 +08 [1358799] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:18:58.566 +08 [1358799] STATEMENT:  SELECT public.place_order('741'::bigint, '479741'::bigint, '5015035'::bigint, 4, '{115741,241741,1741,366741,442741}'::bigint[], '{5,1,5,5,5}'::integer[], '{15045121,15045122,15045123,15045124,0}'::bigint[]) AS place_order
+2026-10-07 14:19:07.410 +08 [1358802] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:19:07.410 +08 [1358802] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:19:07.410 +08 [1358802] STATEMENT:  SELECT public.place_order('22'::bigint, '56022'::bigint, '5016504'::bigint, 5, '{225022,188022,409022,285022,473022}'::bigint[], '{3,5,2,1,2}'::integer[], '{15049552,15049553,15049554,15049555,15049556}'::bigint[]) AS place_order
+2026-10-07 14:20:40.515 +08 [1358822] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:20:40.515 +08 [1358822] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:20:40.515 +08 [1358822] STATEMENT:  SELECT public.place_order('64'::bigint, '658064'::bigint, '5031823'::bigint, 3, '{35064,98064,276064,322064,406064}'::bigint[], '{3,5,5,4,3}'::integer[], '{15095415,15095416,15095417,0,0}'::bigint[]) AS place_order
+2026-10-07 14:22:03.494 +08 [1363535] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:22:03.494 +08 [1363535] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:22:03.494 +08 [1363535] STATEMENT:  SELECT public.place_order('174'::bigint, '153174'::bigint, '5045264'::bigint, 3, '{113174,341174,403174,491174,70174}'::bigint[], '{2,5,1,5,3}'::integer[], '{15135563,15135564,15135565,0,0}'::bigint[]) AS place_order
+2026-10-07 14:22:20.020 +08 [1358803] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:22:20.020 +08 [1358803] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:22:20.020 +08 [1358803] STATEMENT:  SELECT public.place_order('62'::bigint, '90062'::bigint, '5047860'::bigint, 5, '{292062,400062,241062,73062,313062}'::bigint[], '{4,1,3,5,1}'::integer[], '{15143308,15143309,15143310,15143311,15143312}'::bigint[]) AS place_order
+2026-10-07 14:22:26.017 +08 [1419764] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:22:26.017 +08 [1419764] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:22:26.017 +08 [1419764] STATEMENT:  SELECT public.place_order('82'::bigint, '91082'::bigint, '5048835'::bigint, 5, '{135082,472082,146082,376082,300082}'::bigint[], '{2,1,2,2,4}'::integer[], '{15146171,15146172,15146173,15146174,15146175}'::bigint[]) AS place_order
+2026-10-07 14:22:36.174 +08 [1424947] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:22:36.174 +08 [1424947] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:22:36.174 +08 [1424947] STATEMENT:  SELECT public.place_order('55'::bigint, '738055'::bigint, '5050436'::bigint, 5, '{233055,20055,391055,286055,198055}'::bigint[], '{4,3,5,1,1}'::integer[], '{15151006,15151007,15151008,15151009,15151010}'::bigint[]) AS place_order
+2026-10-07 14:22:56.818 +08 [1358821] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:22:56.818 +08 [1358821] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:22:56.818 +08 [1358821] STATEMENT:  SELECT public.place_order('22'::bigint, '189022'::bigint, '5053610'::bigint, 5, '{451022,291022,315022,245022,293022}'::bigint[], '{3,5,3,2,1}'::integer[], '{15160657,15160658,15160659,15160660,15160661}'::bigint[]) AS place_order
+2026-10-07 14:23:01.300 +08 [1358805] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:23:01.300 +08 [1358805] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:23:01.300 +08 [1358805] STATEMENT:  SELECT public.place_order('22'::bigint, '426022'::bigint, '5054329'::bigint, 2, '{117022,408022,245022,65022,443022}'::bigint[], '{4,2,5,1,4}'::integer[], '{15162797,15162798,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:23:20.077 +08 [1358823] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:23:20.077 +08 [1358823] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:23:20.077 +08 [1358823] STATEMENT:  SELECT public.place_order('19'::bigint, '675019'::bigint, '5057191'::bigint, 5, '{360019,226019,209019,306019,211019}'::bigint[], '{4,1,1,5,1}'::integer[], '{15171383,15171384,15171385,15171386,15171387}'::bigint[]) AS place_order
+2026-10-07 14:23:25.738 +08 [1443784] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:23:25.738 +08 [1443784] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:23:25.738 +08 [1443784] STATEMENT:  SELECT public.place_order('15'::bigint, '136015'::bigint, '5058154'::bigint, 4, '{404015,336015,327015,248015,392015}'::bigint[], '{4,5,2,4,4}'::integer[], '{15174262,15174263,15174264,15174265,0}'::bigint[]) AS place_order
+2026-10-07 14:23:56.522 +08 [1358999] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:23:56.522 +08 [1358999] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:23:56.522 +08 [1358999] STATEMENT:  SELECT public.place_order('82'::bigint, '780082'::bigint, '5062676'::bigint, 1, '{474082,370082,480082,278082,304082}'::bigint[], '{5,1,2,3,4}'::integer[], '{15187836,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:23:56.764 +08 [1358808] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:23:56.764 +08 [1358808] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:23:56.764 +08 [1358808] STATEMENT:  SELECT public.place_order('940'::bigint, '112940'::bigint, '5062724'::bigint, 3, '{88940,57940,130940,374940,61940}'::bigint[], '{2,3,2,2,3}'::integer[], '{15187963,15187964,15187965,0,0}'::bigint[]) AS place_order
+2026-10-07 14:24:53.656 +08 [1360930] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:24:53.656 +08 [1360930] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:24:53.656 +08 [1360930] STATEMENT:  SELECT public.place_order('48'::bigint, '221048'::bigint, '5071397'::bigint, 3, '{209048,303048,360048,240048,61048}'::bigint[], '{5,2,5,1,5}'::integer[], '{15213856,15213857,15213858,0,0}'::bigint[]) AS place_order
+2026-10-07 14:25:07.819 +08 [1358801] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:25:07.819 +08 [1358801] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:25:07.819 +08 [1358801] STATEMENT:  SELECT public.place_order('19'::bigint, '301019'::bigint, '5073458'::bigint, 3, '{202019,467019,380019,294019,14019}'::bigint[], '{5,5,1,2,3}'::integer[], '{15220145,15220146,15220147,0,0}'::bigint[]) AS place_order
+2026-10-07 14:26:22.244 +08 [1455109] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:26:22.244 +08 [1455109] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:26:22.244 +08 [1455109] STATEMENT:  SELECT public.place_order('64'::bigint, '297064'::bigint, '5085314'::bigint, 1, '{191064,53064,266064,35064,130064}'::bigint[], '{4,4,2,2,1}'::integer[], '{15255810,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:26:52.421 +08 [1358875] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:26:52.421 +08 [1358875] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:26:52.421 +08 [1358875] STATEMENT:  SELECT public.place_order('70'::bigint, '279070'::bigint, '5089918'::bigint, 3, '{358070,29070,172070,302070,389070}'::bigint[], '{3,4,3,5,3}'::integer[], '{15269625,15269626,15269627,0,0}'::bigint[]) AS place_order
+2026-10-07 14:27:00.759 +08 [1437874] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:27:00.759 +08 [1437874] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:27:00.759 +08 [1437874] STATEMENT:  SELECT public.place_order('837'::bigint, '939837'::bigint, '5091161'::bigint, 3, '{31837,485837,369837,152837,359837}'::bigint[], '{4,2,4,1,5}'::integer[], '{15273248,15273249,15273250,0,0}'::bigint[]) AS place_order
+2026-10-07 14:27:14.269 +08 [1445516] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:27:14.269 +08 [1445516] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:27:14.269 +08 [1445516] STATEMENT:  SELECT public.place_order('22'::bigint, '376022'::bigint, '5093338'::bigint, 5, '{354022,261022,494022,296022,476022}'::bigint[], '{3,4,5,3,2}'::integer[], '{15279659,15279660,15279661,15279662,15279663}'::bigint[]) AS place_order
+2026-10-07 14:27:28.719 +08 [1358804] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:27:28.719 +08 [1358804] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+2026-10-07 14:27:28.719 +08 [1358804] STATEMENT:  SELECT public.place_order('51'::bigint, '264051'::bigint, '5095635'::bigint, 4, '{181051,166051,323051,477051,473051}'::bigint[], '{2,3,2,5,3}'::integer[], '{15286513,15286514,15286515,15286516,0}'::bigint[]) AS place_order
+2026-10-07 14:27:43.405 +08 [1358800] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:27:43.405 +08 [1358800] STATEMENT:  WITH debit AS (UPDATE public.inventory_102125 inventory SET quantity = (inventory.quantity OPERATOR(pg_catalog.-) 4), updated_at = '2026-10-07 14:27:43.420823'::timestamp without time zone WHERE ((inventory.merchant_id OPERATOR(pg_catalog.=) '348'::bigint) AND (inventory.product_id OPERATOR(pg_catalog.=) '63348'::bigint) AND (inventory.quantity OPERATOR(pg_catalog.>=) 4)) RETURNING 1 AS "?column?") SELECT (EXISTS (SELECT 1 AS "?column?" FROM debit debit("?column?"))) AS debit_ok
+2026-10-07 14:27:48.470 +08 [1358800] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:27:48.470 +08 [1358800] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:27:48.470 +08 [1358800] STATEMENT:  SELECT public.place_order('62'::bigint, '700062'::bigint, '5098959'::bigint, 4, '{441062,263062,168062,61062,278062}'::bigint[], '{5,4,3,1,5}'::integer[], '{15296343,15296344,15296345,15296346,0}'::bigint[]) AS place_order
+2026-10-07 14:27:56.046 +08 [1393048] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:27:56.046 +08 [1393048] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:27:56.046 +08 [1393048] STATEMENT:  SELECT public.place_order('936'::bigint, '568936'::bigint, '5100164'::bigint, 3, '{35936,431936,64936,149936,464936}'::bigint[], '{1,1,3,5,1}'::integer[], '{15299875,15299876,15299877,0,0}'::bigint[]) AS place_order
+2026-10-07 14:28:04.277 +08 [1476755] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:28:04.277 +08 [1476755] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:28:04.277 +08 [1476755] STATEMENT:  SELECT public.place_order('1'::bigint, '872001'::bigint, '5101522'::bigint, 4, '{376001,208001,227001,172001,306001}'::bigint[], '{3,5,3,2,4}'::integer[], '{15303909,15303910,15303911,15303912,0}'::bigint[]) AS place_order
+2026-10-07 14:28:24.373 +08 [1341241] WARNING:  terminating connection due to administrator command
+2026-10-07 14:28:24.373 +08 [1341241] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 14:28:24.752 +08 [1340960] LOG:  received fast shutdown request
+2026-10-07 14:28:24.753 +08 [1340960] LOG:  aborting any active transactions
+2026-10-07 14:28:24.753 +08 [1500077] FATAL:  terminating connection due to administrator command
+2026-10-07 14:28:24.753 +08 [1517208] FATAL:  terminating connection due to administrator command
+2026-10-07 14:28:24.754 +08 [1500071] FATAL:  terminating connection due to administrator command
+2026-10-07 14:28:24.757 +08 [1340960] LOG:  background worker "logical replication launcher" (PID 1341013) exited with exit code 1
+2026-10-07 14:28:24.763 +08 [1341008] LOG:  shutting down
+2026-10-07 14:28:24.763 +08 [1341008] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 14:28:25.728 +08 [1341008] LOG:  checkpoint complete: wrote 127836 buffers (97.5%), wrote 174 SLRU buffers; 0 WAL file(s) added, 0 removed, 137 recycled; write=0.930 s, sync=0.002 s, total=0.966 s; sync files=360, longest=0.001 s, average=0.001 s; distance=2231236 kB, estimate=2231236 kB; lsn=2/84047C10, redo lsn=2/84047C10
+2026-10-07 14:28:26.034 +08 [1340960] LOG:  database system is shut down
+2026-10-07 14:28:29.002 +08 [1534344] LOG:  There is no designated Main database.
+2026-10-07 14:28:29.002 +08 [1534344] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 14:28:29.002 +08 [1534344] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 14:28:29.121 +08 [1534344] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 14:28:29.121 +08 [1534344] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 14:28:29.121 +08 [1534344] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 14:28:29.122 +08 [1534344] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 14:28:29.125 +08 [1534391] LOG:  database system was shut down at 2026-10-07 14:28:25 +08
+2026-10-07 14:28:29.129 +08 [1534344] LOG:  database system is ready to accept connections
+2026-10-07 14:28:30.063 +08 [1534623] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 14:28:30.063 +08 [1534623] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 14:29:47.081 +08 [1542476] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:29:47.081 +08 [1542476] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:29:47.081 +08 [1542476] STATEMENT:  SELECT public.place_order('55'::bigint, '465055'::bigint, '5003569'::bigint, 5, '{10055,202055,202055,97055,26055}'::bigint[], '{1,2,5,2,2}'::integer[], '{15010737,15010738,15010739,15010740,15010741}'::bigint[]) AS place_order
+2026-10-07 14:29:47.106 +08 [1546915] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:29:47.106 +08 [1546915] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:29:47.106 +08 [1546915] STATEMENT:  SELECT public.place_order('55'::bigint, '465055'::bigint, '5003572'::bigint, 5, '{10055,202055,202055,97055,26055}'::bigint[], '{1,2,5,2,2}'::integer[], '{15010744,15010745,15010746,15010747,15010748}'::bigint[]) AS place_order
+2026-10-07 14:29:54.324 +08 [1542462] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:29:54.324 +08 [1542462] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+2026-10-07 14:29:54.324 +08 [1542462] STATEMENT:  SELECT public.place_order('95'::bigint, '62095'::bigint, '5004598'::bigint, 4, '{262095,96095,343095,104095,6095}'::bigint[], '{5,3,5,2,4}'::integer[], '{15013773,15013774,15013775,15013776,0}'::bigint[]) AS place_order
+2026-10-07 14:30:47.983 +08 [1552000] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:30:47.983 +08 [1552000] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:30:47.983 +08 [1552000] STATEMENT:  SELECT public.place_order('17'::bigint, '888017'::bigint, '5012734'::bigint, 3, '{447017,395017,143017,89017,78017}'::bigint[], '{5,2,5,5,2}'::integer[], '{15038015,15038016,15038017,0,0}'::bigint[]) AS place_order
+2026-10-07 14:30:54.110 +08 [1552018] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:30:54.110 +08 [1552018] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:30:54.110 +08 [1552018] STATEMENT:  SELECT public.place_order('63'::bigint, '695063'::bigint, '5013740'::bigint, 3, '{278063,231063,422063,423063,442063}'::bigint[], '{1,5,1,5,5}'::integer[], '{15040981,15040982,15040983,0,0}'::bigint[]) AS place_order
+2026-10-07 14:31:20.073 +08 [1552027] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:31:20.073 +08 [1552027] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:31:20.073 +08 [1552027] STATEMENT:  SELECT public.place_order('70'::bigint, '300070'::bigint, '5018088'::bigint, 5, '{262070,374070,247070,52070,471070}'::bigint[], '{3,1,1,1,2}'::integer[], '{15054188,15054189,15054190,15054191,15054192}'::bigint[]) AS place_order
+2026-10-07 14:31:25.184 +08 [1552047] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:31:25.184 +08 [1552047] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:31:25.184 +08 [1552047] STATEMENT:  SELECT public.place_order('63'::bigint, '659063'::bigint, '5018903'::bigint, 2, '{235063,21063,38063,314063,200063}'::bigint[], '{5,3,2,3,3}'::integer[], '{15056623,15056624,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:31:59.036 +08 [1563418] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:31:59.036 +08 [1563418] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:31:59.036 +08 [1563418] STATEMENT:  SELECT public.place_order('95'::bigint, '493095'::bigint, '5024688'::bigint, 5, '{220095,119095,397095,242095,439095}'::bigint[], '{1,2,1,3,1}'::integer[], '{15074096,15074097,15074098,15074099,15074100}'::bigint[]) AS place_order
+2026-10-07 14:32:17.950 +08 [1552072] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:32:17.950 +08 [1552072] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:32:17.950 +08 [1552072] STATEMENT:  SELECT public.place_order('25'::bigint, '656025'::bigint, '5027960'::bigint, 3, '{499025,352025,148025,403025,365025}'::bigint[], '{5,5,4,4,2}'::integer[], '{15083992,15083993,15083994,0,0}'::bigint[]) AS place_order
+2026-10-07 14:32:19.095 +08 [1552022] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:32:19.095 +08 [1552022] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:32:19.095 +08 [1552022] STATEMENT:  SELECT public.place_order('15'::bigint, '34015'::bigint, '5028170'::bigint, 5, '{261015,132015,372015,15,297015}'::bigint[], '{2,3,3,1,1}'::integer[], '{15084612,15084613,15084614,15084615,15084616}'::bigint[]) AS place_order
+2026-10-07 14:32:31.252 +08 [1552136] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:32:31.252 +08 [1552136] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:32:31.252 +08 [1552136] STATEMENT:  SELECT public.place_order('34'::bigint, '518034'::bigint, '5030256'::bigint, 1, '{380034,215034,170034,21034,80034}'::bigint[], '{4,2,5,4,3}'::integer[], '{15090891,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:32:31.276 +08 [1552007] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:32:31.276 +08 [1552007] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:32:31.276 +08 [1552007] STATEMENT:  SELECT public.place_order('34'::bigint, '889034'::bigint, '5030260'::bigint, 5, '{165034,185034,493034,465034,284034}'::bigint[], '{4,1,5,4,5}'::integer[], '{15090898,15090899,15090900,15090901,15090902}'::bigint[]) AS place_order
+2026-10-07 14:32:44.083 +08 [1552087] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:32:44.083 +08 [1552087] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:32:44.083 +08 [1552087] STATEMENT:  SELECT public.place_order('99'::bigint, '848099'::bigint, '5032444'::bigint, 4, '{490099,487099,372099,489099,109099}'::bigint[], '{5,2,2,3,4}'::integer[], '{15097457,15097458,15097459,15097460,0}'::bigint[]) AS place_order
+2026-10-07 14:32:59.041 +08 [1556039] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:32:59.041 +08 [1556039] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:32:59.041 +08 [1556039] STATEMENT:  SELECT public.place_order('99'::bigint, '163099'::bigint, '5034954'::bigint, 3, '{417099,418099,360099,226099,316099}'::bigint[], '{4,2,5,3,3}'::integer[], '{15104965,15104966,15104967,0,0}'::bigint[]) AS place_order
+2026-10-07 14:33:10.866 +08 [1552015] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:33:10.866 +08 [1552015] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:33:10.866 +08 [1552015] STATEMENT:  SELECT public.place_order('22'::bigint, '806022'::bigint, '5036874'::bigint, 5, '{450022,219022,375022,445022,363022}'::bigint[], '{3,1,3,4,3}'::integer[], '{15110706,15110707,15110708,15110709,15110710}'::bigint[]) AS place_order
+2026-10-07 14:33:44.494 +08 [1552145] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:33:44.494 +08 [1552145] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:33:44.494 +08 [1552145] STATEMENT:  SELECT public.place_order('565'::bigint, '860565'::bigint, '5042336'::bigint, 5, '{497565,423565,80565,378565,292565}'::bigint[], '{3,2,1,1,3}'::integer[], '{15127139,15127140,15127141,15127142,15127143}'::bigint[]) AS place_order
+2026-10-07 14:34:01.496 +08 [1552005] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:34:01.496 +08 [1552005] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:34:01.496 +08 [1552005] STATEMENT:  SELECT public.place_order('34'::bigint, '194034'::bigint, '5045215'::bigint, 2, '{284034,147034,424034,71034,373034}'::bigint[], '{1,5,5,5,1}'::integer[], '{15135756,15135757,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:34:06.745 +08 [1593893] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:34:06.745 +08 [1593893] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:34:06.745 +08 [1593893] STATEMENT:  SELECT public.place_order('469'::bigint, '330469'::bigint, '5046070'::bigint, 4, '{209469,423469,199469,278469,390469}'::bigint[], '{4,3,3,2,1}'::integer[], '{15138321,15138322,15138323,15138324,0}'::bigint[]) AS place_order
+2026-10-07 14:34:07.015 +08 [1562268] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:34:07.015 +08 [1562268] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:34:07.015 +08 [1562268] STATEMENT:  SELECT public.place_order('19'::bigint, '220019'::bigint, '5046111'::bigint, 4, '{386019,88019,73019,487019,177019}'::bigint[], '{3,3,2,1,1}'::integer[], '{15138450,15138451,15138452,15138453,0}'::bigint[]) AS place_order
+2026-10-07 14:34:29.245 +08 [1552014] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:34:29.245 +08 [1552014] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:34:29.245 +08 [1552014] STATEMENT:  SELECT public.place_order('21'::bigint, '736021'::bigint, '5049765'::bigint, 3, '{433021,465021,480021,233021,195021}'::bigint[], '{3,3,3,5,3}'::integer[], '{15149359,15149360,15149361,0,0}'::bigint[]) AS place_order
+2026-10-07 14:34:40.219 +08 [1552063] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:34:40.219 +08 [1552063] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:34:40.219 +08 [1552063] STATEMENT:  SELECT public.place_order('51'::bigint, '794051'::bigint, '5051457'::bigint, 2, '{276051,362051,339051,267051,276051}'::bigint[], '{3,2,3,5,2}'::integer[], '{15154403,15154404,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:34:41.000 +08 [1552008] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:34:41.000 +08 [1552008] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:34:41.000 +08 [1552008] STATEMENT:  SELECT public.place_order('63'::bigint, '897063'::bigint, '5051571'::bigint, 2, '{349063,71063,445063,239063,206063}'::bigint[], '{3,2,5,5,5}'::integer[], '{15154746,15154747,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:34:45.657 +08 [1604778] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:34:45.657 +08 [1604778] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:34:45.657 +08 [1604778] STATEMENT:  SELECT public.place_order('579'::bigint, '176579'::bigint, '5052317'::bigint, 1, '{335579,228579,282579,213579,212579}'::bigint[], '{5,5,4,3,5}'::integer[], '{15157066,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:34:58.020 +08 [1552052] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:34:58.020 +08 [1552052] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:34:58.020 +08 [1552052] STATEMENT:  SELECT public.place_order('1'::bigint, '769001'::bigint, '5054355'::bigint, 5, '{129001,284001,271001,192001,195001}'::bigint[], '{4,5,5,3,2}'::integer[], '{15163306,15163307,15163308,15163309,15163310}'::bigint[]) AS place_order
+2026-10-07 14:35:14.342 +08 [1622444] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:35:14.342 +08 [1622444] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:35:14.342 +08 [1622444] STATEMENT:  SELECT public.place_order('48'::bigint, '968048'::bigint, '5056936'::bigint, 4, '{261048,12048,232048,464048,469048}'::bigint[], '{5,1,5,1,1}'::integer[], '{15171065,15171066,15171067,15171068,0}'::bigint[]) AS place_order
+2026-10-07 14:35:25.410 +08 [1552031] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:35:25.410 +08 [1552031] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:35:25.410 +08 [1552031] STATEMENT:  SELECT public.place_order('72'::bigint, '542072'::bigint, '5058625'::bigint, 3, '{301072,361072,367072,183072,312072}'::bigint[], '{4,3,5,2,5}'::integer[], '{15176087,15176088,15176089,0,0}'::bigint[]) AS place_order
+2026-10-07 14:35:32.860 +08 [1628070] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:35:32.860 +08 [1628070] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:35:32.860 +08 [1628070] STATEMENT:  SELECT public.place_order('59'::bigint, '810059'::bigint, '5059834'::bigint, 3, '{479059,232059,372059,498059,210059}'::bigint[], '{1,5,4,1,3}'::integer[], '{15179791,15179792,15179793,0,0}'::bigint[]) AS place_order
+2026-10-07 14:35:40.979 +08 [1552020] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:35:40.979 +08 [1552020] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:35:40.979 +08 [1552020] STATEMENT:  SELECT public.place_order('21'::bigint, '823021'::bigint, '5061121'::bigint, 2, '{489021,80021,189021,35021,133021}'::bigint[], '{1,5,4,1,1}'::integer[], '{15183655,15183656,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:36:05.695 +08 [1580686] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:36:05.695 +08 [1580686] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:36:05.695 +08 [1580686] STATEMENT:  SELECT public.place_order('1'::bigint, '342001'::bigint, '5064995'::bigint, 5, '{96001,446001,424001,29001,378001}'::bigint[], '{5,2,2,2,1}'::integer[], '{15195319,15195320,15195321,15195322,15195323}'::bigint[]) AS place_order
+2026-10-07 14:36:38.605 +08 [1552082] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:36:38.605 +08 [1552082] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:36:38.605 +08 [1552082] STATEMENT:  SELECT public.place_order('64'::bigint, '663064'::bigint, '5070103'::bigint, 4, '{214064,242064,233064,135064,169064}'::bigint[], '{3,5,5,5,3}'::integer[], '{15210572,15210573,15210574,15210575,0}'::bigint[]) AS place_order
+2026-10-07 14:36:48.966 +08 [1611822] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:36:48.966 +08 [1611822] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:36:48.966 +08 [1611822] STATEMENT:  SELECT public.place_order('51'::bigint, '577051'::bigint, '5071776'::bigint, 3, '{196051,180051,388051,70051,471051}'::bigint[], '{5,1,5,5,1}'::integer[], '{15215524,15215525,15215526,0,0}'::bigint[]) AS place_order
+2026-10-07 14:38:33.882 +08 [1552003] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:38:33.882 +08 [1552003] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:38:33.882 +08 [1552003] STATEMENT:  SELECT public.place_order('34'::bigint, '951034'::bigint, '5088778'::bigint, 5, '{463034,494034,217034,310034,23034}'::bigint[], '{3,5,5,3,5}'::integer[], '{15266649,15266650,15266651,15266652,15266653}'::bigint[]) AS place_order
+2026-10-07 14:39:06.502 +08 [1580697] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:39:06.502 +08 [1580697] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:39:06.502 +08 [1580697] STATEMENT:  SELECT public.place_order('1'::bigint, '684001'::bigint, '5094203'::bigint, 5, '{392001,432001,267001,200001,26001}'::bigint[], '{3,3,5,5,2}'::integer[], '{15282871,15282872,15282873,15282874,15282875}'::bigint[]) AS place_order
+2026-10-07 14:40:07.791 +08 [1552012] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:40:07.791 +08 [1552012] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:40:07.791 +08 [1552012] STATEMENT:  SELECT public.place_order('72'::bigint, '860072'::bigint, '5104433'::bigint, 4, '{336072,386072,275072,401072,371072}'::bigint[], '{4,1,1,3,5}'::integer[], '{15313486,15313487,15313488,15313489,0}'::bigint[]) AS place_order
+2026-10-07 14:40:28.681 +08 [1534344] LOG:  received fast shutdown request
+2026-10-07 14:40:28.682 +08 [1534344] LOG:  aborting any active transactions
+2026-10-07 14:40:28.682 +08 [1708829] FATAL:  terminating connection due to administrator command
+2026-10-07 14:40:28.682 +08 [1691890] FATAL:  terminating connection due to administrator command
+2026-10-07 14:40:28.682 +08 [1691887] FATAL:  terminating connection due to administrator command
+2026-10-07 14:40:28.687 +08 [1534344] LOG:  background worker "logical replication launcher" (PID 1534394) exited with exit code 1
+2026-10-07 14:40:28.691 +08 [1534389] LOG:  shutting down
+2026-10-07 14:40:28.691 +08 [1534389] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 14:40:29.110 +08 [1724966] LOG:  PID 1691887 in cancel request did not match any process
+2026-10-07 14:40:29.115 +08 [1724972] LOG:  PID 1691890 in cancel request did not match any process
+2026-10-07 14:40:29.643 +08 [1534389] LOG:  checkpoint complete: wrote 128289 buffers (97.9%), wrote 181 SLRU buffers; 0 WAL file(s) added, 0 removed, 136 recycled; write=0.928 s, sync=0.002 s, total=0.953 s; sync files=362, longest=0.001 s, average=0.001 s; distance=2240958 kB, estimate=2240958 kB; lsn=3/CCB75F0, redo lsn=3/CCB75F0
+2026-10-07 14:40:29.947 +08 [1534344] LOG:  database system is shut down
+2026-10-07 14:40:32.818 +08 [1725659] LOG:  There is no designated Main database.
+2026-10-07 14:40:32.818 +08 [1725659] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 14:40:32.818 +08 [1725659] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 14:40:32.936 +08 [1725659] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 14:40:32.936 +08 [1725659] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 14:40:32.936 +08 [1725659] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 14:40:32.937 +08 [1725659] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 14:40:32.941 +08 [1725687] LOG:  database system was shut down at 2026-10-07 14:40:29 +08
+2026-10-07 14:40:32.945 +08 [1725659] LOG:  database system is ready to accept connections
+2026-10-07 14:40:33.861 +08 [1725850] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 14:40:33.861 +08 [1725850] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 14:41:29.513 +08 [1734069] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:41:29.513 +08 [1734069] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:41:29.513 +08 [1734069] STATEMENT:  SELECT public.place_order('55'::bigint, '930055'::bigint, '5000665'::bigint, 5, '{258055,63055,79055,130055,255055}'::bigint[], '{4,3,3,2,5}'::integer[], '{15001905,15001906,15001907,15001908,15001909}'::bigint[]) AS place_order
+2026-10-07 14:41:46.955 +08 [1733951] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:41:46.955 +08 [1733951] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:41:46.955 +08 [1733951] STATEMENT:  SELECT public.place_order('55'::bigint, '365055'::bigint, '5003135'::bigint, 3, '{55055,361055,312055,191055,159055}'::bigint[], '{5,3,5,2,2}'::integer[], '{15009207,15009208,15009209,0,0}'::bigint[]) AS place_order
+2026-10-07 14:42:07.976 +08 [1733953] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:42:07.976 +08 [1733953] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+2026-10-07 14:42:07.976 +08 [1733953] STATEMENT:  SELECT public.place_order('48'::bigint, '308048'::bigint, '5006331'::bigint, 4, '{11048,92048,405048,9048,19048}'::bigint[], '{4,1,4,5,2}'::integer[], '{15018963,15018964,15018965,15018966,0}'::bigint[]) AS place_order
+2026-10-07 14:42:10.060 +08 [1733978] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:42:10.060 +08 [1733978] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:42:10.060 +08 [1733978] STATEMENT:  SELECT public.place_order('82'::bigint, '289082'::bigint, '5006669'::bigint, 5, '{366082,331082,320082,198082,131082}'::bigint[], '{2,1,1,3,2}'::integer[], '{15019935,15019936,15019937,15019938,15019939}'::bigint[]) AS place_order
+2026-10-07 14:42:31.049 +08 [1744246] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:42:31.049 +08 [1744246] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:42:31.049 +08 [1744246] STATEMENT:  SELECT public.place_order('72'::bigint, '233072'::bigint, '5009813'::bigint, 1, '{132072,395072,88072,421072,237072}'::bigint[], '{4,4,4,1,5}'::integer[], '{15029379,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:43:31.694 +08 [1744429] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:43:31.694 +08 [1744429] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:43:31.694 +08 [1744429] STATEMENT:  SELECT public.place_order('48'::bigint, '106048'::bigint, '5019674'::bigint, 5, '{212048,393048,427048,188048,35048}'::bigint[], '{2,5,4,2,2}'::integer[], '{15058784,15058785,15058786,15058787,15058788}'::bigint[]) AS place_order
+2026-10-07 14:44:01.097 +08 [1744378] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:44:01.097 +08 [1744378] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:44:01.097 +08 [1744378] STATEMENT:  SELECT public.place_order('15'::bigint, '736015'::bigint, '5024595'::bigint, 2, '{330015,187015,422015,63015,224015}'::bigint[], '{5,4,3,5,1}'::integer[], '{15073454,15073455,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:44:08.327 +08 [1744263] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:44:08.327 +08 [1744263] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:44:08.327 +08 [1744263] STATEMENT:  SELECT public.place_order('21'::bigint, '486021'::bigint, '5025876'::bigint, 2, '{372021,435021,39021,252021,254021}'::bigint[], '{4,1,1,2,4}'::integer[], '{15077300,15077301,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:44:42.816 +08 [1744239] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:44:42.816 +08 [1744239] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:44:42.816 +08 [1744239] STATEMENT:  SELECT public.place_order('48'::bigint, '294048'::bigint, '5031787'::bigint, 1, '{18048,323048,378048,95048,305048}'::bigint[], '{2,3,4,1,1}'::integer[], '{15094949,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:45:10.099 +08 [1744237] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:45:10.099 +08 [1744237] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:45:10.099 +08 [1744237] STATEMENT:  SELECT public.place_order('34'::bigint, '122034'::bigint, '5036456'::bigint, 2, '{70034,317034,483034,288034,431034}'::bigint[], '{5,1,5,1,1}'::integer[], '{15108936,15108937,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:45:37.664 +08 [1744343] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:45:37.664 +08 [1744343] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+2026-10-07 14:45:37.664 +08 [1744343] STATEMENT:  SELECT public.place_order('634'::bigint, '232634'::bigint, '5041183'::bigint, 5, '{110634,238634,304634,79634,232634}'::bigint[], '{2,1,5,1,1}'::integer[], '{15122871,15122872,15122873,15122874,15122875}'::bigint[]) AS place_order
+2026-10-07 14:45:45.138 +08 [1744603] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:45:45.138 +08 [1744603] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:45:45.138 +08 [1744603] STATEMENT:  SELECT public.place_order('510'::bigint, '159510'::bigint, '5042479'::bigint, 3, '{128510,334510,288510,389510,497510}'::bigint[], '{2,2,3,5,2}'::integer[], '{15126735,15126736,15126737,0,0}'::bigint[]) AS place_order
+2026-10-07 14:46:22.126 +08 [1744276] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:46:22.126 +08 [1744276] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:46:22.126 +08 [1744276] STATEMENT:  SELECT public.place_order('34'::bigint, '464034'::bigint, '5048348'::bigint, 5, '{60034,96034,477034,322034,221034}'::bigint[], '{2,1,4,4,1}'::integer[], '{15144486,15144487,15144488,15144489,15144490}'::bigint[]) AS place_order
+2026-10-07 14:46:27.538 +08 [1771873] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:46:27.538 +08 [1771873] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:46:27.538 +08 [1771873] STATEMENT:  SELECT public.place_order('15'::bigint, '832015'::bigint, '5049201'::bigint, 3, '{399015,325015,262015,475015,468015}'::bigint[], '{1,2,1,4,2}'::integer[], '{15147087,15147088,15147089,0,0}'::bigint[]) AS place_order
+2026-10-07 14:46:38.232 +08 [1744286] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:46:38.232 +08 [1744286] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:46:38.232 +08 [1744286] STATEMENT:  SELECT public.place_order('234'::bigint, '476234'::bigint, '5050950'::bigint, 2, '{367234,58234,239234,65234,382234}'::bigint[], '{2,3,1,5,1}'::integer[], '{15152194,15152195,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:46:43.154 +08 [1744287] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:46:43.154 +08 [1744287] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:46:43.154 +08 [1744287] STATEMENT:  SELECT public.place_order('64'::bigint, '884064'::bigint, '5051751'::bigint, 5, '{328064,20064,10064,140064,498064}'::bigint[], '{3,4,2,2,5}'::integer[], '{15154622,15154623,15154624,15154625,15154626}'::bigint[]) AS place_order
+2026-10-07 14:47:32.052 +08 [1744241] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:47:32.052 +08 [1744241] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:47:32.052 +08 [1744241] STATEMENT:  SELECT public.place_order('34'::bigint, '272034'::bigint, '5059572'::bigint, 3, '{340034,387034,75034,277034,324034}'::bigint[], '{5,5,5,1,4}'::integer[], '{15177991,15177992,15177993,0,0}'::bigint[]) AS place_order
+2026-10-07 14:47:40.192 +08 [1744419] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:47:40.192 +08 [1744419] STATEMENT:  WITH debit AS (UPDATE public.inventory_102109 inventory SET quantity = (inventory.quantity OPERATOR(pg_catalog.-) 5), updated_at = '2026-10-07 14:47:40.20874'::timestamp without time zone WHERE ((inventory.merchant_id OPERATOR(pg_catalog.=) '105'::bigint) AND (inventory.product_id OPERATOR(pg_catalog.=) '320105'::bigint) AND (inventory.quantity OPERATOR(pg_catalog.>=) 5)) RETURNING 1 AS "?column?") SELECT (EXISTS (SELECT 1 AS "?column?" FROM debit debit("?column?"))) AS debit_ok
+2026-10-07 14:48:31.092 +08 [1780016] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:48:31.092 +08 [1780016] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:48:31.092 +08 [1780016] STATEMENT:  SELECT public.place_order('62'::bigint, '331062'::bigint, '5069051'::bigint, 2, '{333062,131062,377062,104062,340062}'::bigint[], '{1,2,2,3,1}'::integer[], '{15206395,15206396,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:48:33.077 +08 [1744272] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:48:33.077 +08 [1744272] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:48:33.077 +08 [1744272] STATEMENT:  SELECT public.place_order('25'::bigint, '31025'::bigint, '5069365'::bigint, 5, '{392025,110025,267025,475025,36025}'::bigint[], '{2,1,1,3,5}'::integer[], '{15207323,15207324,15207325,15207326,15207327}'::bigint[]) AS place_order
+2026-10-07 14:48:41.832 +08 [1790491] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:48:41.832 +08 [1790491] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:48:41.832 +08 [1790491] STATEMENT:  SELECT public.place_order('70'::bigint, '142070'::bigint, '5070750'::bigint, 5, '{11070,464070,254070,79070,456070}'::bigint[], '{2,2,3,1,5}'::integer[], '{15211487,15211488,15211489,15211490,15211491}'::bigint[]) AS place_order
+2026-10-07 14:49:10.432 +08 [1744232] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:49:10.432 +08 [1744232] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:49:10.432 +08 [1744232] STATEMENT:  SELECT public.place_order('22'::bigint, '952022'::bigint, '5075298'::bigint, 1, '{465022,100022,12022,46022,356022}'::bigint[], '{1,5,4,3,5}'::integer[], '{15225107,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:49:26.780 +08 [1744234] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:49:26.780 +08 [1744234] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:49:26.780 +08 [1744234] STATEMENT:  SELECT public.place_order('22'::bigint, '796022'::bigint, '5078079'::bigint, 4, '{190022,373022,66022,292022,236022}'::bigint[], '{2,1,5,5,3}'::integer[], '{15233396,15233397,15233398,15233399,0}'::bigint[]) AS place_order
+2026-10-07 14:49:36.310 +08 [1744372] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:49:36.310 +08 [1744372] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:49:36.310 +08 [1744372] STATEMENT:  SELECT public.place_order('63'::bigint, '582063'::bigint, '5079712'::bigint, 1, '{114063,268063,145063,225063,392063}'::bigint[], '{1,2,4,2,4}'::integer[], '{15238321,0,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:50:43.135 +08 [1744264] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:50:43.135 +08 [1744264] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:50:43.135 +08 [1744264] STATEMENT:  SELECT public.place_order('27'::bigint, '973027'::bigint, '5090786'::bigint, 3, '{1027,189027,383027,462027,27}'::bigint[], '{3,5,3,4,2}'::integer[], '{15271628,15271629,15271630,0,0}'::bigint[]) AS place_order
+2026-10-07 14:51:13.839 +08 [1744230] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:51:13.839 +08 [1744230] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:51:13.839 +08 [1744230] STATEMENT:  SELECT public.place_order('70'::bigint, '455070'::bigint, '5095715'::bigint, 4, '{402070,309070,164070,290070,15070}'::bigint[], '{4,5,2,4,3}'::integer[], '{15286430,15286431,15286432,15286433,0}'::bigint[]) AS place_order
+2026-10-07 14:51:23.804 +08 [1744238] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:51:23.804 +08 [1744238] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:51:23.804 +08 [1744238] STATEMENT:  SELECT public.place_order('883'::bigint, '777883'::bigint, '5097322'::bigint, 2, '{282883,263883,361883,298883,136883}'::bigint[], '{3,1,2,3,1}'::integer[], '{15291244,15291245,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:52:00.208 +08 [1744257] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:52:00.208 +08 [1744257] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:52:00.208 +08 [1744257] STATEMENT:  SELECT public.place_order('63'::bigint, '827063'::bigint, '5103418'::bigint, 2, '{342063,363063,479063,402063,134063}'::bigint[], '{5,3,5,5,1}'::integer[], '{15309473,15309474,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:52:18.519 +08 [1744337] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:52:18.519 +08 [1744337] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:52:18.519 +08 [1744337] STATEMENT:  SELECT public.place_order('72'::bigint, '443072'::bigint, '5106437'::bigint, 3, '{211072,291072,498072,167072,295072}'::bigint[], '{5,2,2,1,4}'::integer[], '{15318533,15318534,15318535,0,0}'::bigint[]) AS place_order
+2026-10-07 14:52:24.490 +08 [1744385] ERROR:  could not serialize access due to concurrent update
+2026-10-07 14:52:24.490 +08 [1744385] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 14:52:24.490 +08 [1744385] STATEMENT:  SELECT public.place_order('21'::bigint, '303021'::bigint, '5107452'::bigint, 2, '{21021,368021,432021,290021,216021}'::bigint[], '{3,1,3,1,5}'::integer[], '{15321588,15321589,0,0,0}'::bigint[]) AS place_order
+2026-10-07 14:52:32.842 +08 [1725850] WARNING:  terminating connection due to administrator command
+2026-10-07 14:52:32.842 +08 [1725850] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 14:52:33.032 +08 [1725659] LOG:  received fast shutdown request
+2026-10-07 14:52:33.032 +08 [1725659] LOG:  aborting any active transactions
+2026-10-07 14:52:33.032 +08 [1869762] FATAL:  terminating connection due to administrator command
+2026-10-07 14:52:33.032 +08 [1885758] FATAL:  terminating connection due to administrator command
+2026-10-07 14:52:33.032 +08 [1869751] FATAL:  terminating connection due to administrator command
+2026-10-07 14:52:33.037 +08 [1725659] LOG:  background worker "logical replication launcher" (PID 1725692) exited with exit code 1
+2026-10-07 14:52:33.041 +08 [1725684] LOG:  shutting down
+2026-10-07 14:52:33.041 +08 [1725684] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 14:52:33.992 +08 [1725684] LOG:  checkpoint complete: wrote 128560 buffers (98.1%), wrote 180 SLRU buffers; 0 WAL file(s) added, 0 removed, 137 recycled; write=0.927 s, sync=0.002 s, total=0.951 s; sync files=360, longest=0.001 s, average=0.001 s; distance=2242715 kB, estimate=2242715 kB; lsn=3/95ADE318, redo lsn=3/95ADE318
+2026-10-07 14:52:34.301 +08 [1725659] LOG:  database system is shut down

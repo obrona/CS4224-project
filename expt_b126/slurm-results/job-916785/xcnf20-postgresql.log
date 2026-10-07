@@ -1,0 +1,257 @@
+2026-10-07 12:26:24.390 +08 [3574252] LOG:  There is no designated Main database.
+2026-10-07 12:26:24.390 +08 [3574252] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 12:26:24.390 +08 [3574252] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 12:26:24.509 +08 [3574252] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 12:26:24.509 +08 [3574252] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 12:26:24.509 +08 [3574252] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 12:26:24.510 +08 [3574252] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 12:26:24.514 +08 [3574259] LOG:  database system was shut down at 2026-10-07 12:26:23 +08
+2026-10-07 12:26:24.517 +08 [3574252] LOG:  database system is ready to accept connections
+2026-10-07 12:26:26.707 +08 [3574276] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 12:26:26.707 +08 [3574276] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 12:39:20.126 +08 [3574276] WARNING:  terminating connection due to administrator command
+2026-10-07 12:39:20.126 +08 [3574276] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 12:39:22.135 +08 [3574276] WARNING:  connection to the remote node cs04@xcnf18:6036 failed with the following error: server closed the connection unexpectedly
+		This probably means the server terminated abnormally
+		before or while processing the request.
+2026-10-07 12:39:22.135 +08 [3574276] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 12:39:22.135 +08 [3574276] WARNING:  server closed the connection unexpectedly
+		This probably means the server terminated abnormally
+		before or while processing the request.
+2026-10-07 12:39:22.135 +08 [3574276] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 12:39:22.135 +08 [3574276] WARNING:  terminating connection due to administrator command
+2026-10-07 12:39:22.135 +08 [3574276] CONTEXT:  while executing command on xcnf19:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 12:39:22.568 +08 [3574252] LOG:  received fast shutdown request
+2026-10-07 12:39:22.587 +08 [3574252] LOG:  aborting any active transactions
+2026-10-07 12:39:22.587 +08 [3601139] FATAL:  terminating connection due to administrator command
+2026-10-07 12:39:22.587 +08 [3595806] FATAL:  terminating connection due to administrator command
+2026-10-07 12:39:22.591 +08 [3574252] LOG:  background worker "logical replication launcher" (PID 3574262) exited with exit code 1
+2026-10-07 12:39:22.596 +08 [3574257] LOG:  shutting down
+2026-10-07 12:39:22.613 +08 [3574257] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 12:39:23.735 +08 [3574257] LOG:  checkpoint complete: wrote 122214 buffers (93.2%), wrote 14 SLRU buffers; 0 WAL file(s) added, 0 removed, 229 recycled; write=1.057 s, sync=0.006 s, total=1.140 s; sync files=1190, longest=0.001 s, average=0.001 s; distance=3753200 kB, estimate=3753200 kB; lsn=0/E689B298, redo lsn=0/E689B298
+2026-10-07 12:39:24.026 +08 [3574252] LOG:  database system is shut down
+2026-10-07 12:39:25.444 +08 [3602663] LOG:  There is no designated Main database.
+2026-10-07 12:39:25.444 +08 [3602663] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 12:39:25.444 +08 [3602663] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 12:39:25.564 +08 [3602663] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 12:39:25.564 +08 [3602663] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 12:39:25.564 +08 [3602663] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 12:39:25.564 +08 [3602663] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 12:39:25.569 +08 [3602672] LOG:  database system was shut down at 2026-10-07 12:39:23 +08
+2026-10-07 12:39:25.573 +08 [3602663] LOG:  database system is ready to accept connections
+2026-10-07 12:39:26.497 +08 [3602692] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 12:39:26.497 +08 [3602692] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 12:42:44.507 +08 [3612490] ERROR:  could not serialize access due to concurrent update
+2026-10-07 12:42:44.507 +08 [3612490] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 12:42:44.507 +08 [3612490] STATEMENT:  SELECT public.place_order('53'::bigint, '87053'::bigint, '5004171'::bigint, 5, '{69053,433053,345053,140053,411053}'::bigint[], '{1,2,3,1,3}'::integer[], '{15012268,15012269,15012270,15012271,15012272}'::bigint[]) AS place_order
+2026-10-07 12:43:23.507 +08 [3612486] ERROR:  could not serialize access due to concurrent update
+2026-10-07 12:43:23.507 +08 [3612486] STATEMENT:  UPDATE public.inventory_102114 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-07 12:43:23.474927'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '416285'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 12:51:19.371 +08 [3602692] WARNING:  terminating connection due to administrator command
+2026-10-07 12:51:19.371 +08 [3602692] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 12:51:19.371 +08 [3602692] WARNING:  terminating connection due to administrator command
+2026-10-07 12:51:19.371 +08 [3602692] CONTEXT:  while executing command on xcnf19:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 12:51:19.376 +08 [3602692] WARNING:  could not issue cancel request
+2026-10-07 12:51:19.376 +08 [3602692] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-10-07 12:51:19.376 +08 [3602692] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 12:51:20.401 +08 [3602663] LOG:  received fast shutdown request
+2026-10-07 12:51:20.471 +08 [3602663] LOG:  aborting any active transactions
+2026-10-07 12:51:20.472 +08 [3690294] FATAL:  terminating connection due to administrator command
+2026-10-07 12:51:20.472 +08 [3699541] FATAL:  terminating connection due to administrator command
+2026-10-07 12:51:20.475 +08 [3602663] LOG:  background worker "logical replication launcher" (PID 3602675) exited with exit code 1
+2026-10-07 12:51:20.479 +08 [3602670] LOG:  shutting down
+2026-10-07 12:51:20.497 +08 [3602670] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 12:51:21.399 +08 [3704275] LOG:  PID 3690294 in cancel request did not match any process
+2026-10-07 12:51:21.503 +08 [3602670] LOG:  checkpoint complete: wrote 121728 buffers (92.9%), wrote 52 SLRU buffers; 0 WAL file(s) added, 0 removed, 121 recycled; write=0.955 s, sync=0.002 s, total=1.024 s; sync files=327, longest=0.001 s, average=0.001 s; distance=1985278 kB, estimate=1985278 kB; lsn=1/5FB5AD88, redo lsn=1/5FB5AD88
+2026-10-07 12:51:21.784 +08 [3602663] LOG:  database system is shut down
+2026-10-07 12:51:23.202 +08 [3704328] LOG:  There is no designated Main database.
+2026-10-07 12:51:23.202 +08 [3704328] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 12:51:23.202 +08 [3704328] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 12:51:23.321 +08 [3704328] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 12:51:23.321 +08 [3704328] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 12:51:23.321 +08 [3704328] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 12:51:23.321 +08 [3704328] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 12:51:23.326 +08 [3704338] LOG:  database system was shut down at 2026-10-07 12:51:21 +08
+2026-10-07 12:51:23.329 +08 [3704328] LOG:  database system is ready to accept connections
+2026-10-07 12:51:24.253 +08 [3704381] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 12:51:24.253 +08 [3704381] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 12:53:03.867 +08 [3707745] ERROR:  could not serialize access due to concurrent update
+2026-10-07 12:53:03.867 +08 [3707745] STATEMENT:  UPDATE public.inventory_102114 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-07 12:53:03.809567'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '65494'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:02:28.912 +08 [3714866] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:02:28.912 +08 [3714866] STATEMENT:  UPDATE public.inventory_102134 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-07 13:02:28.844577'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '84798'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:03:17.115 +08 [3704381] WARNING:  terminating connection due to administrator command
+2026-10-07 13:03:17.115 +08 [3704381] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:03:17.115 +08 [3704381] WARNING:  could not issue cancel request
+2026-10-07 13:03:17.115 +08 [3704381] DETAIL:  Client error: PQcancel() -- connect() failed: error 111
+	
+2026-10-07 13:03:17.115 +08 [3704381] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:03:18.647 +08 [3704328] LOG:  received fast shutdown request
+2026-10-07 13:03:18.649 +08 [3704328] LOG:  aborting any active transactions
+2026-10-07 13:03:18.649 +08 [3794083] FATAL:  terminating connection due to administrator command
+2026-10-07 13:03:18.649 +08 [3803172] FATAL:  terminating connection due to administrator command
+2026-10-07 13:03:18.656 +08 [3704328] LOG:  background worker "logical replication launcher" (PID 3704341) exited with exit code 1
+2026-10-07 13:03:18.658 +08 [3704336] LOG:  shutting down
+2026-10-07 13:03:18.658 +08 [3704336] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 13:03:19.124 +08 [3808401] LOG:  PID 3794083 in cancel request did not match any process
+2026-10-07 13:03:19.777 +08 [3704336] LOG:  checkpoint complete: wrote 121946 buffers (93.0%), wrote 63 SLRU buffers; 0 WAL file(s) added, 0 removed, 123 recycled; write=0.974 s, sync=0.106 s, total=1.120 s; sync files=328, longest=0.060 s, average=0.001 s; distance=2018796 kB, estimate=2018796 kB; lsn=1/DAED5D88, redo lsn=1/DAED5D88
+2026-10-07 13:03:20.063 +08 [3704328] LOG:  database system is shut down
+2026-10-07 13:03:21.521 +08 [3808486] LOG:  There is no designated Main database.
+2026-10-07 13:03:21.521 +08 [3808486] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 13:03:21.521 +08 [3808486] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 13:03:21.638 +08 [3808486] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 13:03:21.638 +08 [3808486] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 13:03:21.638 +08 [3808486] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 13:03:21.639 +08 [3808486] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 13:03:21.643 +08 [3808496] LOG:  database system was shut down at 2026-10-07 13:03:19 +08
+2026-10-07 13:03:21.646 +08 [3808486] LOG:  database system is ready to accept connections
+2026-10-07 13:03:22.570 +08 [3808523] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 13:03:22.570 +08 [3808523] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:06:57.543 +08 [3821601] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:06:57.543 +08 [3821601] STATEMENT:  UPDATE public.inventory_102134 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-07 13:06:57.410496'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '271275'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:07:04.641 +08 [3821594] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:07:04.641 +08 [3821594] STATEMENT:  UPDATE public.inventory_102110 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-07 13:07:04.505834'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '175329'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:07:44.654 +08 [3821601] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:07:44.654 +08 [3821601] STATEMENT:  UPDATE public.inventory_102122 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-07 13:07:44.524067'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '427825'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-07 13:07:52.024 +08 [3821601] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:07:52.024 +08 [3821601] STATEMENT:  UPDATE public.inventory_102118 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 1), updated_at = '2026-10-07 13:07:51.883679'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '198262'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 1)) RETURNING 1 AS "?column?"
+2026-10-07 13:15:15.428 +08 [3808523] WARNING:  terminating connection due to administrator command
+2026-10-07 13:15:15.428 +08 [3808523] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:15:17.152 +08 [3808486] LOG:  received fast shutdown request
+2026-10-07 13:15:17.152 +08 [3808486] LOG:  aborting any active transactions
+2026-10-07 13:15:17.153 +08 [3942336] FATAL:  terminating connection due to administrator command
+2026-10-07 13:15:17.153 +08 [3925131] FATAL:  terminating connection due to administrator command
+2026-10-07 13:15:17.157 +08 [3808486] LOG:  background worker "logical replication launcher" (PID 3808499) exited with exit code 1
+2026-10-07 13:15:17.161 +08 [3808494] LOG:  shutting down
+2026-10-07 13:15:17.161 +08 [3808494] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 13:15:17.625 +08 [3949436] LOG:  PID 3925131 in cancel request did not match any process
+2026-10-07 13:15:18.094 +08 [3808494] LOG:  checkpoint complete: wrote 122091 buffers (93.1%), wrote 61 SLRU buffers; 0 WAL file(s) added, 0 removed, 123 recycled; write=0.911 s, sync=0.004 s, total=0.934 s; sync files=329, longest=0.003 s, average=0.001 s; distance=2013264 kB, estimate=2013264 kB; lsn=2/55CE9E28, redo lsn=2/55CE9E28
+2026-10-07 13:15:18.380 +08 [3808486] LOG:  database system is shut down
+2026-10-07 13:15:19.983 +08 [3949743] LOG:  There is no designated Main database.
+2026-10-07 13:15:19.983 +08 [3949743] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 13:15:19.983 +08 [3949743] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 13:15:20.117 +08 [3949743] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 13:15:20.117 +08 [3949743] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 13:15:20.117 +08 [3949743] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 13:15:20.118 +08 [3949743] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 13:15:20.122 +08 [3949764] LOG:  database system was shut down at 2026-10-07 13:15:18 +08
+2026-10-07 13:15:20.126 +08 [3949743] LOG:  database system is ready to accept connections
+2026-10-07 13:15:20.993 +08 [3949846] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 13:15:20.993 +08 [3949846] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:16:46.707 +08 [3956673] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:16:46.707 +08 [3956673] STATEMENT:  UPDATE public.inventory_102118 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 4), updated_at = '2026-10-07 13:16:46.409797'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '281617'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:17:21.338 +08 [3971242] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:17:21.338 +08 [3971242] STATEMENT:  UPDATE public.inventory_102118 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 1), updated_at = '2026-10-07 13:17:21.068687'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '462617'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 1)) RETURNING 1 AS "?column?"
+2026-10-07 13:17:39.176 +08 [3971223] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:17:39.176 +08 [3971223] STATEMENT:  UPDATE public.inventory_102126 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 2), updated_at = '2026-10-07 13:17:38.809943'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '101586'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 2)) RETURNING 1 AS "?column?"
+2026-10-07 13:17:57.871 +08 [3971173] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:17:57.871 +08 [3971173] STATEMENT:  UPDATE public.inventory_102126 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-07 13:17:57.589785'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '50738'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:18:01.527 +08 [3971246] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:18:01.527 +08 [3971246] STATEMENT:  UPDATE public.inventory_102122 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 5), updated_at = '2026-10-07 13:18:01.229295'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '118706'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 5)) RETURNING 1 AS "?column?"
+2026-10-07 13:22:24.616 +08 [3971225] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:22:24.616 +08 [3971225] STATEMENT:  UPDATE public.inventory_102134 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 5), updated_at = '2026-10-07 13:22:24.311429'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '224926'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 5)) RETURNING 1 AS "?column?"
+2026-10-07 13:24:34.077 +08 [4134019] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:24:34.077 +08 [4134019] STATEMENT:  UPDATE public.inventory_102126 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-07 13:24:33.768904'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '212738'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:26:24.664 +08 [3971173] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:26:24.664 +08 [3971173] STATEMENT:  UPDATE public.inventory_102106 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 1), updated_at = '2026-10-07 13:26:24.374143'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '497031'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 1)) RETURNING 1 AS "?column?"
+2026-10-07 13:27:13.850 +08 [3949846] WARNING:  terminating connection due to administrator command
+2026-10-07 13:27:13.850 +08 [3949846] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:27:15.479 +08 [3949743] LOG:  received fast shutdown request
+2026-10-07 13:27:15.480 +08 [3949743] LOG:  aborting any active transactions
+2026-10-07 13:27:15.480 +08 [4168600] FATAL:  terminating connection due to administrator command
+2026-10-07 13:27:15.480 +08 [4192513] FATAL:  terminating connection due to administrator command
+2026-10-07 13:27:15.486 +08 [3949743] LOG:  background worker "logical replication launcher" (PID 3949767) exited with exit code 1
+2026-10-07 13:27:15.489 +08 [3949762] LOG:  shutting down
+2026-10-07 13:27:15.489 +08 [3949762] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 13:27:15.915 +08 [20696] LOG:  PID 4168600 in cancel request did not match any process
+2026-10-07 13:27:16.423 +08 [3949762] LOG:  checkpoint complete: wrote 122235 buffers (93.3%), wrote 60 SLRU buffers; 0 WAL file(s) added, 0 removed, 123 recycled; write=0.909 s, sync=0.005 s, total=0.935 s; sync files=328, longest=0.003 s, average=0.001 s; distance=2010023 kB, estimate=2010023 kB; lsn=2/D07D3B48, redo lsn=2/D07D3B48
+2026-10-07 13:27:16.707 +08 [3949743] LOG:  database system is shut down
+2026-10-07 13:27:18.262 +08 [21867] LOG:  There is no designated Main database.
+2026-10-07 13:27:18.262 +08 [21867] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 13:27:18.262 +08 [21867] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 13:27:18.383 +08 [21867] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 13:27:18.383 +08 [21867] LOG:  listening on IPv4 address "0.0.0.0", port 6036
+2026-10-07 13:27:18.383 +08 [21867] LOG:  listening on IPv6 address "::", port 6036
+2026-10-07 13:27:18.383 +08 [21867] LOG:  listening on Unix socket "/tmp/.s.PGSQL.6036"
+2026-10-07 13:27:18.388 +08 [21964] LOG:  database system was shut down at 2026-10-07 13:27:16 +08
+2026-10-07 13:27:18.391 +08 [21867] LOG:  database system is ready to accept connections
+2026-10-07 13:27:19.317 +08 [22239] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 13:27:19.317 +08 [22239] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:28:19.097 +08 [30151] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:28:19.097 +08 [30151] STATEMENT:  UPDATE public.inventory_102130 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-07 13:28:18.382261'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '428058'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-07 13:29:23.717 +08 [50248] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:29:23.717 +08 [50248] STATEMENT:  UPDATE public.inventory_102106 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-07 13:29:22.870621'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '235651'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-07 13:30:42.392 +08 [49915] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:30:42.392 +08 [49915] STATEMENT:  UPDATE public.inventory_102134 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 4), updated_at = '2026-10-07 13:30:41.731969'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '243011'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:31:18.148 +08 [50294] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:31:18.148 +08 [50294] STATEMENT:  UPDATE public.inventory_102122 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 4), updated_at = '2026-10-07 13:31:17.478149'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '220671'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:33:05.071 +08 [50006] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:33:05.071 +08 [50006] STATEMENT:  UPDATE public.inventory_102134 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 2), updated_at = '2026-10-07 13:33:04.412656'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '297995'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:33:21.611 +08 [49923] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:33:21.611 +08 [49923] STATEMENT:  UPDATE public.inventory_102134 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 5), updated_at = '2026-10-07 13:33:20.90786'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '278517'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 5)) RETURNING 1 AS "?column?"
+2026-10-07 13:33:21.870 +08 [50204] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:33:21.870 +08 [50204] STATEMENT:  UPDATE public.inventory_102118 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-07 13:33:21.228323'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '287306'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:34:24.912 +08 [50185] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:34:24.912 +08 [50185] STATEMENT:  UPDATE public.inventory_102110 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-07 13:34:24.269315'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '429329'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:35:12.745 +08 [49953] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:35:12.745 +08 [49953] STATEMENT:  UPDATE public.inventory_102114 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-07 13:35:12.042312'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '86802'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:35:17.231 +08 [49932] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:35:17.231 +08 [49932] STATEMENT:  UPDATE public.inventory_102118 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 4), updated_at = '2026-10-07 13:35:16.556667'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '83037'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:35:39.721 +08 [50185] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:35:39.721 +08 [50185] STATEMENT:  UPDATE public.inventory_102114 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 5), updated_at = '2026-10-07 13:35:39.024803'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '470747'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 5)) RETURNING 1 AS "?column?"
+2026-10-07 13:35:55.274 +08 [50036] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:35:55.274 +08 [50036] STATEMENT:  UPDATE public.inventory_102106 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-07 13:35:54.61894'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '390600'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:37:13.697 +08 [49941] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:37:13.697 +08 [49941] STATEMENT:  UPDATE public.inventory_102110 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-07 13:37:13.056657'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '122329'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:38:05.946 +08 [49915] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:38:05.946 +08 [49915] STATEMENT:  UPDATE public.inventory_102106 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-07 13:38:05.273961'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '326854'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:38:30.779 +08 [50031] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:38:30.779 +08 [50031] STATEMENT:  UPDATE public.inventory_102126 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-07 13:38:30.065039'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '498529'::bigint) RETURNING 1 AS "?column?"
+2026-10-07 13:38:48.061 +08 [49919] ERROR:  could not serialize access due to concurrent update
+2026-10-07 13:38:48.061 +08 [49919] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-07 13:38:48.061 +08 [49919] STATEMENT:  SELECT public.place_order('40'::bigint, '315040'::bigint, '5019291'::bigint, 5, '{301040,433040,1040,208040,99040}'::bigint[], '{3,4,2,1,3}'::integer[], '{15057675,15057676,15057677,15057678,15057679}'::bigint[]) AS place_order
+2026-10-07 13:39:12.181 +08 [22239] WARNING:  terminating connection due to administrator command
+2026-10-07 13:39:12.181 +08 [22239] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:39:14.189 +08 [22239] WARNING:  connection to the remote node cs04@xcnf18:6036 failed with the following error: server closed the connection unexpectedly
+		This probably means the server terminated abnormally
+		before or while processing the request.
+2026-10-07 13:39:14.189 +08 [22239] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:39:14.189 +08 [22239] WARNING:  server closed the connection unexpectedly
+		This probably means the server terminated abnormally
+		before or while processing the request.
+2026-10-07 13:39:14.189 +08 [22239] CONTEXT:  while executing command on xcnf18:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:39:14.189 +08 [22239] WARNING:  terminating connection due to administrator command
+2026-10-07 13:39:14.189 +08 [22239] CONTEXT:  while executing command on xcnf19:6036
+	Citus maintenance daemon for database 16384 user 10
+2026-10-07 13:39:14.604 +08 [21867] LOG:  received fast shutdown request
+2026-10-07 13:39:14.605 +08 [21867] LOG:  aborting any active transactions
+2026-10-07 13:39:14.605 +08 [295634] FATAL:  terminating connection due to administrator command
+2026-10-07 13:39:14.605 +08 [326424] FATAL:  terminating connection due to administrator command
+2026-10-07 13:39:14.610 +08 [21867] LOG:  background worker "logical replication launcher" (PID 21968) exited with exit code 1
+2026-10-07 13:39:14.614 +08 [21962] LOG:  shutting down
+2026-10-07 13:39:14.614 +08 [21962] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 13:39:15.529 +08 [21962] LOG:  checkpoint complete: wrote 122292 buffers (93.3%), wrote 54 SLRU buffers; 0 WAL file(s) added, 0 removed, 122 recycled; write=0.892 s, sync=0.002 s, total=0.916 s; sync files=329, longest=0.001 s, average=0.001 s; distance=1993130 kB, estimate=1993130 kB; lsn=3/4A23E558, redo lsn=3/4A23E558
+2026-10-07 13:39:15.819 +08 [21867] LOG:  database system is shut down

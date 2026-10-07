@@ -1,0 +1,537 @@
+2026-10-07 08:45:26.545 +08 [53248] LOG:  There is no designated Main database.
+2026-10-07 08:45:26.545 +08 [53248] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 08:45:26.545 +08 [53248] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 08:45:26.658 +08 [53248] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 08:45:26.658 +08 [53248] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 08:45:26.658 +08 [53248] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 08:45:26.658 +08 [53248] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 08:45:26.662 +08 [53270] LOG:  database system was shut down at 2026-10-07 08:45:24 +08
+2026-10-07 08:45:26.666 +08 [53248] LOG:  database system is ready to accept connections
+2026-10-07 08:45:28.864 +08 [53974] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 08:45:28.864 +08 [53974] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 08:58:27.075 +08 [53248] LOG:  received fast shutdown request
+2026-10-07 08:58:27.076 +08 [53248] LOG:  aborting any active transactions
+2026-10-07 08:58:27.079 +08 [53248] LOG:  background worker "logical replication launcher" (PID 53279) exited with exit code 1
+2026-10-07 08:58:27.081 +08 [53264] LOG:  shutting down
+2026-10-07 08:58:27.081 +08 [53264] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 08:58:27.107 +08 [53264] LOG:  checkpoint complete: wrote 1643 buffers (1.3%), wrote 21 SLRU buffers; 0 WAL file(s) added, 0 removed, 3 recycled; write=0.023 s, sync=0.002 s, total=0.027 s; sync files=501, longest=0.001 s, average=0.001 s; distance=44827 kB, estimate=44827 kB; lsn=0/4325D10, redo lsn=0/4325D10
+2026-10-07 08:58:27.151 +08 [53248] LOG:  database system is shut down
+2026-10-07 08:58:32.685 +08 [56452] LOG:  There is no designated Main database.
+2026-10-07 08:58:32.685 +08 [56452] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 08:58:32.685 +08 [56452] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 08:58:32.805 +08 [56452] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 08:58:32.806 +08 [56452] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 08:58:32.806 +08 [56452] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 08:58:32.806 +08 [56452] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 08:58:32.810 +08 [56459] LOG:  database system was shut down at 2026-10-07 08:58:27 +08
+2026-10-07 08:58:32.814 +08 [56452] LOG:  database system is ready to accept connections
+2026-10-07 08:58:33.712 +08 [56523] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 08:58:33.712 +08 [56523] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 09:04:14.146 +08 [57975] ERROR:  could not serialize access due to concurrent update
+2026-10-07 09:04:14.146 +08 [57975] CONTEXT:  while executing command on xcnf21:5536
+2026-10-07 09:04:14.146 +08 [57975] STATEMENT:  WITH
+	input_items(item_no, product_id, quantity) AS (
+	  VALUES
+	    (1, (14068)::bigint, (1)::integer),
+	    (2, (237068)::bigint, (4)::integer),
+	    (3, (151068)::bigint, (1)::integer),
+	    (4, (369068)::bigint, (4)::integer),
+	    (5, (82068)::bigint, (4)::integer)
+	),
+	requested_items AS MATERIALIZED (
+	  SELECT item_no, product_id, quantity
+	  FROM input_items
+	  WHERE item_no <= (4)::integer
+	),
+	-- Duplicate selections need their combined quantity reserved atomically.
+	requirements AS MATERIALIZED (
+	  SELECT product_id, SUM(quantity)::integer AS quantity
+	  FROM requested_items
+	  GROUP BY product_id
+	),
+	-- only eligible if all items requested exist.
+	eligible AS MATERIALIZED (
+	  SELECT
+	    EXISTS (
+	      SELECT 1
+	      FROM customers c
+	      WHERE c.merchant_id = (68)::bigint
+	        AND c.customer_id = (882068)::bigint
+	    )
+	    AND NOT EXISTS (
+	      SELECT 1
+	      FROM requirements r
+	      LEFT JOIN products p
+	        ON p.merchant_id = (68)::bigint
+	       AND p.product_id = r.product_id
+	      LEFT JOIN inventory i
+	        ON i.merchant_id = (68)::bigint
+	       AND i.product_id = r.product_id
+	      WHERE p.product_id IS NULL
+	         OR i.product_id IS NULL
+	         OR i.quantity < r.quantity
+	    ) AS ok
+	),
+	reserved AS (
+	  UPDATE inventory i
+	  SET quantity = i.quantity - r.quantity,
+	      updated_at = CURRENT_TIMESTAMP
+	  FROM requirements r, eligible e
+	  WHERE e.ok
+	    AND i.merchant_id = (68)::bigint
+	    AND i.product_id = r.product_id
+	  RETURNING i.product_id
+	),
+	reservation_ok AS MATERIALIZED (
+	  SELECT e.ok
+	     AND (SELECT COUNT(*) FROM reserved)
+	       = (SELECT COUNT(*) FROM requirements) AS ok
+	  FROM eligible e
+	),
+	inserted_order AS (
+	  INSERT INTO orders(
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  SELECT
+	    nextval('benchmark_order_id_seq'),
+	    (68)::bigint,
+	    (882068)::bigint,
+	    'PENDING'::text,
+	    SUM(ri.quantity * p.price)::numeric(12,2),
+	    CURRENT_TIMESTAMP
+	  FROM requested_items ri
+	  JOIN products p
+	    ON p.merchant_id = (68)::bigint
+	   AND p.product_id = ri.product_id
+	  CROSS JOIN reservation_ok ro
+	  WHERE ro.ok
+	  HAVING COUNT(*) = (4)::integer
+	  RETURNING order_id
+	),
+	inserted_items AS (
+	  INSERT INTO order_items(
+	    order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+	  )
+	  SELECT
+	    nextval('benchmark_order_item_id_seq'),
+	    (68)::bigint,
+	    o.order_id,
+	    ri.product_id,
+	    ri.quantity,
+	    p.price
+	  FROM requested_items ri
+	  JOIN products p
+	    ON p.merchant_id = (68)::bigint
+	   AND p.product_id = ri.product_id
+	  CROSS JOIN inserted_order o
+	  RETURNING 1
+	)
+	SELECT
+	  EXISTS (SELECT 1 FROM inserted_order) AS order_created,
+	  (SELECT COUNT(*) FROM inserted_items) AS items_created;
+2026-10-07 09:10:27.605 +08 [56452] LOG:  received fast shutdown request
+2026-10-07 09:10:27.606 +08 [56452] LOG:  aborting any active transactions
+2026-10-07 09:10:27.609 +08 [56452] LOG:  background worker "logical replication launcher" (PID 56462) exited with exit code 1
+2026-10-07 09:10:27.611 +08 [56457] LOG:  shutting down
+2026-10-07 09:10:27.611 +08 [56457] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 09:10:27.624 +08 [56457] LOG:  checkpoint complete: wrote 1287 buffers (1.0%), wrote 50 SLRU buffers; 0 WAL file(s) added, 0 removed, 6 recycled; write=0.012 s, sync=0.001 s, total=0.014 s; sync files=49, longest=0.001 s, average=0.001 s; distance=101415 kB, estimate=101415 kB; lsn=0/A62FB48, redo lsn=0/A62FB48
+2026-10-07 09:10:27.667 +08 [56452] LOG:  database system is shut down
+2026-10-07 09:10:33.328 +08 [58992] LOG:  There is no designated Main database.
+2026-10-07 09:10:33.328 +08 [58992] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 09:10:33.328 +08 [58992] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 09:10:33.459 +08 [58992] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 09:10:33.459 +08 [58992] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 09:10:33.459 +08 [58992] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 09:10:33.460 +08 [58992] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 09:10:33.464 +08 [59003] LOG:  database system was shut down at 2026-10-07 09:10:27 +08
+2026-10-07 09:10:33.468 +08 [58992] LOG:  database system is ready to accept connections
+2026-10-07 09:10:34.351 +08 [59055] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 09:10:34.351 +08 [59055] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 09:15:04.706 +08 [60632] ERROR:  could not serialize access due to concurrent update
+2026-10-07 09:15:04.706 +08 [60632] CONTEXT:  while executing command on xcnf18:5536
+2026-10-07 09:15:04.706 +08 [60632] STATEMENT:  WITH
+	input_items(item_no, product_id, quantity) AS (
+	  VALUES
+	    (1, (290036)::bigint, (5)::integer),
+	    (2, (435036)::bigint, (5)::integer),
+	    (3, (327036)::bigint, (4)::integer),
+	    (4, (249036)::bigint, (5)::integer),
+	    (5, (331036)::bigint, (3)::integer)
+	),
+	requested_items AS MATERIALIZED (
+	  SELECT item_no, product_id, quantity
+	  FROM input_items
+	  WHERE item_no <= (4)::integer
+	),
+	-- Duplicate selections need their combined quantity reserved atomically.
+	requirements AS MATERIALIZED (
+	  SELECT product_id, SUM(quantity)::integer AS quantity
+	  FROM requested_items
+	  GROUP BY product_id
+	),
+	-- only eligible if all items requested exist.
+	eligible AS MATERIALIZED (
+	  SELECT
+	    EXISTS (
+	      SELECT 1
+	      FROM customers c
+	      WHERE c.merchant_id = (36)::bigint
+	        AND c.customer_id = (696036)::bigint
+	    )
+	    AND NOT EXISTS (
+	      SELECT 1
+	      FROM requirements r
+	      LEFT JOIN products p
+	        ON p.merchant_id = (36)::bigint
+	       AND p.product_id = r.product_id
+	      LEFT JOIN inventory i
+	        ON i.merchant_id = (36)::bigint
+	       AND i.product_id = r.product_id
+	      WHERE p.product_id IS NULL
+	         OR i.product_id IS NULL
+	         OR i.quantity < r.quantity
+	    ) AS ok
+	),
+	reserved AS (
+	  UPDATE inventory i
+	  SET quantity = i.quantity - r.quantity,
+	      updated_at = CURRENT_TIMESTAMP
+	  FROM requirements r, eligible e
+	  WHERE e.ok
+	    AND i.merchant_id = (36)::bigint
+	    AND i.product_id = r.product_id
+	  RETURNING i.product_id
+	),
+	reservation_ok AS MATERIALIZED (
+	  SELECT e.ok
+	     AND (SELECT COUNT(*) FROM reserved)
+	       = (SELECT COUNT(*) FROM requirements) AS ok
+	  FROM eligible e
+	),
+	inserted_order AS (
+	  INSERT INTO orders(
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  SELECT
+	    nextval('benchmark_order_id_seq'),
+	    (36)::bigint,
+	    (696036)::bigint,
+	    'PENDING'::text,
+	    SUM(ri.quantity * p.price)::numeric(12,2),
+	    CURRENT_TIMESTAMP
+	  FROM requested_items ri
+	  JOIN products p
+	    ON p.merchant_id = (36)::bigint
+	   AND p.product_id = ri.product_id
+	  CROSS JOIN reservation_ok ro
+	  WHERE ro.ok
+	  HAVING COUNT(*) = (4)::integer
+	  RETURNING order_id
+	),
+	inserted_items AS (
+	  INSERT INTO order_items(
+	    order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+	  )
+	  SELECT
+	    nextval('benchmark_order_item_id_seq'),
+	    (36)::bigint,
+	    o.order_id,
+	    ri.product_id,
+	    ri.quantity,
+	    p.price
+	  FROM requested_items ri
+	  JOIN products p
+	    ON p.merchant_id = (36)::bigint
+	   AND p.product_id = ri.product_id
+	  CROSS JOIN inserted_order o
+	  RETURNING 1
+	)
+	SELECT
+	  EXISTS (SELECT 1 FROM inserted_order) AS order_created,
+	  (SELECT COUNT(*) FROM inserted_items) AS items_created;
+2026-10-07 09:19:57.695 +08 [60636] ERROR:  could not serialize access due to concurrent update
+2026-10-07 09:19:57.695 +08 [60636] CONTEXT:  while executing command on xcnf18:5536
+2026-10-07 09:19:57.695 +08 [60636] STATEMENT:  UPDATE inventory
+	SET quantity = quantity + (14)::integer,
+	    updated_at = CURRENT_TIMESTAMP
+	WHERE inventory_id = (290057)::bigint
+	  AND merchant_id = (57)::bigint
+	  AND product_id = (290057)::bigint
+	  AND quantity + (14)::integer >= 0;
+2026-10-07 09:22:26.656 +08 [58992] LOG:  received fast shutdown request
+2026-10-07 09:22:26.656 +08 [58992] LOG:  aborting any active transactions
+2026-10-07 09:22:26.661 +08 [58992] LOG:  background worker "logical replication launcher" (PID 59007) exited with exit code 1
+2026-10-07 09:22:26.661 +08 [59001] LOG:  shutting down
+2026-10-07 09:22:26.661 +08 [59001] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 09:22:26.675 +08 [59001] LOG:  checkpoint complete: wrote 1302 buffers (1.0%), wrote 50 SLRU buffers; 0 WAL file(s) added, 0 removed, 6 recycled; write=0.012 s, sync=0.001 s, total=0.014 s; sync files=49, longest=0.001 s, average=0.001 s; distance=103407 kB, estimate=103407 kB; lsn=0/10B2BA68, redo lsn=0/10B2BA68
+2026-10-07 09:22:26.719 +08 [58992] LOG:  database system is shut down
+2026-10-07 09:22:32.187 +08 [61547] LOG:  There is no designated Main database.
+2026-10-07 09:22:32.187 +08 [61547] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 09:22:32.187 +08 [61547] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 09:22:32.319 +08 [61547] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 09:22:32.319 +08 [61547] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 09:22:32.319 +08 [61547] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 09:22:32.320 +08 [61547] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 09:22:32.324 +08 [61554] LOG:  database system was shut down at 2026-10-07 09:22:26 +08
+2026-10-07 09:22:32.328 +08 [61547] LOG:  database system is ready to accept connections
+2026-10-07 09:22:33.206 +08 [61601] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 09:22:33.206 +08 [61601] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 09:32:55.046 +08 [63369] ERROR:  could not serialize access due to concurrent update
+2026-10-07 09:32:55.046 +08 [63369] CONTEXT:  while executing command on xcnf21:5536
+2026-10-07 09:32:55.046 +08 [63369] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (978)::bigint
+	    AND product_id = (34978)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-07 09:34:24.524 +08 [61547] LOG:  received fast shutdown request
+2026-10-07 09:34:24.524 +08 [61547] LOG:  aborting any active transactions
+2026-10-07 09:34:24.528 +08 [61547] LOG:  background worker "logical replication launcher" (PID 61557) exited with exit code 1
+2026-10-07 09:34:24.530 +08 [61552] LOG:  shutting down
+2026-10-07 09:34:24.530 +08 [61552] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 09:34:24.541 +08 [61552] LOG:  checkpoint complete: wrote 1063 buffers (0.8%), wrote 39 SLRU buffers; 0 WAL file(s) added, 0 removed, 5 recycled; write=0.010 s, sync=0.001 s, total=0.012 s; sync files=49, longest=0.001 s, average=0.001 s; distance=79890 kB, estimate=79890 kB; lsn=0/15930428, redo lsn=0/15930428
+2026-10-07 09:34:24.587 +08 [61547] LOG:  database system is shut down
+2026-10-07 09:35:44.090 +08 [66024] LOG:  There is no designated Main database.
+2026-10-07 09:35:44.090 +08 [66024] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 09:35:44.090 +08 [66024] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 09:35:44.206 +08 [66024] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 09:35:44.206 +08 [66024] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 09:35:44.206 +08 [66024] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 09:35:44.206 +08 [66024] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 09:35:44.210 +08 [66031] LOG:  database system was shut down at 2026-10-07 09:34:24 +08
+2026-10-07 09:35:44.214 +08 [66024] LOG:  database system is ready to accept connections
+2026-10-07 09:36:00.220 +08 [66096] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 09:36:00.220 +08 [66096] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 09:44:56.189 +08 [66843] ERROR:  could not serialize access due to concurrent update
+2026-10-07 09:44:56.189 +08 [66843] CONTEXT:  while executing command on xcnf21:5536
+2026-10-07 09:44:56.189 +08 [66843] STATEMENT:  WITH
+	input_items(item_no, product_id, quantity) AS (
+	  VALUES
+	    (1, (200077)::bigint, (4)::integer),
+	    (2, (53077)::bigint, (1)::integer),
+	    (3, (222077)::bigint, (4)::integer),
+	    (4, (303077)::bigint, (5)::integer),
+	    (5, (411077)::bigint, (4)::integer)
+	),
+	requested_items AS MATERIALIZED (
+	  SELECT item_no, product_id, quantity
+	  FROM input_items
+	  WHERE item_no <= (4)::integer
+	),
+	-- Duplicate selections need their combined quantity reserved atomically.
+	requirements AS MATERIALIZED (
+	  SELECT product_id, SUM(quantity)::integer AS quantity
+	  FROM requested_items
+	  GROUP BY product_id
+	),
+	-- only eligible if all items requested exist.
+	eligible AS MATERIALIZED (
+	  SELECT
+	    EXISTS (
+	      SELECT 1
+	      FROM customers c
+	      WHERE c.merchant_id = (77)::bigint
+	        AND c.customer_id = (619077)::bigint
+	    )
+	    AND NOT EXISTS (
+	      SELECT 1
+	      FROM requirements r
+	      LEFT JOIN products p
+	        ON p.merchant_id = (77)::bigint
+	       AND p.product_id = r.product_id
+	      LEFT JOIN inventory i
+	        ON i.merchant_id = (77)::bigint
+	       AND i.product_id = r.product_id
+	      WHERE p.product_id IS NULL
+	         OR i.product_id IS NULL
+	         OR i.quantity < r.quantity
+	    ) AS ok
+	),
+	reserved AS (
+	  UPDATE inventory i
+	  SET quantity = i.quantity - r.quantity,
+	      updated_at = CURRENT_TIMESTAMP
+	  FROM requirements r, eligible e
+	  WHERE e.ok
+	    AND i.merchant_id = (77)::bigint
+	    AND i.product_id = r.product_id
+	  RETURNING i.product_id
+	),
+	reservation_ok AS MATERIALIZED (
+	  SELECT e.ok
+	     AND (SELECT COUNT(*) FROM reserved)
+	       = (SELECT COUNT(*) FROM requirements) AS ok
+	  FROM eligible e
+	),
+	inserted_order AS (
+	  INSERT INTO orders(
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  SELECT
+	    nextval('benchmark_order_id_seq'),
+	    (77)::bigint,
+	    (619077)::bigint,
+	    'PENDING'::text,
+	    SUM(ri.quantity * p.price)::numeric(12,2),
+	    CURRENT_TIMESTAMP
+	  FROM requested_items ri
+	  JOIN products p
+	    ON p.merchant_id = (77)::bigint
+	   AND p.product_id = ri.product_id
+	  CROSS JOIN reservation_ok ro
+	  WHERE ro.ok
+	  HAVING COUNT(*) = (4)::integer
+	  RETURNING order_id
+	),
+	inserted_items AS (
+	  INSERT INTO order_items(
+	    order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+	  )
+	  SELECT
+	    nextval('benchmark_order_item_id_seq'),
+	    (77)::bigint,
+	    o.order_id,
+	    ri.product_id,
+	    ri.quantity,
+	    p.price
+	  FROM requested_items ri
+	  JOIN products p
+	    ON p.merchant_id = (77)::bigint
+	   AND p.product_id = ri.product_id
+	  CROSS JOIN inserted_order o
+	  RETURNING 1
+	)
+	SELECT
+	  EXISTS (SELECT 1 FROM inserted_order) AS order_created,
+	  (SELECT COUNT(*) FROM inserted_items) AS items_created;
+2026-10-07 09:47:52.573 +08 [66024] LOG:  received fast shutdown request
+2026-10-07 09:47:52.574 +08 [66024] LOG:  aborting any active transactions
+2026-10-07 09:47:52.577 +08 [66024] LOG:  background worker "logical replication launcher" (PID 66034) exited with exit code 1
+2026-10-07 09:47:52.579 +08 [66029] LOG:  shutting down
+2026-10-07 09:47:52.580 +08 [66029] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 09:47:52.591 +08 [66029] LOG:  checkpoint complete: wrote 1080 buffers (0.8%), wrote 36 SLRU buffers; 0 WAL file(s) added, 0 removed, 4 recycled; write=0.010 s, sync=0.001 s, total=0.012 s; sync files=49, longest=0.001 s, average=0.001 s; distance=70157 kB, estimate=70157 kB; lsn=0/19DB3980, redo lsn=0/19DB3980
+2026-10-07 09:47:52.631 +08 [66024] LOG:  database system is shut down
+2026-10-07 09:47:58.375 +08 [68822] LOG:  There is no designated Main database.
+2026-10-07 09:47:58.375 +08 [68822] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 09:47:58.375 +08 [68822] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 09:47:58.496 +08 [68822] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 09:47:58.497 +08 [68822] LOG:  listening on IPv4 address "0.0.0.0", port 5536
+2026-10-07 09:47:58.497 +08 [68822] LOG:  listening on IPv6 address "::", port 5536
+2026-10-07 09:47:58.497 +08 [68822] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5536"
+2026-10-07 09:47:58.501 +08 [68829] LOG:  database system was shut down at 2026-10-07 09:47:52 +08
+2026-10-07 09:47:58.505 +08 [68822] LOG:  database system is ready to accept connections
+2026-10-07 09:47:59.396 +08 [68854] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 09:47:59.396 +08 [68854] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 09:55:46.907 +08 [70118] ERROR:  could not serialize access due to concurrent update
+2026-10-07 09:55:46.907 +08 [70118] CONTEXT:  while executing command on xcnf19:5536
+2026-10-07 09:55:46.907 +08 [70118] STATEMENT:  WITH
+	input_items(item_no, product_id, quantity) AS (
+	  VALUES
+	    (1, (375019)::bigint, (5)::integer),
+	    (2, (161019)::bigint, (2)::integer),
+	    (3, (289019)::bigint, (1)::integer),
+	    (4, (50019)::bigint, (5)::integer),
+	    (5, (470019)::bigint, (4)::integer)
+	),
+	requested_items AS MATERIALIZED (
+	  SELECT item_no, product_id, quantity
+	  FROM input_items
+	  WHERE item_no <= (4)::integer
+	),
+	-- Duplicate selections need their combined quantity reserved atomically.
+	requirements AS MATERIALIZED (
+	  SELECT product_id, SUM(quantity)::integer AS quantity
+	  FROM requested_items
+	  GROUP BY product_id
+	),
+	-- only eligible if all items requested exist.
+	eligible AS MATERIALIZED (
+	  SELECT
+	    EXISTS (
+	      SELECT 1
+	      FROM customers c
+	      WHERE c.merchant_id = (19)::bigint
+	        AND c.customer_id = (782019)::bigint
+	    )
+	    AND NOT EXISTS (
+	      SELECT 1
+	      FROM requirements r
+	      LEFT JOIN products p
+	        ON p.merchant_id = (19)::bigint
+	       AND p.product_id = r.product_id
+	      LEFT JOIN inventory i
+	        ON i.merchant_id = (19)::bigint
+	       AND i.product_id = r.product_id
+	      WHERE p.product_id IS NULL
+	         OR i.product_id IS NULL
+	         OR i.quantity < r.quantity
+	    ) AS ok
+	),
+	reserved AS (
+	  UPDATE inventory i
+	  SET quantity = i.quantity - r.quantity,
+	      updated_at = CURRENT_TIMESTAMP
+	  FROM requirements r, eligible e
+	  WHERE e.ok
+	    AND i.merchant_id = (19)::bigint
+	    AND i.product_id = r.product_id
+	  RETURNING i.product_id
+	),
+	reservation_ok AS MATERIALIZED (
+	  SELECT e.ok
+	     AND (SELECT COUNT(*) FROM reserved)
+	       = (SELECT COUNT(*) FROM requirements) AS ok
+	  FROM eligible e
+	),
+	inserted_order AS (
+	  INSERT INTO orders(
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  SELECT
+	    nextval('benchmark_order_id_seq'),
+	    (19)::bigint,
+	    (782019)::bigint,
+	    'PENDING'::text,
+	    SUM(ri.quantity * p.price)::numeric(12,2),
+	    CURRENT_TIMESTAMP
+	  FROM requested_items ri
+	  JOIN products p
+	    ON p.merchant_id = (19)::bigint
+	   AND p.product_id = ri.product_id
+	  CROSS JOIN reservation_ok ro
+	  WHERE ro.ok
+	  HAVING COUNT(*) = (4)::integer
+	  RETURNING order_id
+	),
+	inserted_items AS (
+	  INSERT INTO order_items(
+	    order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+	  )
+	  SELECT
+	    nextval('benchmark_order_item_id_seq'),
+	    (19)::bigint,
+	    o.order_id,
+	    ri.product_id,
+	    ri.quantity,
+	    p.price
+	  FROM requested_items ri
+	  JOIN products p
+	    ON p.merchant_id = (19)::bigint
+	   AND p.product_id = ri.product_id
+	  CROSS JOIN inserted_order o
+	  RETURNING 1
+	)
+	SELECT
+	  EXISTS (SELECT 1 FROM inserted_order) AS order_created,
+	  (SELECT COUNT(*) FROM inserted_items) AS items_created;
+2026-10-07 10:01:00.345 +08 [68822] LOG:  received fast shutdown request
+2026-10-07 10:01:00.346 +08 [68822] LOG:  aborting any active transactions
+2026-10-07 10:01:00.349 +08 [68822] LOG:  background worker "logical replication launcher" (PID 68832) exited with exit code 1
+2026-10-07 10:01:00.351 +08 [68827] LOG:  shutting down
+2026-10-07 10:01:00.351 +08 [68827] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 10:01:00.362 +08 [68827] LOG:  checkpoint complete: wrote 1052 buffers (0.8%), wrote 41 SLRU buffers; 0 WAL file(s) added, 0 removed, 5 recycled; write=0.010 s, sync=0.001 s, total=0.012 s; sync files=49, longest=0.001 s, average=0.001 s; distance=78408 kB, estimate=78408 kB; lsn=0/1EA459D8, redo lsn=0/1EA459D8
+2026-10-07 10:01:00.405 +08 [68822] LOG:  database system is shut down
