@@ -1,21 +1,28 @@
-"""Analyse the workload-A ablation: a 2^4 x 3 factorial (expt_a300 .. expt_a347).
+"""Analyse one workload's ablation: a 2^4 x 3 factorial (expt_<s>300 .. expt_<s>347).
 
-Run from anywhere:  python3 analysis/ablation.py
+Run from anywhere:  python3 analysis/ablation.py [--side a|b]     (default a)
 
-Cells and factor levels come only from ablation/manifest.csv. Four binary factors
+The side s is the workload, a or b; the two grids are analysed separately, never
+together (they run on disjoint node sets). Cells and factor levels come only from
+the side's manifest, ablation/manifest.csv (a) or ablation/manifest_b.csv (b).
+Four binary factors
   T5R  t5_routing     T6R  t6_rollup     T7R  t7_routing     SH8  shards8
 and one three-level factor, the T1 mode (t1_mode): set, fn (place_order delegated
 to a function) and fn_rc (delegated + READ COMMITTED + stock lock). fn_rc exists
 only with delegation, so the T1 mode is one 3-level factor, not two bits. Cell
-expt_a<300 + 16*m + mask>, m = 0/1/2 for set/fn/fn_rc, mask bits T5R=1, T6R=2,
-T7R=4, SH8=8. Replicates expt_a<index>_<k> ("replicate of expt_a<index>", k >= 1)
-are a further run of cell expt_a<index> with the same code; they are reported
-separately (replicate_check) and are not part of the 48-cell fit.
+expt_<s><300 + 16*m + mask>, m = 0/1/2 for set/fn/fn_rc, mask bits T5R=1, T6R=2,
+T7R=4, SH8=8; any manifest source other than "replicate of ..." (generated,
+existing, renamed from ...) is a grid cell. Replicates expt_<s><index>_<k>
+("replicate of expt_<s><index>", k >= 1) are a further run of cell
+expt_<s><index> with the same code; they are reported separately
+(replicate_check), each against its cell, and are not part of the 48-cell fit.
 
 Each cell is loaded with plot_results.load_experiment, so its cross-checks and its
 validity rule (pgbench exit code 0 and no aborted client) are the ones used
 everywhere else. A cell has not been run yet when its directory or its
-slurm-results/ is absent, when its job has not finished a single client count
+slurm-results/ is absent, when its one job-*/ has no benchmark-results/ yet (the
+job is setting up, or died before the benchmark: the job id is reported), when
+its job has not finished a single client count
 (summary.csv holds only its header), or when it lacks a client count that other
 cells have (partial: still running). Nothing is imputed.
 
@@ -51,20 +58,22 @@ estimated only when all 48 cells are valid for it; otherwise the non-valid cells
 are listed.
 
 Add-one / leave-one-out follow the agreed linear history
-  a300 -> +T5R a301 -> +T6R a303 -> +T7R a307 -> +DEL (fn) a323 -> +SH8 a331
-       -> +RCL (fn_rc) a347
+  <s>300 -> +T5R <s>301 -> +T6R <s>303 -> +T7R <s>307 -> +DEL (fn) <s>323 -> +SH8
+  <s>331 -> +RCL (fn_rc) <s>347
 Add-one is each step's ratio against the previous cell of the history;
-leave-one-out is a347 against the cell with one optimisation removed (one binary
+leave-one-out is <s>347 against the cell with one optimisation removed (one binary
 factor OFF, or the T1 mode one level down: fn_rc -> fn). Both at R_peak and at
 every client count; a row whose cells have not run says so.
 
-Output, all in analysis/figures/ablation/ (this script owns the directory's
-*.png, *.pdf and *.csv): figures as PNG (dpi 200) + PDF, one chart per file, and
+Output, all in analysis/figures/ablation/ (side a) or analysis/figures/ablation_b/
+(side b) (this script owns the directory's *.png, *.pdf and *.csv): figures as
+PNG (dpi 200) + PDF, one chart per file, and
 CSV tables. The module docstring of plot_results.py documents the palette; the
 extra roles used here are the documented diverging pair (blue <-> red with the
 neutral band grey midpoint) and the status "critical" red for non-valid points.
 """
 
+import argparse
 import math
 import re
 import sys
@@ -97,10 +106,9 @@ MAIN = SHORT + [DEL, RCL]                  # main effects, in report order
 N_MASKS = 2 ** NB
 N_CELLS = N_MASKS * len(T1_MODES)          # 48
 MANIFEST_COLUMNS = ["experiment"] + [f for f, _ in BINARY] + [T1_COLUMN, "source"]
-CELL_OFFSET = 300            # factorial cell name: expt_a<300 + 16*m + mask>
-REPLICATE_SOURCE = re.compile(r"^replicate of (expt_a\d+)$")
-ABLATION_NAME = re.compile(r"^expt_a(\d+)$")
-REPLICATE_NAME = re.compile(r"^expt_a(\d+)_([1-9]\d*)$")   # k-th replicate of expt_a<index>
+CELL_OFFSET = 300            # factorial cell name: expt_<side><300 + 16*m + mask>
+# side (workload) -> (manifest file in ablation/, output directory in analysis/figures/)
+SIDES = {"a": ("manifest.csv", "ablation"), "b": ("manifest_b.csv", "ablation_b")}
 
 # Every contrast: (binary factor indices, T1 contrast or None), by number of the
 # 5 factors involved, then T1 contrast (none, DEL, RCL), then binary combination.
@@ -116,8 +124,8 @@ T_975 = 2.201                # t(0.975, 11), for DF_POOLED = 11
 
 # The agreed linear history of optimisations: (step label, binary bit or T1 level).
 HISTORY = [("T5R", 0), ("T6R", 1), ("T7R", 2), (DEL, "fn"), ("SH8", 3), (RCL, "fn_rc")]
-HISTORY_IDS = ["a300", "a301", "a303", "a307", "a323", "a331", "a347"]
-LEAVE_ONE_OUT_IDS = ["a346", "a345", "a343", "a339", "a331"]   # T5R, T6R, T7R, SH8, RCL
+HISTORY_INDICES = [300, 301, 303, 307, 323, 331, 347]
+LEAVE_ONE_OUT_INDICES = [346, 345, 343, 339, 331]   # T5R, T6R, T7R, SH8, RCL
 
 TX_EFFECT_CLIENTS = (1, 64)
 REPLICATE_TOLERANCE = 0.02   # CLAUDE.md: same code within ~2% at 1 client
@@ -137,17 +145,19 @@ NOT_RUN = "not run yet"
 # ---- Manifest --------------------------------------------------------------
 @dataclass(frozen=True)
 class Cell:
+    side: str                 # workload, a or b
     name: str                 # expt_a315, or expt_a300_1 for a replicate
     index: int                # 315; a replicate has its original's index
     mask: int                 # binary factors, bit k = BINARY[k]
     mode: int                 # T1 mode, index into T1_MODES
     replicate_of: str | None  # id of the original cell, e.g. "a300"
-    run: int | None           # replicate number k of expt_a<index>_<k>; None for a cell
+    run: int | None           # replicate number k of expt_<side><index>_<k>; None for a cell
     path: Path
 
     @property
     def id(self):
-        return f"a{self.index}" if self.run is None else f"a{self.index}_{self.run}"
+        base = f"{self.side}{self.index}"
+        return base if self.run is None else f"{base}_{self.run}"
 
     @property
     def levels(self):
@@ -169,13 +179,17 @@ def cell_index(mask, mode):
     return CELL_OFFSET + N_MASKS * mode + mask
 
 
-def read_manifest(repo):
-    """Factorial cells ordered by index (row = 16*m + mask), and replicates.
+def read_manifest(repo, side):
+    """Factorial cells of one side ordered by index (row = 16*m + mask), and replicates.
 
     Raises on any inconsistency. A listed cell whose directory is absent is kept:
     it has not been run yet (load() reports it).
     """
-    path = repo / "ablation" / "manifest.csv"
+    path = repo / "ablation" / SIDES[side][0]
+    prefix = f"expt_{side}"
+    replicate_source = re.compile(rf"^replicate of ({prefix}\d+)$")
+    ablation_name = re.compile(rf"^{prefix}(\d+)$")
+    replicate_name = re.compile(rf"^{prefix}(\d+)_([1-9]\d*)$")   # k-th replicate of <index>
     if not path.is_file():
         raise FileNotFoundError(f"missing ablation manifest: {path}")
     m = pd.read_csv(path, dtype=str)
@@ -186,12 +200,12 @@ def read_manifest(repo):
                            f"{sorted(m.experiment[m.experiment.duplicated()])}")
     cells, replicates = {}, []
     for r in m.itertuples(index=False):
-        rep = REPLICATE_SOURCE.match(r.source)
-        name_m = (REPLICATE_NAME if rep else ABLATION_NAME).match(r.experiment)
+        rep = replicate_source.match(r.source)
+        name_m = (replicate_name if rep else ablation_name).match(r.experiment)
         if not name_m:
             raise RuntimeError(f"{path}: experiment {r.experiment!r} with source {r.source!r} "
-                               f"is not " + ("expt_a<integer>_<k>, k >= 1" if rep
-                                             else "expt_a<integer>"))
+                               f"is not " + (f"{prefix}<integer>_<k>, k >= 1" if rep
+                                             else f"{prefix}<integer>"))
         levels = tuple(int(getattr(r, f)) for f, _ in BINARY)
         if any(v not in (0, 1) for v in levels):
             raise RuntimeError(f"{path}: {r.experiment} has binary levels {levels}, not 0/1")
@@ -202,17 +216,17 @@ def read_manifest(repo):
         mode = T1_MODES.index(t1)
         index = int(name_m.group(1))
         if rep:
-            orig = f"expt_a{index}"
+            orig = f"{prefix}{index}"
             if rep.group(1) != orig:
                 raise RuntimeError(f"{path}: {r.experiment} is named as a replicate of {orig} "
                                    f"but its source says {r.source!r}")
-            replicates.append((Cell(r.experiment, index, mask, mode, None,
+            replicates.append((Cell(side, r.experiment, index, mask, mode, None,
                                     int(name_m.group(2)), repo / r.experiment), orig))
             continue
-        cell = Cell(r.experiment, index, mask, mode, None, None, repo / r.experiment)
+        cell = Cell(side, r.experiment, index, mask, mode, None, None, repo / r.experiment)
         if index != cell_index(mask, mode):
             raise RuntimeError(f"{path}: {r.experiment} should be named "
-                               f"expt_a{cell_index(mask, mode)} for mask {mask}, t1_mode {t1}")
+                               f"{prefix}{cell_index(mask, mode)} for mask {mask}, t1_mode {t1}")
         cells[(mask, mode)] = cell
     if len(cells) != N_CELLS:
         raise RuntimeError(f"{path}: {len(cells)} factorial cells, expected {N_CELLS}")
@@ -224,16 +238,17 @@ def read_manifest(repo):
         o = by_name[orig]
         if (o.mask, o.mode) != (rc.mask, rc.mode):
             raise RuntimeError(f"{path}: {rc.name} levels ({rc.label}) != {orig} ({o.label})")
-        reps.append(Cell(rc.name, rc.index, rc.mask, rc.mode, o.id, rc.run, rc.path))
+        reps.append(Cell(side, rc.name, rc.index, rc.mask, rc.mode, o.id, rc.run, rc.path))
 
-    # Every grid-range cell directory and every replicate-named directory must be listed.
+    # Every directory of this side named as a grid cell or as a replicate of one
+    # must be listed. A replicate of an experiment outside the grid (expt_a0_1 of
+    # the base design expt_a0) is not part of the ablation.
     listed = set(m.experiment)
     lo, hi = CELL_OFFSET, CELL_OFFSET + N_CELLS
     stray = sorted(p.name for p in repo.iterdir()
                    if p.is_dir() and p.name not in listed
-                   and (REPLICATE_NAME.match(p.name)
-                        or (ABLATION_NAME.match(p.name)
-                            and lo <= int(ABLATION_NAME.match(p.name).group(1)) < hi)))
+                   and (g := replicate_name.match(p.name) or ablation_name.match(p.name))
+                   and lo <= int(g.group(1)) < hi)
     if stray:
         raise RuntimeError(f"{path} does not list ablation directories {stray}")
     return (sorted(cells.values(), key=lambda c: c.index),
@@ -245,9 +260,18 @@ def not_run_reason(c):
     """Why a cell has no results yet, or None when it has a finished client count."""
     if not c.path.is_dir():
         return f"{NOT_RUN} (no directory)"
-    if not (c.path / "slurm-results").is_dir():
+    slurm = c.path / "slurm-results"
+    if not slurm.is_dir():
         return f"{NOT_RUN} (no slurm-results/)"
-    s_path = pr.results_dir(pr.Experiment("a", c.index, c.path)) / "summary.csv"
+    # run.sh creates slurm-results/job-<id>/ when the job starts but benchmark-results/
+    # only after the schema, data load and plans (minutes later); until then the cell
+    # has no result. A job that died in that phase stays in this state, so the reason
+    # names the job. Zero or several job-*/ still raise in results_dir.
+    jobs = [p for p in slurm.glob("job-*") if p.is_dir()]
+    if len(jobs) == 1 and not (jobs[0] / "benchmark-results").is_dir():
+        return (f"{NOT_RUN} (no benchmark-results/ in {jobs[0].name}: running, or failed "
+                "before the benchmark)")
+    s_path = pr.results_dir(pr.Experiment(c.side, c.index, c.path)) / "summary.csv"
     # A job that is still on its first client count has written only the CSV
     # header; that is "not run yet", not a broken cell. A missing summary.csv
     # still raises in load_experiment.
@@ -267,9 +291,9 @@ def load(cells):
         if reason:
             status[c.id] = reason
             continue
-        s, t = pr.load_experiment(pr.Experiment("a", c.index, c.path))
+        s, t = pr.load_experiment(pr.Experiment(c.side, c.index, c.path))
         for df in (s, t):
-            # plot_results names a run a<index>, which a replicate shares with its
+            # plot_results names a run <side><index>, which a replicate shares with its
             # original; every lookup here is by c.id, which tells them apart.
             df["exp"] = c.id
             df["label"] = c.label
@@ -948,7 +972,7 @@ def fig_replicate_check(rep, lat1, out):
 
 # ---- Linear history: add-one and leave-one-out ------------------------------
 def history_cells(by_key):
-    """The cumulative cells of HISTORY, base first; asserted against HISTORY_IDS."""
+    """The cumulative cells of HISTORY, base first; asserted against HISTORY_INDICES."""
     mask, mode = 0, 0
     path = [by_key[(mask, mode)]]
     for _, step in HISTORY:
@@ -960,21 +984,22 @@ def history_cells(by_key):
                 raise RuntimeError(f"history steps T1 mode {T1_MODES[mode]} -> {step}")
             mode = new
         path.append(by_key[(mask, mode)])
-    ids = [c.id for c in path]
-    if ids != HISTORY_IDS:
-        raise RuntimeError(f"linear history derived from the manifest {ids} != {HISTORY_IDS}")
+    indices = [c.index for c in path]
+    if indices != HISTORY_INDICES:
+        raise RuntimeError(f"linear history derived from the manifest {indices} "
+                           f"!= {HISTORY_INDICES}")
     return path
 
 
 def leave_one_out_cells(by_key):
-    """[(step, cell without it)] for the all-ON cell; asserted against LEAVE_ONE_OUT_IDS."""
+    """[(step, cell without it)] for the all-ON cell; asserted against LEAVE_ONE_OUT_INDICES."""
     full_mask, full_mode = N_MASKS - 1, len(T1_MODES) - 1
     out = [(SHORT[k], by_key[(full_mask ^ (1 << k), full_mode)]) for k in range(NB)]
     out.append((RCL, by_key[(full_mask, full_mode - 1)]))   # T1 mode one level down
-    ids = [c.id for _, c in out]
-    if ids != LEAVE_ONE_OUT_IDS:
-        raise RuntimeError(f"leave-one-out cells derived from the manifest {ids} "
-                           f"!= {LEAVE_ONE_OUT_IDS}")
+    indices = [c.index for _, c in out]
+    if indices != LEAVE_ONE_OUT_INDICES:
+        raise RuntimeError(f"leave-one-out cells derived from the manifest {indices} "
+                           f"!= {LEAVE_ONE_OUT_INDICES}")
     return out
 
 
@@ -1068,9 +1093,9 @@ def print_effects(title, eff, rep_sd, max_order):
               f"e/PSE={r.effect_over_pse:6.2f}{flag}")
 
 
-def run(repo, out):
+def run(repo, side, out):
     start = time.perf_counter()
-    cells, replicates = read_manifest(repo)
+    cells, replicates = read_manifest(repo, side)
     all_cells = cells + replicates
     out.mkdir(parents=True, exist_ok=True)
     # This script owns the directory: drop last run's outputs so a table or
@@ -1081,7 +1106,8 @@ def run(repo, out):
 
     summary, tx, status = load(all_cells)
     if summary is None:
-        print(f"no ablation cell has results yet under {repo}; nothing to analyse")
+        print(f"no ablation cell of {SIDES[side][0]} has results yet under {repo}; "
+              "nothing to analyse")
         return []
     clients = sorted(summary.clients.unique())
     transactions = sorted(tx.transaction.unique(), key=pr.tx_key)
@@ -1116,7 +1142,8 @@ def run(repo, out):
     fig_ratio_bars(add_one[add_one.response == "r_peak"],
                    "Peak throughput gained by each step of the optimisation history",
                    "Ratio = R_peak of the cell after the step / R_peak of the cell before it, "
-                   "along a300 -> +T5R -> +T6R -> +T7R -> +DEL (fn) -> +SH8 -> +RCL (fn_rc). "
+                   f"along {hist[0].id} -> +T5R -> +T6R -> +T7R -> +DEL (fn) -> +SH8 -> "
+                   "+RCL (fn_rc). "
                    "R_peak = highest TPS over the client counts; the two peaks may "
                    "sit at different client counts (add_one.csv, also per client count).",
                    out, "add_one_peak")
@@ -1229,7 +1256,11 @@ def effects_step(summary, tx, status, cells, clients, transactions, rep, out):
 
 
 def main():
-    run(pr.REPO, pr.REPO / "analysis" / "figures" / "ablation")
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--side", choices=sorted(SIDES), default="a",
+                    help="workload whose ablation to analyse (default: a)")
+    side = ap.parse_args().side
+    run(pr.REPO, side, pr.REPO / "analysis" / "figures" / SIDES[side][1])
 
 
 if __name__ == "__main__":
