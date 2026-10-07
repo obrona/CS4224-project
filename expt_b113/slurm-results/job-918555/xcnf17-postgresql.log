@@ -1,0 +1,2126 @@
+2026-10-07 20:56:10.576 +08 [174709] LOG:  There is no designated Main database.
+2026-10-07 20:56:10.576 +08 [174709] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 20:56:10.576 +08 [174709] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 20:56:10.691 +08 [174709] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 20:56:10.691 +08 [174709] LOG:  listening on IPv4 address "0.0.0.0", port 5736
+2026-10-07 20:56:10.691 +08 [174709] LOG:  listening on IPv6 address "::", port 5736
+2026-10-07 20:56:10.691 +08 [174709] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5736"
+2026-10-07 20:56:10.695 +08 [174747] LOG:  database system was shut down at 2026-10-07 20:56:07 +08
+2026-10-07 20:56:10.700 +08 [174709] LOG:  database system is ready to accept connections
+2026-10-07 20:56:12.849 +08 [174959] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 20:56:12.849 +08 [174959] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 21:09:16.624 +08 [174709] LOG:  received fast shutdown request
+2026-10-07 21:09:16.624 +08 [174709] LOG:  aborting any active transactions
+2026-10-07 21:09:16.628 +08 [174709] LOG:  background worker "logical replication launcher" (PID 174771) exited with exit code 1
+2026-10-07 21:09:16.630 +08 [174735] LOG:  shutting down
+2026-10-07 21:09:16.630 +08 [174735] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 21:09:16.655 +08 [174735] LOG:  checkpoint complete: wrote 1435 buffers (1.1%), wrote 14 SLRU buffers; 0 WAL file(s) added, 0 removed, 1 recycled; write=0.022 s, sync=0.002 s, total=0.026 s; sync files=507, longest=0.001 s, average=0.001 s; distance=24290 kB, estimate=24290 kB; lsn=0/2F17958, redo lsn=0/2F17958
+2026-10-07 21:09:16.702 +08 [174709] LOG:  database system is shut down
+2026-10-07 21:09:22.199 +08 [177679] LOG:  There is no designated Main database.
+2026-10-07 21:09:22.199 +08 [177679] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 21:09:22.199 +08 [177679] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 21:09:22.313 +08 [177679] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 21:09:22.313 +08 [177679] LOG:  listening on IPv4 address "0.0.0.0", port 5736
+2026-10-07 21:09:22.313 +08 [177679] LOG:  listening on IPv6 address "::", port 5736
+2026-10-07 21:09:22.314 +08 [177679] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5736"
+2026-10-07 21:09:22.318 +08 [177686] LOG:  database system was shut down at 2026-10-07 21:09:16 +08
+2026-10-07 21:09:22.322 +08 [177679] LOG:  database system is ready to accept connections
+2026-10-07 21:09:23.227 +08 [177818] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 21:09:23.227 +08 [177818] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 21:13:31.024 +08 [178260] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:13:31.024 +08 [178260] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:13:31.024 +08 [178260] HINT:  The transaction might succeed if retried.
+2026-10-07 21:13:31.024 +08 [178260] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 21:13:31.024 +08 [178260] STATEMENT:  SELECT public.place_order(
+	  (127)::bigint,
+	  (936127)::bigint,
+	  (5006082)::bigint,
+	  (5)::integer,
+	  ARRAY[(494127)::bigint, (477127)::bigint, (349127)::bigint,
+	        (397127)::bigint, (394127)::bigint],
+	  ARRAY[(5)::integer, (1)::integer, (3)::integer,
+	        (1)::integer, (3)::integer],
+	  ARRAY[(15017958)::bigint, (15017959)::bigint, (15017960)::bigint,
+	        (15017961)::bigint, (15017962)::bigint]
+	);
+2026-10-07 21:16:27.924 +08 [178260] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:16:27.924 +08 [178260] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf19:5736
+2026-10-07 21:16:27.924 +08 [178260] STATEMENT:  SELECT public.place_order(
+	  (70)::bigint,
+	  (135070)::bigint,
+	  (5012231)::bigint,
+	  (5)::integer,
+	  ARRAY[(393070)::bigint, (366070)::bigint, (103070)::bigint,
+	        (472070)::bigint, (389070)::bigint],
+	  ARRAY[(2)::integer, (4)::integer, (3)::integer,
+	        (1)::integer, (3)::integer],
+	  ARRAY[(15036263)::bigint, (15036264)::bigint, (15036265)::bigint,
+	        (15036266)::bigint, (15036267)::bigint]
+	);
+2026-10-07 21:21:23.804 +08 [177679] LOG:  received fast shutdown request
+2026-10-07 21:21:23.805 +08 [177679] LOG:  aborting any active transactions
+2026-10-07 21:21:23.809 +08 [177679] LOG:  background worker "logical replication launcher" (PID 177689) exited with exit code 1
+2026-10-07 21:21:23.809 +08 [177684] LOG:  shutting down
+2026-10-07 21:21:23.809 +08 [177684] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 21:21:23.817 +08 [177684] LOG:  checkpoint complete: wrote 496 buffers (0.4%), wrote 30 SLRU buffers; 0 WAL file(s) added, 0 removed, 3 recycled; write=0.006 s, sync=0.001 s, total=0.009 s; sync files=51, longest=0.001 s, average=0.001 s; distance=36879 kB, estimate=36879 kB; lsn=0/531B850, redo lsn=0/531B850
+2026-10-07 21:21:23.860 +08 [177679] LOG:  database system is shut down
+2026-10-07 21:21:28.938 +08 [180091] LOG:  There is no designated Main database.
+2026-10-07 21:21:28.938 +08 [180091] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 21:21:28.938 +08 [180091] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 21:21:29.054 +08 [180091] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 21:21:29.054 +08 [180091] LOG:  listening on IPv4 address "0.0.0.0", port 5736
+2026-10-07 21:21:29.054 +08 [180091] LOG:  listening on IPv6 address "::", port 5736
+2026-10-07 21:21:29.054 +08 [180091] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5736"
+2026-10-07 21:21:29.058 +08 [180098] LOG:  database system was shut down at 2026-10-07 21:21:23 +08
+2026-10-07 21:21:29.062 +08 [180091] LOG:  database system is ready to accept connections
+2026-10-07 21:21:29.961 +08 [180124] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 21:21:29.961 +08 [180124] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 21:22:52.067 +08 [180371] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:22:52.067 +08 [180371] DETAIL:  Reason code: Canceled on conflict out to pivot 87375, during read.
+2026-10-07 21:22:52.067 +08 [180371] HINT:  The transaction might succeed if retried.
+2026-10-07 21:22:52.067 +08 [180371] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:22:52.067 +08 [180371] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 21:23:23.398 +08 [180375] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:23:23.398 +08 [180375] DETAIL:  Reason code: Canceled on conflict out to pivot 89536, during read.
+2026-10-07 21:23:23.398 +08 [180375] HINT:  The transaction might succeed if retried.
+2026-10-07 21:23:23.398 +08 [180375] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:23:23.398 +08 [180375] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 21:23:23.399 +08 [180376] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:23:23.399 +08 [180376] DETAIL:  Reason code: Canceled on conflict out to pivot 89536, during read.
+2026-10-07 21:23:23.399 +08 [180376] HINT:  The transaction might succeed if retried.
+2026-10-07 21:23:23.399 +08 [180376] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:23:23.399 +08 [180376] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 21:23:30.707 +08 [180577] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:23:30.707 +08 [180577] DETAIL:  Reason code: Canceled on conflict out to pivot 81940, during read.
+2026-10-07 21:23:30.707 +08 [180577] HINT:  The transaction might succeed if retried.
+2026-10-07 21:23:30.707 +08 [180577] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 21:23:30.707 +08 [180577] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 21:23:55.547 +08 [180572] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:23:55.547 +08 [180572] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:23:55.547 +08 [180572] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (76)::bigint
+	    AND product_id = (484076)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-07 21:23:57.109 +08 [180576] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:23:57.109 +08 [180576] DETAIL:  Reason code: Canceled on conflict out to pivot 86573, during read.
+2026-10-07 21:23:57.109 +08 [180576] HINT:  The transaction might succeed if retried.
+2026-10-07 21:23:57.109 +08 [180576] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:23:57.109 +08 [180576] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 21:24:13.910 +08 [180571] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:24:13.910 +08 [180571] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:24:13.910 +08 [180571] HINT:  The transaction might succeed if retried.
+2026-10-07 21:24:13.910 +08 [180571] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:24:13.910 +08 [180571] STATEMENT:  SELECT public.place_order(
+	  (22)::bigint,
+	  (29022)::bigint,
+	  (5003396)::bigint,
+	  (2)::integer,
+	  ARRAY[(348022)::bigint, (61022)::bigint, (116022)::bigint,
+	        (171022)::bigint, (133022)::bigint],
+	  ARRAY[(2)::integer, (4)::integer, (1)::integer,
+	        (2)::integer, (3)::integer],
+	  ARRAY[(15010059)::bigint, (15010060)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:24:44.069 +08 [180576] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:24:44.069 +08 [180576] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-10-07 21:24:44.069 +08 [180576] HINT:  The transaction might succeed if retried.
+2026-10-07 21:24:44.069 +08 [180576] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 21:24:44.069 +08 [180576] STATEMENT:  UPDATE products
+	SET price = price + (2)::numeric(12,2)
+	WHERE product_id = (336085)::bigint
+	  AND merchant_id = (85)::bigint;
+2026-10-07 21:25:13.197 +08 [180576] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:25:13.197 +08 [180576] DETAIL:  Reason code: Canceled on conflict out to pivot 93757, during read.
+2026-10-07 21:25:13.197 +08 [180576] HINT:  The transaction might succeed if retried.
+2026-10-07 21:25:13.197 +08 [180576] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:25:13.197 +08 [180576] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 21:25:50.141 +08 [180575] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:25:50.141 +08 [180575] DETAIL:  Reason code: Canceled on conflict out to pivot 108131, during read.
+2026-10-07 21:25:50.141 +08 [180575] HINT:  The transaction might succeed if retried.
+2026-10-07 21:25:50.141 +08 [180575] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 21:25:50.141 +08 [180575] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 21:31:46.978 +08 [180573] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:31:46.978 +08 [180573] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf20:5736
+2026-10-07 21:31:46.978 +08 [180573] STATEMENT:  SELECT public.place_order(
+	  (40)::bigint,
+	  (868040)::bigint,
+	  (5018464)::bigint,
+	  (5)::integer,
+	  ARRAY[(61040)::bigint, (353040)::bigint, (488040)::bigint,
+	        (76040)::bigint, (64040)::bigint],
+	  ARRAY[(2)::integer, (4)::integer, (3)::integer,
+	        (2)::integer, (4)::integer],
+	  ARRAY[(15055392)::bigint, (15055393)::bigint, (15055394)::bigint,
+	        (15055395)::bigint, (15055396)::bigint]
+	);
+2026-10-07 21:33:26.607 +08 [180091] LOG:  received fast shutdown request
+2026-10-07 21:33:26.607 +08 [180091] LOG:  aborting any active transactions
+2026-10-07 21:33:26.610 +08 [180091] LOG:  background worker "logical replication launcher" (PID 180101) exited with exit code 1
+2026-10-07 21:33:26.612 +08 [180096] LOG:  shutting down
+2026-10-07 21:33:26.612 +08 [180096] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 21:33:26.619 +08 [180096] LOG:  checkpoint complete: wrote 516 buffers (0.4%), wrote 29 SLRU buffers; 0 WAL file(s) added, 0 removed, 2 recycled; write=0.006 s, sync=0.001 s, total=0.008 s; sync files=51, longest=0.001 s, average=0.001 s; distance=37700 kB, estimate=37700 kB; lsn=0/77EC900, redo lsn=0/77EC900
+2026-10-07 21:33:26.663 +08 [180091] LOG:  database system is shut down
+2026-10-07 21:33:31.916 +08 [182340] LOG:  There is no designated Main database.
+2026-10-07 21:33:31.917 +08 [182340] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 21:33:31.917 +08 [182340] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 21:33:32.031 +08 [182340] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 21:33:32.031 +08 [182340] LOG:  listening on IPv4 address "0.0.0.0", port 5736
+2026-10-07 21:33:32.031 +08 [182340] LOG:  listening on IPv6 address "::", port 5736
+2026-10-07 21:33:32.031 +08 [182340] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5736"
+2026-10-07 21:33:32.035 +08 [182347] LOG:  database system was shut down at 2026-10-07 21:33:26 +08
+2026-10-07 21:33:32.039 +08 [182340] LOG:  database system is ready to accept connections
+2026-10-07 21:33:32.939 +08 [182439] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 21:33:32.939 +08 [182439] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 21:35:18.804 +08 [182727] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:35:18.804 +08 [182727] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:35:18.804 +08 [182727] HINT:  The transaction might succeed if retried.
+2026-10-07 21:35:18.804 +08 [182727] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:35:18.804 +08 [182727] STATEMENT:  SELECT public.place_order(
+	  (66)::bigint,
+	  (936066)::bigint,
+	  (5000897)::bigint,
+	  (3)::integer,
+	  ARRAY[(56066)::bigint, (114066)::bigint, (284066)::bigint,
+	        (373066)::bigint, (474066)::bigint],
+	  ARRAY[(1)::integer, (4)::integer, (2)::integer,
+	        (5)::integer, (3)::integer],
+	  ARRAY[(15002669)::bigint, (15002670)::bigint, (15002671)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:36:53.133 +08 [182987] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:36:53.133 +08 [182987] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 21:36:53.133 +08 [182987] HINT:  The transaction might succeed if retried.
+2026-10-07 21:36:53.133 +08 [182987] CONTEXT:  SQL statement "INSERT INTO public.orders (
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  VALUES (
+	    p_order_id, p_merchant_id, p_customer_id, 'PENDING',
+	    v_total::numeric(12,2), CURRENT_TIMESTAMP
+	  )
+	  RETURNING total_amount, created_at"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 69 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 21:36:53.133 +08 [182987] STATEMENT:  SELECT public.place_order(
+	  (514)::bigint,
+	  (781514)::bigint,
+	  (5003012)::bigint,
+	  (5)::integer,
+	  ARRAY[(176514)::bigint, (44514)::bigint, (181514)::bigint,
+	        (33514)::bigint, (474514)::bigint],
+	  ARRAY[(5)::integer, (3)::integer, (3)::integer,
+	        (2)::integer, (3)::integer],
+	  ARRAY[(15008971)::bigint, (15008972)::bigint, (15008973)::bigint,
+	        (15008974)::bigint, (15008975)::bigint]
+	);
+2026-10-07 21:38:01.386 +08 [182991] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:38:01.386 +08 [182991] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 21:38:01.386 +08 [182991] STATEMENT:  SELECT public.place_order(
+	  (66)::bigint,
+	  (957066)::bigint,
+	  (5005375)::bigint,
+	  (5)::integer,
+	  ARRAY[(405066)::bigint, (13066)::bigint, (300066)::bigint,
+	        (291066)::bigint, (259066)::bigint],
+	  ARRAY[(5)::integer, (4)::integer, (3)::integer,
+	        (5)::integer, (1)::integer],
+	  ARRAY[(15016193)::bigint, (15016194)::bigint, (15016195)::bigint,
+	        (15016196)::bigint, (15016197)::bigint]
+	);
+2026-10-07 21:39:24.355 +08 [182996] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:39:24.355 +08 [182996] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 21:39:24.355 +08 [182996] STATEMENT:  UPDATE inventory
+	SET quantity = quantity + (7)::integer,
+	    updated_at = CURRENT_TIMESTAMP
+	WHERE inventory_id = (107087)::bigint
+	  AND merchant_id = (87)::bigint
+	  AND product_id = (107087)::bigint
+	  AND quantity + (7)::integer >= 0;
+2026-10-07 21:39:34.772 +08 [182999] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:39:34.772 +08 [182999] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 21:39:34.772 +08 [182999] HINT:  The transaction might succeed if retried.
+2026-10-07 21:39:34.772 +08 [182999] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 21:39:34.772 +08 [182999] STATEMENT:  SELECT public.place_order(
+	  (96)::bigint,
+	  (895096)::bigint,
+	  (5007115)::bigint,
+	  (2)::integer,
+	  ARRAY[(382096)::bigint, (97096)::bigint, (80096)::bigint,
+	        (25096)::bigint, (45096)::bigint],
+	  ARRAY[(4)::integer, (3)::integer, (1)::integer,
+	        (4)::integer, (1)::integer],
+	  ARRAY[(15021431)::bigint, (15021432)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:39:49.573 +08 [182988] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:39:49.573 +08 [182988] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf20:5736
+2026-10-07 21:39:49.573 +08 [182988] STATEMENT:  SELECT public.place_order(
+	  (69)::bigint,
+	  (66069)::bigint,
+	  (5007621)::bigint,
+	  (4)::integer,
+	  ARRAY[(195069)::bigint, (262069)::bigint, (273069)::bigint,
+	        (52069)::bigint, (81069)::bigint],
+	  ARRAY[(3)::integer, (3)::integer, (5)::integer,
+	        (2)::integer, (1)::integer],
+	  ARRAY[(15022956)::bigint, (15022957)::bigint, (15022958)::bigint,
+	        (15022959)::bigint, (0)::bigint]
+	);
+2026-10-07 21:39:52.156 +08 [182990] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:39:52.156 +08 [182990] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:39:52.156 +08 [182990] HINT:  The transaction might succeed if retried.
+2026-10-07 21:39:52.156 +08 [182990] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:39:52.156 +08 [182990] STATEMENT:  SELECT public.place_order(
+	  (680)::bigint,
+	  (913680)::bigint,
+	  (5007719)::bigint,
+	  (2)::integer,
+	  ARRAY[(475680)::bigint, (354680)::bigint, (478680)::bigint,
+	        (410680)::bigint, (346680)::bigint],
+	  ARRAY[(2)::integer, (1)::integer, (5)::integer,
+	        (3)::integer, (4)::integer],
+	  ARRAY[(15023243)::bigint, (15023244)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:40:02.194 +08 [182992] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:40:02.194 +08 [182992] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:40:02.194 +08 [182992] HINT:  The transaction might succeed if retried.
+2026-10-07 21:40:02.194 +08 [182992] CONTEXT:  SQL statement "INSERT INTO public.order_items (
+	      order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+	    )
+	    VALUES (
+	      p_item_ids[k], p_merchant_id, p_order_id, p_product_ids[k],
+	      p_quantities[k], v_price
+	    )"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 82 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 21:40:02.194 +08 [182992] STATEMENT:  SELECT public.place_order(
+	  (742)::bigint,
+	  (596742)::bigint,
+	  (5008032)::bigint,
+	  (5)::integer,
+	  ARRAY[(227742)::bigint, (15742)::bigint, (489742)::bigint,
+	        (229742)::bigint, (25742)::bigint],
+	  ARRAY[(4)::integer, (3)::integer, (4)::integer,
+	        (3)::integer, (2)::integer],
+	  ARRAY[(15024167)::bigint, (15024168)::bigint, (15024169)::bigint,
+	        (15024170)::bigint, (15024171)::bigint]
+	);
+2026-10-07 21:40:28.216 +08 [182992] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:40:28.216 +08 [182992] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:40:28.216 +08 [182992] HINT:  The transaction might succeed if retried.
+2026-10-07 21:40:28.216 +08 [182992] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:40:28.216 +08 [182992] STATEMENT:  SELECT public.place_order(
+	  (62)::bigint,
+	  (428062)::bigint,
+	  (5008946)::bigint,
+	  (5)::integer,
+	  ARRAY[(446062)::bigint, (73062)::bigint, (168062)::bigint,
+	        (206062)::bigint, (439062)::bigint],
+	  ARRAY[(5)::integer, (1)::integer, (1)::integer,
+	        (2)::integer, (4)::integer],
+	  ARRAY[(15026947)::bigint, (15026948)::bigint, (15026949)::bigint,
+	        (15026950)::bigint, (15026951)::bigint]
+	);
+2026-10-07 21:40:51.140 +08 [182988] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:40:51.140 +08 [182988] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:40:51.140 +08 [182988] HINT:  The transaction might succeed if retried.
+2026-10-07 21:40:51.140 +08 [182988] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:40:51.140 +08 [182988] STATEMENT:  SELECT public.place_order(
+	  (218)::bigint,
+	  (317218)::bigint,
+	  (5009087)::bigint,
+	  (3)::integer,
+	  ARRAY[(75218)::bigint, (262218)::bigint, (348218)::bigint,
+	        (379218)::bigint, (87218)::bigint],
+	  ARRAY[(1)::integer, (4)::integer, (5)::integer,
+	        (2)::integer, (5)::integer],
+	  ARRAY[(15027371)::bigint, (15027372)::bigint, (15027373)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:43:35.515 +08 [182993] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:43:35.515 +08 [182993] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 21:43:35.515 +08 [182993] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (289)::bigint
+	    AND product_id = (161289)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-07 21:43:53.486 +08 [182998] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:43:53.486 +08 [182998] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:43:53.486 +08 [182998] HINT:  The transaction might succeed if retried.
+2026-10-07 21:43:53.486 +08 [182998] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:43:53.486 +08 [182998] STATEMENT:  SELECT public.place_order(
+	  (51)::bigint,
+	  (216051)::bigint,
+	  (5013288)::bigint,
+	  (3)::integer,
+	  ARRAY[(186051)::bigint, (1051)::bigint, (167051)::bigint,
+	        (157051)::bigint, (455051)::bigint],
+	  ARRAY[(1)::integer, (3)::integer, (2)::integer,
+	        (2)::integer, (5)::integer],
+	  ARRAY[(15040041)::bigint, (15040042)::bigint, (15040043)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:44:03.446 +08 [183002] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:44:03.446 +08 [183002] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 21:44:03.446 +08 [183002] STATEMENT:  SELECT public.place_order(
+	  (71)::bigint,
+	  (656071)::bigint,
+	  (5013581)::bigint,
+	  (5)::integer,
+	  ARRAY[(309071)::bigint, (222071)::bigint, (7071)::bigint,
+	        (221071)::bigint, (119071)::bigint],
+	  ARRAY[(2)::integer, (2)::integer, (2)::integer,
+	        (1)::integer, (4)::integer],
+	  ARRAY[(15040957)::bigint, (15040958)::bigint, (15040959)::bigint,
+	        (15040960)::bigint, (15040961)::bigint]
+	);
+2026-10-07 21:44:09.488 +08 [182992] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:44:09.488 +08 [182992] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:44:09.488 +08 [182992] HINT:  The transaction might succeed if retried.
+2026-10-07 21:44:09.488 +08 [182992] CONTEXT:  SQL statement "INSERT INTO public.order_items (
+	      order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+	    )
+	    VALUES (
+	      p_item_ids[k], p_merchant_id, p_order_id, p_product_ids[k],
+	      p_quantities[k], v_price
+	    )"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 82 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 21:44:09.488 +08 [182992] STATEMENT:  SELECT public.place_order(
+	  (281)::bigint,
+	  (628281)::bigint,
+	  (5013779)::bigint,
+	  (4)::integer,
+	  ARRAY[(313281)::bigint, (199281)::bigint, (56281)::bigint,
+	        (234281)::bigint, (100281)::bigint],
+	  ARRAY[(5)::integer, (2)::integer, (2)::integer,
+	        (3)::integer, (4)::integer],
+	  ARRAY[(15041569)::bigint, (15041570)::bigint, (15041571)::bigint,
+	        (15041572)::bigint, (0)::bigint]
+	);
+2026-10-07 21:44:36.126 +08 [182997] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:44:36.126 +08 [182997] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:44:36.126 +08 [182997] HINT:  The transaction might succeed if retried.
+2026-10-07 21:44:36.126 +08 [182997] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:44:36.126 +08 [182997] STATEMENT:  SELECT public.place_order(
+	  (331)::bigint,
+	  (576331)::bigint,
+	  (5014603)::bigint,
+	  (2)::integer,
+	  ARRAY[(373331)::bigint, (300331)::bigint, (375331)::bigint,
+	        (230331)::bigint, (236331)::bigint],
+	  ARRAY[(2)::integer, (2)::integer, (4)::integer,
+	        (2)::integer, (2)::integer],
+	  ARRAY[(15043976)::bigint, (15043977)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:46:16.937 +08 [182340] LOG:  received fast shutdown request
+2026-10-07 21:46:16.937 +08 [182340] LOG:  aborting any active transactions
+2026-10-07 21:46:16.945 +08 [182340] LOG:  background worker "logical replication launcher" (PID 182350) exited with exit code 1
+2026-10-07 21:46:16.945 +08 [182345] LOG:  shutting down
+2026-10-07 21:46:16.945 +08 [182345] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 21:46:16.951 +08 [182345] LOG:  checkpoint complete: wrote 373 buffers (0.3%), wrote 21 SLRU buffers; 0 WAL file(s) added, 0 removed, 2 recycled; write=0.005 s, sync=0.001 s, total=0.007 s; sync files=51, longest=0.001 s, average=0.001 s; distance=26106 kB, estimate=26106 kB; lsn=0/916B108, redo lsn=0/916B108
+2026-10-07 21:46:16.993 +08 [182340] LOG:  database system is shut down
+2026-10-07 21:46:22.530 +08 [184525] LOG:  There is no designated Main database.
+2026-10-07 21:46:22.530 +08 [184525] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 21:46:22.530 +08 [184525] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 21:46:22.646 +08 [184525] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 21:46:22.646 +08 [184525] LOG:  listening on IPv4 address "0.0.0.0", port 5736
+2026-10-07 21:46:22.646 +08 [184525] LOG:  listening on IPv6 address "::", port 5736
+2026-10-07 21:46:22.647 +08 [184525] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5736"
+2026-10-07 21:46:22.650 +08 [184535] LOG:  database system was shut down at 2026-10-07 21:46:16 +08
+2026-10-07 21:46:22.654 +08 [184525] LOG:  database system is ready to accept connections
+2026-10-07 21:46:23.555 +08 [184692] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 21:46:23.555 +08 [184692] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 21:47:43.058 +08 [185199] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:47:43.058 +08 [185199] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-10-07 21:47:43.058 +08 [185199] HINT:  The transaction might succeed if retried.
+2026-10-07 21:47:43.058 +08 [185199] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:47:43.058 +08 [185199] STATEMENT:  UPDATE customers
+	SET email = 'Customer-' || 420572 || '@acme.com'
+	WHERE customer_id = (313207)::bigint
+	  AND merchant_id = (207)::bigint
+	  AND email IS DISTINCT FROM
+	      ('Customer-' || 420572 || '@acme.com');
+2026-10-07 21:48:23.532 +08 [185656] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:48:23.532 +08 [185656] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 21:48:23.532 +08 [185656] HINT:  The transaction might succeed if retried.
+2026-10-07 21:48:23.532 +08 [185656] CONTEXT:  SQL statement "INSERT INTO public.orders (
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  VALUES (
+	    p_order_id, p_merchant_id, p_customer_id, 'PENDING',
+	    v_total::numeric(12,2), CURRENT_TIMESTAMP
+	  )
+	  RETURNING total_amount, created_at"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 69 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 21:48:23.532 +08 [185656] STATEMENT:  SELECT public.place_order(
+	  (845)::bigint,
+	  (953845)::bigint,
+	  (5001209)::bigint,
+	  (4)::integer,
+	  ARRAY[(85845)::bigint, (175845)::bigint, (396845)::bigint,
+	        (102845)::bigint, (244845)::bigint],
+	  ARRAY[(3)::integer, (1)::integer, (2)::integer,
+	        (4)::integer, (1)::integer],
+	  ARRAY[(15003630)::bigint, (15003631)::bigint, (15003632)::bigint,
+	        (15003633)::bigint, (0)::bigint]
+	);
+2026-10-07 21:48:24.005 +08 [185656] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:48:24.005 +08 [185656] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 21:48:24.005 +08 [185656] HINT:  The transaction might succeed if retried.
+2026-10-07 21:48:24.005 +08 [185656] CONTEXT:  SQL statement "INSERT INTO public.orders (
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  VALUES (
+	    p_order_id, p_merchant_id, p_customer_id, 'PENDING',
+	    v_total::numeric(12,2), CURRENT_TIMESTAMP
+	  )
+	  RETURNING total_amount, created_at"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 69 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 21:48:24.005 +08 [185656] STATEMENT:  SELECT public.place_order(
+	  (845)::bigint,
+	  (953845)::bigint,
+	  (5001220)::bigint,
+	  (4)::integer,
+	  ARRAY[(85845)::bigint, (175845)::bigint, (396845)::bigint,
+	        (102845)::bigint, (244845)::bigint],
+	  ARRAY[(3)::integer, (1)::integer, (2)::integer,
+	        (4)::integer, (1)::integer],
+	  ARRAY[(15003661)::bigint, (15003662)::bigint, (15003663)::bigint,
+	        (15003664)::bigint, (0)::bigint]
+	);
+2026-10-07 21:48:29.064 +08 [185655] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:48:29.064 +08 [185655] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 21:48:29.064 +08 [185655] HINT:  The transaction might succeed if retried.
+2026-10-07 21:48:29.064 +08 [185655] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:48:29.064 +08 [185655] STATEMENT:  SELECT public.place_order(
+	  (38)::bigint,
+	  (839038)::bigint,
+	  (5001470)::bigint,
+	  (3)::integer,
+	  ARRAY[(249038)::bigint, (192038)::bigint, (234038)::bigint,
+	        (262038)::bigint, (38038)::bigint],
+	  ARRAY[(5)::integer, (2)::integer, (3)::integer,
+	        (4)::integer, (5)::integer],
+	  ARRAY[(15004420)::bigint, (15004421)::bigint, (15004422)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:48:33.740 +08 [185657] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:48:33.740 +08 [185657] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:48:33.740 +08 [185657] HINT:  The transaction might succeed if retried.
+2026-10-07 21:48:33.740 +08 [185657] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:48:33.740 +08 [185657] STATEMENT:  SELECT public.place_order(
+	  (335)::bigint,
+	  (819335)::bigint,
+	  (5001642)::bigint,
+	  (4)::integer,
+	  ARRAY[(484335)::bigint, (102335)::bigint, (236335)::bigint,
+	        (470335)::bigint, (407335)::bigint],
+	  ARRAY[(1)::integer, (1)::integer, (2)::integer,
+	        (2)::integer, (4)::integer],
+	  ARRAY[(15004944)::bigint, (15004945)::bigint, (15004946)::bigint,
+	        (15004947)::bigint, (0)::bigint]
+	);
+2026-10-07 21:48:33.911 +08 [185649] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:48:33.911 +08 [185649] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:48:33.911 +08 [185649] STATEMENT:  UPDATE inventory
+	SET quantity = quantity + (18)::integer,
+	    updated_at = CURRENT_TIMESTAMP
+	WHERE inventory_id = (222061)::bigint
+	  AND merchant_id = (61)::bigint
+	  AND product_id = (222061)::bigint
+	  AND quantity + (18)::integer >= 0;
+2026-10-07 21:48:36.154 +08 [185651] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:48:36.154 +08 [185651] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:48:36.154 +08 [185651] HINT:  The transaction might succeed if retried.
+2026-10-07 21:48:36.154 +08 [185651] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:48:36.154 +08 [185651] STATEMENT:  SELECT public.place_order(
+	  (930)::bigint,
+	  (123930)::bigint,
+	  (5001735)::bigint,
+	  (3)::integer,
+	  ARRAY[(306930)::bigint, (230930)::bigint, (320930)::bigint,
+	        (233930)::bigint, (227930)::bigint],
+	  ARRAY[(1)::integer, (3)::integer, (1)::integer,
+	        (4)::integer, (5)::integer],
+	  ARRAY[(15005222)::bigint, (15005223)::bigint, (15005224)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:48:38.880 +08 [185640] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:48:38.880 +08 [185640] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf19:5736
+2026-10-07 21:48:38.880 +08 [185640] STATEMENT:  SELECT public.place_order(
+	  (62)::bigint,
+	  (292062)::bigint,
+	  (5001831)::bigint,
+	  (5)::integer,
+	  ARRAY[(191062)::bigint, (177062)::bigint, (429062)::bigint,
+	        (448062)::bigint, (135062)::bigint],
+	  ARRAY[(2)::integer, (2)::integer, (4)::integer,
+	        (3)::integer, (4)::integer],
+	  ARRAY[(15005468)::bigint, (15005469)::bigint, (15005470)::bigint,
+	        (15005471)::bigint, (15005472)::bigint]
+	);
+2026-10-07 21:48:48.380 +08 [185653] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:48:48.380 +08 [185653] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:48:48.380 +08 [185653] HINT:  The transaction might succeed if retried.
+2026-10-07 21:48:48.380 +08 [185653] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:48:48.380 +08 [185653] STATEMENT:  SELECT public.place_order(
+	  (565)::bigint,
+	  (403565)::bigint,
+	  (5002219)::bigint,
+	  (2)::integer,
+	  ARRAY[(463565)::bigint, (116565)::bigint, (75565)::bigint,
+	        (221565)::bigint, (59565)::bigint],
+	  ARRAY[(1)::integer, (5)::integer, (5)::integer,
+	        (1)::integer, (2)::integer],
+	  ARRAY[(15006607)::bigint, (15006608)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:50:08.234 +08 [185668] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:50:08.234 +08 [185668] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:50:08.234 +08 [185668] HINT:  The transaction might succeed if retried.
+2026-10-07 21:50:08.234 +08 [185668] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 21:50:08.234 +08 [185668] STATEMENT:  SELECT public.place_order(
+	  (347)::bigint,
+	  (729347)::bigint,
+	  (5003460)::bigint,
+	  (5)::integer,
+	  ARRAY[(29347)::bigint, (497347)::bigint, (397347)::bigint,
+	        (154347)::bigint, (495347)::bigint],
+	  ARRAY[(4)::integer, (3)::integer, (3)::integer,
+	        (4)::integer, (3)::integer],
+	  ARRAY[(15010317)::bigint, (15010318)::bigint, (15010319)::bigint,
+	        (15010320)::bigint, (15010321)::bigint]
+	);
+2026-10-07 21:50:16.059 +08 [185668] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:50:16.059 +08 [185668] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:50:16.059 +08 [185668] HINT:  The transaction might succeed if retried.
+2026-10-07 21:50:16.059 +08 [185668] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 21:50:16.059 +08 [185668] STATEMENT:  SELECT public.place_order(
+	  (266)::bigint,
+	  (615266)::bigint,
+	  (5003715)::bigint,
+	  (3)::integer,
+	  ARRAY[(494266)::bigint, (422266)::bigint, (77266)::bigint,
+	        (148266)::bigint, (39266)::bigint],
+	  ARRAY[(1)::integer, (4)::integer, (4)::integer,
+	        (2)::integer, (2)::integer],
+	  ARRAY[(15011054)::bigint, (15011055)::bigint, (15011056)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:50:17.025 +08 [185651] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:50:17.025 +08 [185651] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 21:50:17.025 +08 [185651] HINT:  The transaction might succeed if retried.
+2026-10-07 21:50:17.025 +08 [185651] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:50:17.025 +08 [185651] STATEMENT:  SELECT public.place_order(
+	  (23)::bigint,
+	  (373023)::bigint,
+	  (5003768)::bigint,
+	  (2)::integer,
+	  ARRAY[(193023)::bigint, (231023)::bigint, (258023)::bigint,
+	        (259023)::bigint, (317023)::bigint],
+	  ARRAY[(4)::integer, (1)::integer, (4)::integer,
+	        (1)::integer, (1)::integer],
+	  ARRAY[(15011214)::bigint, (15011215)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:50:19.406 +08 [185656] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:50:19.406 +08 [185656] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:50:19.406 +08 [185656] HINT:  The transaction might succeed if retried.
+2026-10-07 21:50:19.406 +08 [185656] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:50:19.406 +08 [185656] STATEMENT:  SELECT public.place_order(
+	  (939)::bigint,
+	  (741939)::bigint,
+	  (5003841)::bigint,
+	  (5)::integer,
+	  ARRAY[(297939)::bigint, (394939)::bigint, (129939)::bigint,
+	        (196939)::bigint, (154939)::bigint],
+	  ARRAY[(1)::integer, (5)::integer, (2)::integer,
+	        (5)::integer, (5)::integer],
+	  ARRAY[(15011437)::bigint, (15011438)::bigint, (15011439)::bigint,
+	        (15011440)::bigint, (15011441)::bigint]
+	);
+2026-10-07 21:50:20.033 +08 [185651] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:50:20.033 +08 [185651] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:50:20.033 +08 [185651] HINT:  The transaction might succeed if retried.
+2026-10-07 21:50:20.033 +08 [185651] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:50:20.033 +08 [185651] STATEMENT:  SELECT public.place_order(
+	  (778)::bigint,
+	  (432778)::bigint,
+	  (5003874)::bigint,
+	  (2)::integer,
+	  ARRAY[(107778)::bigint, (192778)::bigint, (466778)::bigint,
+	        (188778)::bigint, (180778)::bigint],
+	  ARRAY[(4)::integer, (2)::integer, (4)::integer,
+	        (3)::integer, (1)::integer],
+	  ARRAY[(15011529)::bigint, (15011530)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:50:29.457 +08 [185652] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:50:29.457 +08 [185652] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 21:50:29.457 +08 [185652] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (79)::bigint
+	    AND product_id = (188079)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-07 21:50:30.482 +08 [185671] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:50:30.482 +08 [185671] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:50:30.482 +08 [185671] HINT:  The transaction might succeed if retried.
+2026-10-07 21:50:30.482 +08 [185671] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 21:50:30.482 +08 [185671] STATEMENT:  SELECT public.place_order(
+	  (460)::bigint,
+	  (37460)::bigint,
+	  (5004255)::bigint,
+	  (3)::integer,
+	  ARRAY[(250460)::bigint, (248460)::bigint, (16460)::bigint,
+	        (419460)::bigint, (18460)::bigint],
+	  ARRAY[(1)::integer, (3)::integer, (4)::integer,
+	        (4)::integer, (3)::integer],
+	  ARRAY[(15012676)::bigint, (15012677)::bigint, (15012678)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:50:38.104 +08 [185668] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:50:38.104 +08 [185668] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 21:50:38.104 +08 [185668] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (39)::bigint
+	    AND product_id = (221039)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-07 21:50:42.157 +08 [185655] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:50:42.157 +08 [185655] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:50:42.157 +08 [185655] HINT:  The transaction might succeed if retried.
+2026-10-07 21:50:42.157 +08 [185655] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:50:42.157 +08 [185655] STATEMENT:  SELECT public.place_order(
+	  (95)::bigint,
+	  (527095)::bigint,
+	  (5004671)::bigint,
+	  (3)::integer,
+	  ARRAY[(490095)::bigint, (329095)::bigint, (276095)::bigint,
+	        (347095)::bigint, (178095)::bigint],
+	  ARRAY[(1)::integer, (2)::integer, (5)::integer,
+	        (5)::integer, (2)::integer],
+	  ARRAY[(15013963)::bigint, (15013964)::bigint, (15013965)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:50:52.694 +08 [185640] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:50:52.694 +08 [185640] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 21:50:52.694 +08 [185640] HINT:  The transaction might succeed if retried.
+2026-10-07 21:50:52.694 +08 [185640] CONTEXT:  SQL statement "INSERT INTO public.orders (
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  VALUES (
+	    p_order_id, p_merchant_id, p_customer_id, 'PENDING',
+	    v_total::numeric(12,2), CURRENT_TIMESTAMP
+	  )
+	  RETURNING total_amount, created_at"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 69 at SQL statement
+	while executing command on xcnf21:5736
+2026-10-07 21:50:52.694 +08 [185640] STATEMENT:  SELECT public.place_order(
+	  (944)::bigint,
+	  (664944)::bigint,
+	  (5005153)::bigint,
+	  (5)::integer,
+	  ARRAY[(481944)::bigint, (79944)::bigint, (121944)::bigint,
+	        (944)::bigint, (346944)::bigint],
+	  ARRAY[(5)::integer, (4)::integer, (2)::integer,
+	        (5)::integer, (5)::integer],
+	  ARRAY[(15015389)::bigint, (15015390)::bigint, (15015391)::bigint,
+	        (15015392)::bigint, (15015393)::bigint]
+	);
+2026-10-07 21:51:05.816 +08 [185673] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:51:05.816 +08 [185673] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:51:05.816 +08 [185673] HINT:  The transaction might succeed if retried.
+2026-10-07 21:51:05.816 +08 [185673] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 21:51:05.816 +08 [185673] STATEMENT:  SELECT public.place_order(
+	  (757)::bigint,
+	  (824757)::bigint,
+	  (5005660)::bigint,
+	  (4)::integer,
+	  ARRAY[(138757)::bigint, (428757)::bigint, (380757)::bigint,
+	        (451757)::bigint, (126757)::bigint],
+	  ARRAY[(1)::integer, (5)::integer, (1)::integer,
+	        (4)::integer, (5)::integer],
+	  ARRAY[(15016930)::bigint, (15016931)::bigint, (15016932)::bigint,
+	        (15016933)::bigint, (0)::bigint]
+	);
+2026-10-07 21:51:48.037 +08 [185639] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:51:48.037 +08 [185639] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:51:48.037 +08 [185639] HINT:  The transaction might succeed if retried.
+2026-10-07 21:51:48.037 +08 [185639] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:51:48.037 +08 [185639] STATEMENT:  SELECT public.place_order(
+	  (81)::bigint,
+	  (12081)::bigint,
+	  (5005935)::bigint,
+	  (3)::integer,
+	  ARRAY[(154081)::bigint, (389081)::bigint, (219081)::bigint,
+	        (350081)::bigint, (459081)::bigint],
+	  ARRAY[(4)::integer, (5)::integer, (4)::integer,
+	        (1)::integer, (4)::integer],
+	  ARRAY[(15017734)::bigint, (15017735)::bigint, (15017736)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:52:11.794 +08 [185668] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:52:11.794 +08 [185668] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:52:11.794 +08 [185668] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (420)::bigint
+	    AND product_id = (432420)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-07 21:52:13.698 +08 [185642] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:52:13.698 +08 [185642] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 21:52:13.698 +08 [185642] HINT:  The transaction might succeed if retried.
+2026-10-07 21:52:13.698 +08 [185642] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 21:52:13.698 +08 [185642] STATEMENT:  SELECT public.place_order(
+	  (68)::bigint,
+	  (855068)::bigint,
+	  (5006168)::bigint,
+	  (4)::integer,
+	  ARRAY[(415068)::bigint, (49068)::bigint, (71068)::bigint,
+	        (63068)::bigint, (315068)::bigint],
+	  ARRAY[(4)::integer, (4)::integer, (4)::integer,
+	        (3)::integer, (2)::integer],
+	  ARRAY[(15018473)::bigint, (15018474)::bigint, (15018475)::bigint,
+	        (15018476)::bigint, (0)::bigint]
+	);
+2026-10-07 21:53:07.978 +08 [185669] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:53:07.978 +08 [185669] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:53:07.978 +08 [185669] HINT:  The transaction might succeed if retried.
+2026-10-07 21:53:07.978 +08 [185669] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:53:07.978 +08 [185669] STATEMENT:  SELECT public.place_order(
+	  (62)::bigint,
+	  (320062)::bigint,
+	  (5007953)::bigint,
+	  (2)::integer,
+	  ARRAY[(205062)::bigint, (188062)::bigint, (312062)::bigint,
+	        (225062)::bigint, (297062)::bigint],
+	  ARRAY[(4)::integer, (5)::integer, (5)::integer,
+	        (1)::integer, (3)::integer],
+	  ARRAY[(15023807)::bigint, (15023808)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:53:48.654 +08 [185641] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:53:48.654 +08 [185641] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:53:48.654 +08 [185641] HINT:  The transaction might succeed if retried.
+2026-10-07 21:53:48.654 +08 [185641] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 21:53:48.654 +08 [185641] STATEMENT:  SELECT public.place_order(
+	  (566)::bigint,
+	  (986566)::bigint,
+	  (5008713)::bigint,
+	  (1)::integer,
+	  ARRAY[(286566)::bigint, (391566)::bigint, (260566)::bigint,
+	        (78566)::bigint, (246566)::bigint],
+	  ARRAY[(2)::integer, (5)::integer, (3)::integer,
+	        (3)::integer, (2)::integer],
+	  ARRAY[(15026053)::bigint, (0)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:53:51.720 +08 [185664] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:53:51.720 +08 [185664] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:53:51.720 +08 [185664] HINT:  The transaction might succeed if retried.
+2026-10-07 21:53:51.720 +08 [185664] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 21:53:51.720 +08 [185664] STATEMENT:  SELECT public.place_order(
+	  (803)::bigint,
+	  (491803)::bigint,
+	  (5008795)::bigint,
+	  (4)::integer,
+	  ARRAY[(439803)::bigint, (308803)::bigint, (481803)::bigint,
+	        (311803)::bigint, (164803)::bigint],
+	  ARRAY[(2)::integer, (1)::integer, (4)::integer,
+	        (4)::integer, (3)::integer],
+	  ARRAY[(15026285)::bigint, (15026286)::bigint, (15026287)::bigint,
+	        (15026288)::bigint, (0)::bigint]
+	);
+2026-10-07 21:54:39.812 +08 [185655] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:54:39.812 +08 [185655] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:54:39.812 +08 [185655] HINT:  The transaction might succeed if retried.
+2026-10-07 21:54:39.812 +08 [185655] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 21:54:39.812 +08 [185655] STATEMENT:  SELECT public.place_order(
+	  (441)::bigint,
+	  (717441)::bigint,
+	  (5009939)::bigint,
+	  (4)::integer,
+	  ARRAY[(383441)::bigint, (194441)::bigint, (304441)::bigint,
+	        (61441)::bigint, (256441)::bigint],
+	  ARRAY[(2)::integer, (2)::integer, (3)::integer,
+	        (3)::integer, (3)::integer],
+	  ARRAY[(15029688)::bigint, (15029689)::bigint, (15029690)::bigint,
+	        (15029691)::bigint, (0)::bigint]
+	);
+2026-10-07 21:54:50.144 +08 [185644] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:54:50.144 +08 [185644] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 21:54:50.144 +08 [185644] HINT:  The transaction might succeed if retried.
+2026-10-07 21:54:50.144 +08 [185644] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:54:50.144 +08 [185644] STATEMENT:  SELECT public.place_order(
+	  (59)::bigint,
+	  (482059)::bigint,
+	  (5010288)::bigint,
+	  (5)::integer,
+	  ARRAY[(486059)::bigint, (335059)::bigint, (396059)::bigint,
+	        (235059)::bigint, (36059)::bigint],
+	  ARRAY[(5)::integer, (1)::integer, (2)::integer,
+	        (3)::integer, (4)::integer],
+	  ARRAY[(15030695)::bigint, (15030696)::bigint, (15030697)::bigint,
+	        (15030698)::bigint, (15030699)::bigint]
+	);
+2026-10-07 21:55:00.713 +08 [185638] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:55:00.713 +08 [185638] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:55:00.713 +08 [185638] HINT:  The transaction might succeed if retried.
+2026-10-07 21:55:00.713 +08 [185638] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:55:00.713 +08 [185638] STATEMENT:  SELECT public.place_order(
+	  (19)::bigint,
+	  (535019)::bigint,
+	  (5010642)::bigint,
+	  (1)::integer,
+	  ARRAY[(109019)::bigint, (382019)::bigint, (380019)::bigint,
+	        (99019)::bigint, (289019)::bigint],
+	  ARRAY[(1)::integer, (3)::integer, (4)::integer,
+	        (5)::integer, (1)::integer],
+	  ARRAY[(15031808)::bigint, (0)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:55:44.758 +08 [185646] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:55:44.758 +08 [185646] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 21:55:44.758 +08 [185646] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (765)::bigint
+	    AND product_id = (398765)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-07 21:55:52.080 +08 [185639] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:55:52.080 +08 [185639] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:55:52.080 +08 [185639] HINT:  The transaction might succeed if retried.
+2026-10-07 21:55:52.080 +08 [185639] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 21:55:52.080 +08 [185639] STATEMENT:  SELECT public.place_order(
+	  (68)::bigint,
+	  (985068)::bigint,
+	  (5011797)::bigint,
+	  (4)::integer,
+	  ARRAY[(55068)::bigint, (315068)::bigint, (268068)::bigint,
+	        (367068)::bigint, (342068)::bigint],
+	  ARRAY[(2)::integer, (5)::integer, (1)::integer,
+	        (4)::integer, (1)::integer],
+	  ARRAY[(15035252)::bigint, (15035253)::bigint, (15035254)::bigint,
+	        (15035255)::bigint, (0)::bigint]
+	);
+2026-10-07 21:55:56.267 +08 [185666] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:55:56.267 +08 [185666] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 21:55:56.267 +08 [185666] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (808)::bigint
+	    AND product_id = (144808)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-07 21:56:48.912 +08 [185658] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:56:48.912 +08 [185658] DETAIL:  Reason code: Canceled on conflict out to pivot 206822, during read.
+2026-10-07 21:56:48.912 +08 [185658] HINT:  The transaction might succeed if retried.
+2026-10-07 21:56:48.912 +08 [185658] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:56:48.912 +08 [185658] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 21:56:48.932 +08 [185662] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:56:48.932 +08 [185662] DETAIL:  Reason code: Canceled on conflict out to pivot 206822, during read.
+2026-10-07 21:56:48.932 +08 [185662] HINT:  The transaction might succeed if retried.
+2026-10-07 21:56:48.932 +08 [185662] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:56:48.932 +08 [185662] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 21:56:53.351 +08 [185639] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:56:53.351 +08 [185639] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf19:5736
+2026-10-07 21:56:53.351 +08 [185639] STATEMENT:  SELECT public.place_order(
+	  (48)::bigint,
+	  (928048)::bigint,
+	  (5013218)::bigint,
+	  (2)::integer,
+	  ARRAY[(180048)::bigint, (136048)::bigint, (338048)::bigint,
+	        (238048)::bigint, (399048)::bigint],
+	  ARRAY[(5)::integer, (2)::integer, (5)::integer,
+	        (3)::integer, (5)::integer],
+	  ARRAY[(15039499)::bigint, (15039500)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:56:54.992 +08 [185647] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:56:54.992 +08 [185647] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 21:56:54.992 +08 [185647] HINT:  The transaction might succeed if retried.
+2026-10-07 21:56:54.992 +08 [185647] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:56:54.992 +08 [185647] STATEMENT:  SELECT public.place_order(
+	  (466)::bigint,
+	  (881466)::bigint,
+	  (5013270)::bigint,
+	  (2)::integer,
+	  ARRAY[(247466)::bigint, (434466)::bigint, (473466)::bigint,
+	        (352466)::bigint, (170466)::bigint],
+	  ARRAY[(5)::integer, (1)::integer, (1)::integer,
+	        (2)::integer, (3)::integer],
+	  ARRAY[(15039670)::bigint, (15039671)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:57:18.798 +08 [185656] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:57:18.798 +08 [185656] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 21:57:18.798 +08 [185656] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (151)::bigint
+	    AND product_id = (190151)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-07 21:57:27.288 +08 [185640] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:57:27.288 +08 [185640] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 21:57:27.288 +08 [185640] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (154)::bigint
+	    AND product_id = (452154)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-07 21:57:28.685 +08 [185664] ERROR:  could not serialize access due to concurrent update
+2026-10-07 21:57:28.685 +08 [185664] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 21:57:28.685 +08 [185664] STATEMENT:  SELECT public.place_order(
+	  (35)::bigint,
+	  (519035)::bigint,
+	  (5014364)::bigint,
+	  (3)::integer,
+	  ARRAY[(89035)::bigint, (354035)::bigint, (189035)::bigint,
+	        (438035)::bigint, (36035)::bigint],
+	  ARRAY[(5)::integer, (4)::integer, (4)::integer,
+	        (3)::integer, (1)::integer],
+	  ARRAY[(15043001)::bigint, (15043002)::bigint, (15043003)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 21:58:03.133 +08 [185658] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 21:58:03.133 +08 [185658] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 21:58:03.133 +08 [185658] HINT:  The transaction might succeed if retried.
+2026-10-07 21:58:03.133 +08 [185658] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 21:58:03.133 +08 [185658] STATEMENT:  SELECT public.place_order(
+	  (731)::bigint,
+	  (769731)::bigint,
+	  (5014925)::bigint,
+	  (5)::integer,
+	  ARRAY[(431731)::bigint, (236731)::bigint, (485731)::bigint,
+	        (299731)::bigint, (481731)::bigint],
+	  ARRAY[(3)::integer, (5)::integer, (4)::integer,
+	        (2)::integer, (2)::integer],
+	  ARRAY[(15044759)::bigint, (15044760)::bigint, (15044761)::bigint,
+	        (15044762)::bigint, (15044763)::bigint]
+	);
+2026-10-07 21:59:19.257 +08 [184525] LOG:  received fast shutdown request
+2026-10-07 21:59:19.258 +08 [184525] LOG:  aborting any active transactions
+2026-10-07 21:59:19.261 +08 [184525] LOG:  background worker "logical replication launcher" (PID 184538) exited with exit code 1
+2026-10-07 21:59:19.264 +08 [184533] LOG:  shutting down
+2026-10-07 21:59:19.264 +08 [184533] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 21:59:19.270 +08 [184533] LOG:  checkpoint complete: wrote 408 buffers (0.3%), wrote 23 SLRU buffers; 0 WAL file(s) added, 0 removed, 1 recycled; write=0.005 s, sync=0.001 s, total=0.007 s; sync files=51, longest=0.001 s, average=0.001 s; distance=25161 kB, estimate=25161 kB; lsn=0/A9FD708, redo lsn=0/A9FD708
+2026-10-07 21:59:19.314 +08 [184525] LOG:  database system is shut down
+2026-10-07 21:59:25.551 +08 [187422] LOG:  There is no designated Main database.
+2026-10-07 21:59:25.551 +08 [187422] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-07 21:59:25.551 +08 [187422] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-07 21:59:25.665 +08 [187422] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-07 21:59:25.665 +08 [187422] LOG:  listening on IPv4 address "0.0.0.0", port 5736
+2026-10-07 21:59:25.665 +08 [187422] LOG:  listening on IPv6 address "::", port 5736
+2026-10-07 21:59:25.666 +08 [187422] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5736"
+2026-10-07 21:59:25.670 +08 [187440] LOG:  database system was shut down at 2026-10-07 21:59:19 +08
+2026-10-07 21:59:25.673 +08 [187422] LOG:  database system is ready to accept connections
+2026-10-07 21:59:26.596 +08 [187523] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-07 21:59:26.596 +08 [187523] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-07 22:00:46.049 +08 [188151] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:00:46.049 +08 [188151] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 22:00:46.049 +08 [188151] HINT:  The transaction might succeed if retried.
+2026-10-07 22:00:46.049 +08 [188151] CONTEXT:  SQL statement "INSERT INTO public.orders (
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  VALUES (
+	    p_order_id, p_merchant_id, p_customer_id, 'PENDING',
+	    v_total::numeric(12,2), CURRENT_TIMESTAMP
+	  )
+	  RETURNING total_amount, created_at"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 69 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 22:00:46.049 +08 [188151] STATEMENT:  SELECT public.place_order(
+	  (81)::bigint,
+	  (74081)::bigint,
+	  (5000129)::bigint,
+	  (1)::integer,
+	  ARRAY[(281081)::bigint, (298081)::bigint, (136081)::bigint,
+	        (222081)::bigint, (443081)::bigint],
+	  ARRAY[(4)::integer, (4)::integer, (5)::integer,
+	        (1)::integer, (5)::integer],
+	  ARRAY[(15000385)::bigint, (0)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:00:46.052 +08 [188195] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:00:46.052 +08 [188195] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 22:00:46.052 +08 [188195] HINT:  The transaction might succeed if retried.
+2026-10-07 22:00:46.052 +08 [188195] CONTEXT:  SQL statement "INSERT INTO public.orders (
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  VALUES (
+	    p_order_id, p_merchant_id, p_customer_id, 'PENDING',
+	    v_total::numeric(12,2), CURRENT_TIMESTAMP
+	  )
+	  RETURNING total_amount, created_at"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 69 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 22:00:46.052 +08 [188195] STATEMENT:  SELECT public.place_order(
+	  (81)::bigint,
+	  (650081)::bigint,
+	  (5000256)::bigint,
+	  (4)::integer,
+	  ARRAY[(162081)::bigint, (81)::bigint, (241081)::bigint,
+	        (159081)::bigint, (324081)::bigint],
+	  ARRAY[(3)::integer, (2)::integer, (2)::integer,
+	        (4)::integer, (3)::integer],
+	  ARRAY[(15000754)::bigint, (15000755)::bigint, (15000756)::bigint,
+	        (15000757)::bigint, (0)::bigint]
+	);
+2026-10-07 22:00:57.851 +08 [188151] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:00:57.851 +08 [188151] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 22:00:57.851 +08 [188151] HINT:  The transaction might succeed if retried.
+2026-10-07 22:00:57.851 +08 [188151] CONTEXT:  SQL statement "INSERT INTO public.orders (
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  VALUES (
+	    p_order_id, p_merchant_id, p_customer_id, 'PENDING',
+	    v_total::numeric(12,2), CURRENT_TIMESTAMP
+	  )
+	  RETURNING total_amount, created_at"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 69 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 22:00:57.851 +08 [188151] STATEMENT:  SELECT public.place_order(
+	  (54)::bigint,
+	  (770054)::bigint,
+	  (5000565)::bigint,
+	  (1)::integer,
+	  ARRAY[(270054)::bigint, (197054)::bigint, (293054)::bigint,
+	        (499054)::bigint, (99054)::bigint],
+	  ARRAY[(4)::integer, (2)::integer, (1)::integer,
+	        (3)::integer, (5)::integer],
+	  ARRAY[(15001640)::bigint, (0)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:01:00.719 +08 [188198] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:01:00.719 +08 [188198] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:01:00.719 +08 [188198] HINT:  The transaction might succeed if retried.
+2026-10-07 22:01:00.719 +08 [188198] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:01:00.719 +08 [188198] STATEMENT:  SELECT public.place_order(
+	  (685)::bigint,
+	  (270685)::bigint,
+	  (5000705)::bigint,
+	  (2)::integer,
+	  ARRAY[(267685)::bigint, (28685)::bigint, (251685)::bigint,
+	        (241685)::bigint, (486685)::bigint],
+	  ARRAY[(3)::integer, (1)::integer, (2)::integer,
+	        (1)::integer, (3)::integer],
+	  ARRAY[(15002041)::bigint, (15002042)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:01:16.290 +08 [188168] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:01:16.290 +08 [188168] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:01:16.290 +08 [188168] HINT:  The transaction might succeed if retried.
+2026-10-07 22:01:16.290 +08 [188168] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 22:01:16.290 +08 [188168] STATEMENT:  SELECT public.place_order(
+	  (445)::bigint,
+	  (420445)::bigint,
+	  (5000999)::bigint,
+	  (3)::integer,
+	  ARRAY[(200445)::bigint, (282445)::bigint, (319445)::bigint,
+	        (176445)::bigint, (282445)::bigint],
+	  ARRAY[(5)::integer, (3)::integer, (2)::integer,
+	        (4)::integer, (3)::integer],
+	  ARRAY[(15002962)::bigint, (15002963)::bigint, (15002964)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:01:19.013 +08 [188170] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:01:19.013 +08 [188170] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf20:5736
+2026-10-07 22:01:19.013 +08 [188170] STATEMENT:  SELECT public.place_order(
+	  (5)::bigint,
+	  (851005)::bigint,
+	  (5001098)::bigint,
+	  (2)::integer,
+	  ARRAY[(186005)::bigint, (443005)::bigint, (393005)::bigint,
+	        (143005)::bigint, (470005)::bigint],
+	  ARRAY[(2)::integer, (2)::integer, (1)::integer,
+	        (1)::integer, (2)::integer],
+	  ARRAY[(15003260)::bigint, (15003261)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:01:20.361 +08 [188147] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:01:20.361 +08 [188147] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-07 22:01:20.361 +08 [188147] HINT:  The transaction might succeed if retried.
+2026-10-07 22:01:20.361 +08 [188147] CONTEXT:  SQL statement "INSERT INTO public.orders (
+	    order_id, merchant_id, customer_id, order_status, total_amount, created_at
+	  )
+	  VALUES (
+	    p_order_id, p_merchant_id, p_customer_id, 'PENDING',
+	    v_total::numeric(12,2), CURRENT_TIMESTAMP
+	  )
+	  RETURNING total_amount, created_at"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 69 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 22:01:20.361 +08 [188147] STATEMENT:  SELECT public.place_order(
+	  (828)::bigint,
+	  (679828)::bigint,
+	  (5001133)::bigint,
+	  (3)::integer,
+	  ARRAY[(215828)::bigint, (372828)::bigint, (50828)::bigint,
+	        (212828)::bigint, (333828)::bigint],
+	  ARRAY[(3)::integer, (2)::integer, (4)::integer,
+	        (1)::integer, (2)::integer],
+	  ARRAY[(15003364)::bigint, (15003365)::bigint, (15003366)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:01:25.135 +08 [188790] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:01:25.135 +08 [188790] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:01:25.135 +08 [188790] HINT:  The transaction might succeed if retried.
+2026-10-07 22:01:25.135 +08 [188790] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:01:25.135 +08 [188790] STATEMENT:  SELECT public.place_order(
+	  (68)::bigint,
+	  (754068)::bigint,
+	  (5001219)::bigint,
+	  (4)::integer,
+	  ARRAY[(1068)::bigint, (235068)::bigint, (489068)::bigint,
+	        (195068)::bigint, (97068)::bigint],
+	  ARRAY[(4)::integer, (1)::integer, (4)::integer,
+	        (1)::integer, (3)::integer],
+	  ARRAY[(15003628)::bigint, (15003629)::bigint, (15003630)::bigint,
+	        (15003631)::bigint, (0)::bigint]
+	);
+2026-10-07 22:01:28.474 +08 [188814] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:01:28.474 +08 [188814] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:01:28.474 +08 [188814] HINT:  The transaction might succeed if retried.
+2026-10-07 22:01:28.474 +08 [188814] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 22:01:28.474 +08 [188814] STATEMENT:  SELECT public.place_order(
+	  (128)::bigint,
+	  (564128)::bigint,
+	  (5001392)::bigint,
+	  (5)::integer,
+	  ARRAY[(182128)::bigint, (491128)::bigint, (260128)::bigint,
+	        (238128)::bigint, (495128)::bigint],
+	  ARRAY[(4)::integer, (4)::integer, (3)::integer,
+	        (4)::integer, (1)::integer],
+	  ARRAY[(15004145)::bigint, (15004146)::bigint, (15004147)::bigint,
+	        (15004148)::bigint, (15004149)::bigint]
+	);
+2026-10-07 22:01:35.111 +08 [188785] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:01:35.111 +08 [188785] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:01:35.111 +08 [188785] HINT:  The transaction might succeed if retried.
+2026-10-07 22:01:35.111 +08 [188785] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:01:35.111 +08 [188785] STATEMENT:  SELECT public.place_order(
+	  (710)::bigint,
+	  (251710)::bigint,
+	  (5001695)::bigint,
+	  (4)::integer,
+	  ARRAY[(43710)::bigint, (212710)::bigint, (355710)::bigint,
+	        (332710)::bigint, (265710)::bigint],
+	  ARRAY[(1)::integer, (3)::integer, (5)::integer,
+	        (4)::integer, (5)::integer],
+	  ARRAY[(15005048)::bigint, (15005049)::bigint, (15005050)::bigint,
+	        (15005051)::bigint, (0)::bigint]
+	);
+2026-10-07 22:01:35.704 +08 [188809] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:01:35.704 +08 [188809] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:01:35.704 +08 [188809] HINT:  The transaction might succeed if retried.
+2026-10-07 22:01:35.704 +08 [188809] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 22:01:35.704 +08 [188809] STATEMENT:  SELECT public.place_order(
+	  (72)::bigint,
+	  (39072)::bigint,
+	  (5001757)::bigint,
+	  (4)::integer,
+	  ARRAY[(25072)::bigint, (193072)::bigint, (253072)::bigint,
+	        (199072)::bigint, (81072)::bigint],
+	  ARRAY[(2)::integer, (4)::integer, (5)::integer,
+	        (4)::integer, (4)::integer],
+	  ARRAY[(15005241)::bigint, (15005242)::bigint, (15005243)::bigint,
+	        (15005244)::bigint, (0)::bigint]
+	);
+2026-10-07 22:01:36.185 +08 [188786] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:01:36.185 +08 [188786] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf20:5736
+2026-10-07 22:01:36.185 +08 [188786] STATEMENT:  SELECT public.place_order(
+	  (39)::bigint,
+	  (509039)::bigint,
+	  (5001791)::bigint,
+	  (3)::integer,
+	  ARRAY[(197039)::bigint, (445039)::bigint, (466039)::bigint,
+	        (36039)::bigint, (25039)::bigint],
+	  ARRAY[(5)::integer, (4)::integer, (2)::integer,
+	        (1)::integer, (5)::integer],
+	  ARRAY[(15005340)::bigint, (15005341)::bigint, (15005342)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:01:38.584 +08 [188787] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:01:38.584 +08 [188787] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf21:5736
+2026-10-07 22:01:38.584 +08 [188787] STATEMENT:  SELECT public.place_order(
+	  (97)::bigint,
+	  (131097)::bigint,
+	  (5001919)::bigint,
+	  (4)::integer,
+	  ARRAY[(5097)::bigint, (146097)::bigint, (113097)::bigint,
+	        (131097)::bigint, (284097)::bigint],
+	  ARRAY[(5)::integer, (2)::integer, (5)::integer,
+	        (3)::integer, (2)::integer],
+	  ARRAY[(15005724)::bigint, (15005725)::bigint, (15005726)::bigint,
+	        (15005727)::bigint, (0)::bigint]
+	);
+2026-10-07 22:02:54.110 +08 [188810] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:02:54.110 +08 [188810] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:02:54.110 +08 [188810] HINT:  The transaction might succeed if retried.
+2026-10-07 22:02:54.110 +08 [188810] CONTEXT:  SQL statement "INSERT INTO public.order_items (
+	      order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+	    )
+	    VALUES (
+	      p_item_ids[k], p_merchant_id, p_order_id, p_product_ids[k],
+	      p_quantities[k], v_price
+	    )"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 82 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 22:02:54.110 +08 [188810] STATEMENT:  SELECT public.place_order(
+	  (382)::bigint,
+	  (879382)::bigint,
+	  (5003312)::bigint,
+	  (3)::integer,
+	  ARRAY[(289382)::bigint, (381382)::bigint, (432382)::bigint,
+	        (490382)::bigint, (188382)::bigint],
+	  ARRAY[(4)::integer, (4)::integer, (1)::integer,
+	        (3)::integer, (2)::integer],
+	  ARRAY[(15009836)::bigint, (15009837)::bigint, (15009838)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:03:16.593 +08 [188763] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:03:16.593 +08 [188763] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:03:16.593 +08 [188763] HINT:  The transaction might succeed if retried.
+2026-10-07 22:03:16.593 +08 [188763] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:03:16.593 +08 [188763] STATEMENT:  SELECT public.place_order(
+	  (695)::bigint,
+	  (755695)::bigint,
+	  (5004177)::bigint,
+	  (1)::integer,
+	  ARRAY[(34695)::bigint, (8695)::bigint, (489695)::bigint,
+	        (289695)::bigint, (142695)::bigint],
+	  ARRAY[(3)::integer, (5)::integer, (2)::integer,
+	        (1)::integer, (3)::integer],
+	  ARRAY[(15012486)::bigint, (0)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:03:29.899 +08 [188785] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:03:29.899 +08 [188785] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:03:29.899 +08 [188785] HINT:  The transaction might succeed if retried.
+2026-10-07 22:03:29.899 +08 [188785] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 22:03:29.899 +08 [188785] STATEMENT:  SELECT public.place_order(
+	  (70)::bigint,
+	  (525070)::bigint,
+	  (5004696)::bigint,
+	  (5)::integer,
+	  ARRAY[(215070)::bigint, (144070)::bigint, (440070)::bigint,
+	        (475070)::bigint, (283070)::bigint],
+	  ARRAY[(3)::integer, (3)::integer, (2)::integer,
+	        (3)::integer, (4)::integer],
+	  ARRAY[(15014020)::bigint, (15014021)::bigint, (15014022)::bigint,
+	        (15014023)::bigint, (15014024)::bigint]
+	);
+2026-10-07 22:03:30.208 +08 [188812] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:03:30.208 +08 [188812] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:03:30.208 +08 [188812] HINT:  The transaction might succeed if retried.
+2026-10-07 22:03:30.208 +08 [188812] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 22:03:30.208 +08 [188812] STATEMENT:  SELECT public.place_order(
+	  (70)::bigint,
+	  (538070)::bigint,
+	  (5004693)::bigint,
+	  (5)::integer,
+	  ARRAY[(109070)::bigint, (343070)::bigint, (2070)::bigint,
+	        (189070)::bigint, (150070)::bigint],
+	  ARRAY[(5)::integer, (5)::integer, (4)::integer,
+	        (5)::integer, (5)::integer],
+	  ARRAY[(15014006)::bigint, (15014007)::bigint, (15014008)::bigint,
+	        (15014009)::bigint, (15014010)::bigint]
+	);
+2026-10-07 22:04:29.051 +08 [188786] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:04:29.051 +08 [188786] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:04:29.051 +08 [188786] HINT:  The transaction might succeed if retried.
+2026-10-07 22:04:29.051 +08 [188786] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:04:29.051 +08 [188786] STATEMENT:  SELECT public.place_order(
+	  (12)::bigint,
+	  (846012)::bigint,
+	  (5005800)::bigint,
+	  (3)::integer,
+	  ARRAY[(394012)::bigint, (392012)::bigint, (104012)::bigint,
+	        (116012)::bigint, (126012)::bigint],
+	  ARRAY[(4)::integer, (1)::integer, (3)::integer,
+	        (3)::integer, (3)::integer],
+	  ARRAY[(15017362)::bigint, (15017363)::bigint, (15017364)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:04:43.131 +08 [188820] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:04:43.131 +08 [188820] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf21:5736
+2026-10-07 22:04:43.131 +08 [188820] STATEMENT:  SELECT public.place_order(
+	  (864)::bigint,
+	  (288864)::bigint,
+	  (5006357)::bigint,
+	  (4)::integer,
+	  ARRAY[(127864)::bigint, (67864)::bigint, (125864)::bigint,
+	        (232864)::bigint, (246864)::bigint],
+	  ARRAY[(2)::integer, (3)::integer, (3)::integer,
+	        (3)::integer, (4)::integer],
+	  ARRAY[(15019063)::bigint, (15019064)::bigint, (15019065)::bigint,
+	        (15019066)::bigint, (0)::bigint]
+	);
+2026-10-07 22:04:51.093 +08 [188770] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:04:51.093 +08 [188770] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:04:51.093 +08 [188770] HINT:  The transaction might succeed if retried.
+2026-10-07 22:04:51.093 +08 [188770] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 22:04:51.093 +08 [188770] STATEMENT:  SELECT public.place_order(
+	  (70)::bigint,
+	  (257070)::bigint,
+	  (5006640)::bigint,
+	  (2)::integer,
+	  ARRAY[(303070)::bigint, (54070)::bigint, (349070)::bigint,
+	        (153070)::bigint, (115070)::bigint],
+	  ARRAY[(4)::integer, (2)::integer, (1)::integer,
+	        (3)::integer, (1)::integer],
+	  ARRAY[(15019943)::bigint, (15019944)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:04:51.644 +08 [188820] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:04:51.644 +08 [188820] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:04:51.644 +08 [188820] HINT:  The transaction might succeed if retried.
+2026-10-07 22:04:51.644 +08 [188820] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:04:51.644 +08 [188820] STATEMENT:  SELECT public.place_order(
+	  (69)::bigint,
+	  (779069)::bigint,
+	  (5006665)::bigint,
+	  (4)::integer,
+	  ARRAY[(207069)::bigint, (20069)::bigint, (137069)::bigint,
+	        (352069)::bigint, (420069)::bigint],
+	  ARRAY[(4)::integer, (2)::integer, (3)::integer,
+	        (4)::integer, (5)::integer],
+	  ARRAY[(15020017)::bigint, (15020018)::bigint, (15020019)::bigint,
+	        (15020020)::bigint, (0)::bigint]
+	);
+2026-10-07 22:04:57.228 +08 [188779] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:04:57.228 +08 [188779] DETAIL:  Reason code: Canceled on conflict out to pivot 258044, during read.
+2026-10-07 22:04:57.228 +08 [188779] HINT:  The transaction might succeed if retried.
+2026-10-07 22:04:57.228 +08 [188779] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:04:57.228 +08 [188779] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 22:04:57.311 +08 [188773] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:04:57.311 +08 [188773] DETAIL:  Reason code: Canceled on conflict out to pivot 258044, during read.
+2026-10-07 22:04:57.311 +08 [188773] HINT:  The transaction might succeed if retried.
+2026-10-07 22:04:57.311 +08 [188773] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:04:57.311 +08 [188773] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 22:05:00.414 +08 [188793] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:05:00.414 +08 [188793] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:05:00.414 +08 [188793] HINT:  The transaction might succeed if retried.
+2026-10-07 22:05:00.414 +08 [188793] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:05:00.414 +08 [188793] STATEMENT:  SELECT public.place_order(
+	  (5)::bigint,
+	  (962005)::bigint,
+	  (5007043)::bigint,
+	  (5)::integer,
+	  ARRAY[(88005)::bigint, (204005)::bigint, (245005)::bigint,
+	        (233005)::bigint, (263005)::bigint],
+	  ARRAY[(1)::integer, (4)::integer, (2)::integer,
+	        (3)::integer, (5)::integer],
+	  ARRAY[(15021152)::bigint, (15021153)::bigint, (15021154)::bigint,
+	        (15021155)::bigint, (15021156)::bigint]
+	);
+2026-10-07 22:05:02.965 +08 [188796] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:05:02.965 +08 [188796] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:05:02.965 +08 [188796] HINT:  The transaction might succeed if retried.
+2026-10-07 22:05:02.965 +08 [188796] CONTEXT:  SQL statement "INSERT INTO public.order_merchant_map (order_id, merchant_id)
+	  VALUES (p_order_id, p_merchant_id)"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 94 at SQL statement
+	while executing command on xcnf18:5736
+2026-10-07 22:05:02.965 +08 [188796] STATEMENT:  SELECT public.place_order(
+	  (271)::bigint,
+	  (440271)::bigint,
+	  (5007145)::bigint,
+	  (3)::integer,
+	  ARRAY[(220271)::bigint, (281271)::bigint, (179271)::bigint,
+	        (226271)::bigint, (435271)::bigint],
+	  ARRAY[(2)::integer, (2)::integer, (4)::integer,
+	        (1)::integer, (2)::integer],
+	  ARRAY[(15021465)::bigint, (15021466)::bigint, (15021467)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:05:22.683 +08 [188765] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:05:22.683 +08 [188765] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:05:22.683 +08 [188765] HINT:  The transaction might succeed if retried.
+2026-10-07 22:05:22.683 +08 [188765] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:05:22.683 +08 [188765] STATEMENT:  SELECT public.place_order(
+	  (645)::bigint,
+	  (303645)::bigint,
+	  (5007882)::bigint,
+	  (4)::integer,
+	  ARRAY[(122645)::bigint, (311645)::bigint, (1645)::bigint,
+	        (6645)::bigint, (293645)::bigint],
+	  ARRAY[(4)::integer, (4)::integer, (3)::integer,
+	        (2)::integer, (5)::integer],
+	  ARRAY[(15023661)::bigint, (15023662)::bigint, (15023663)::bigint,
+	        (15023664)::bigint, (0)::bigint]
+	);
+2026-10-07 22:05:33.098 +08 [188779] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:05:33.098 +08 [188779] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:05:33.098 +08 [188779] HINT:  The transaction might succeed if retried.
+2026-10-07 22:05:33.098 +08 [188779] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 22:05:33.098 +08 [188779] STATEMENT:  SELECT public.place_order(
+	  (36)::bigint,
+	  (480036)::bigint,
+	  (5008330)::bigint,
+	  (2)::integer,
+	  ARRAY[(290036)::bigint, (485036)::bigint, (388036)::bigint,
+	        (370036)::bigint, (23036)::bigint],
+	  ARRAY[(2)::integer, (4)::integer, (1)::integer,
+	        (4)::integer, (5)::integer],
+	  ARRAY[(15025026)::bigint, (15025027)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:05:33.105 +08 [188764] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:05:33.105 +08 [188764] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:05:33.105 +08 [188764] HINT:  The transaction might succeed if retried.
+2026-10-07 22:05:33.105 +08 [188764] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:05:33.105 +08 [188764] STATEMENT:  SELECT public.place_order(
+	  (58)::bigint,
+	  (806058)::bigint,
+	  (5008308)::bigint,
+	  (4)::integer,
+	  ARRAY[(472058)::bigint, (266058)::bigint, (402058)::bigint,
+	        (358058)::bigint, (380058)::bigint],
+	  ARRAY[(4)::integer, (1)::integer, (1)::integer,
+	        (5)::integer, (4)::integer],
+	  ARRAY[(15024954)::bigint, (15024955)::bigint, (15024956)::bigint,
+	        (15024957)::bigint, (0)::bigint]
+	);
+2026-10-07 22:06:15.952 +08 [188779] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:06:15.952 +08 [188779] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:06:15.952 +08 [188779] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (539)::bigint
+	    AND product_id = (290539)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-07 22:06:21.734 +08 [188809] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:06:21.734 +08 [188809] DETAIL:  Reason code: Canceled on conflict out to pivot 234966, during read.
+2026-10-07 22:06:21.734 +08 [188809] HINT:  The transaction might succeed if retried.
+2026-10-07 22:06:21.734 +08 [188809] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 22:06:21.734 +08 [188809] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 22:06:26.146 +08 [188818] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:06:26.146 +08 [188818] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:06:26.146 +08 [188818] HINT:  The transaction might succeed if retried.
+2026-10-07 22:06:26.146 +08 [188818] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 22:06:26.146 +08 [188818] STATEMENT:  SELECT public.place_order(
+	  (734)::bigint,
+	  (646734)::bigint,
+	  (5009124)::bigint,
+	  (2)::integer,
+	  ARRAY[(236734)::bigint, (464734)::bigint, (281734)::bigint,
+	        (261734)::bigint, (22734)::bigint],
+	  ARRAY[(3)::integer, (5)::integer, (2)::integer,
+	        (5)::integer, (2)::integer],
+	  ARRAY[(15027415)::bigint, (15027416)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:06:26.734 +08 [188799] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:06:26.734 +08 [188799] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:06:26.734 +08 [188799] HINT:  The transaction might succeed if retried.
+2026-10-07 22:06:26.734 +08 [188799] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 22:06:26.734 +08 [188799] STATEMENT:  SELECT public.place_order(
+	  (7)::bigint,
+	  (762007)::bigint,
+	  (5009135)::bigint,
+	  (5)::integer,
+	  ARRAY[(90007)::bigint, (134007)::bigint, (75007)::bigint,
+	        (358007)::bigint, (434007)::bigint],
+	  ARRAY[(3)::integer, (5)::integer, (5)::integer,
+	        (1)::integer, (3)::integer],
+	  ARRAY[(15027446)::bigint, (15027447)::bigint, (15027448)::bigint,
+	        (15027449)::bigint, (15027450)::bigint]
+	);
+2026-10-07 22:06:26.792 +08 [188791] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:06:26.792 +08 [188791] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:06:26.792 +08 [188791] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (58)::bigint
+	    AND product_id = (486058)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-07 22:06:38.618 +08 [188819] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:06:38.618 +08 [188819] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 22:06:38.618 +08 [188819] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (7)::bigint
+	    AND product_id = (203007)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-07 22:06:40.586 +08 [188791] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:06:40.586 +08 [188791] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:06:40.586 +08 [188791] HINT:  The transaction might succeed if retried.
+2026-10-07 22:06:40.586 +08 [188791] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 22:06:40.586 +08 [188791] STATEMENT:  SELECT public.place_order(
+	  (30)::bigint,
+	  (157030)::bigint,
+	  (5009656)::bigint,
+	  (1)::integer,
+	  ARRAY[(411030)::bigint, (315030)::bigint, (105030)::bigint,
+	        (374030)::bigint, (485030)::bigint],
+	  ARRAY[(5)::integer, (4)::integer, (1)::integer,
+	        (3)::integer, (2)::integer],
+	  ARRAY[(15029037)::bigint, (0)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:06:48.036 +08 [188784] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:06:48.036 +08 [188784] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-07 22:06:48.036 +08 [188784] HINT:  The transaction might succeed if retried.
+2026-10-07 22:06:48.036 +08 [188784] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:06:48.036 +08 [188784] STATEMENT:  SELECT public.place_order(
+	  (913)::bigint,
+	  (924913)::bigint,
+	  (5009969)::bigint,
+	  (3)::integer,
+	  ARRAY[(424913)::bigint, (385913)::bigint, (428913)::bigint,
+	        (51913)::bigint, (451913)::bigint],
+	  ARRAY[(1)::integer, (2)::integer, (4)::integer,
+	        (5)::integer, (1)::integer],
+	  ARRAY[(15030010)::bigint, (15030011)::bigint, (15030012)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:06:50.922 +08 [188819] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:06:50.922 +08 [188819] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:06:50.922 +08 [188819] HINT:  The transaction might succeed if retried.
+2026-10-07 22:06:50.922 +08 [188819] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:06:50.922 +08 [188819] STATEMENT:  SELECT public.place_order(
+	  (375)::bigint,
+	  (275375)::bigint,
+	  (5010069)::bigint,
+	  (5)::integer,
+	  ARRAY[(77375)::bigint, (272375)::bigint, (9375)::bigint,
+	        (50375)::bigint, (364375)::bigint],
+	  ARRAY[(2)::integer, (2)::integer, (2)::integer,
+	        (2)::integer, (4)::integer],
+	  ARRAY[(15030314)::bigint, (15030315)::bigint, (15030316)::bigint,
+	        (15030317)::bigint, (15030318)::bigint]
+	);
+2026-10-07 22:06:53.750 +08 [188796] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:06:53.750 +08 [188796] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:06:53.750 +08 [188796] HINT:  The transaction might succeed if retried.
+2026-10-07 22:06:53.750 +08 [188796] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:06:53.750 +08 [188796] STATEMENT:  SELECT public.place_order(
+	  (671)::bigint,
+	  (905671)::bigint,
+	  (5010170)::bigint,
+	  (2)::integer,
+	  ARRAY[(369671)::bigint, (499671)::bigint, (362671)::bigint,
+	        (446671)::bigint, (269671)::bigint],
+	  ARRAY[(1)::integer, (1)::integer, (1)::integer,
+	        (2)::integer, (4)::integer],
+	  ARRAY[(15030630)::bigint, (15030631)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:06:55.800 +08 [188784] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:06:55.800 +08 [188784] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:06:55.800 +08 [188784] HINT:  The transaction might succeed if retried.
+2026-10-07 22:06:55.800 +08 [188784] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 22:06:55.800 +08 [188784] STATEMENT:  SELECT public.place_order(
+	  (51)::bigint,
+	  (417051)::bigint,
+	  (5010251)::bigint,
+	  (4)::integer,
+	  ARRAY[(492051)::bigint, (52051)::bigint, (309051)::bigint,
+	        (400051)::bigint, (67051)::bigint],
+	  ARRAY[(2)::integer, (4)::integer, (2)::integer,
+	        (1)::integer, (3)::integer],
+	  ARRAY[(15030869)::bigint, (15030870)::bigint, (15030871)::bigint,
+	        (15030872)::bigint, (0)::bigint]
+	);
+2026-10-07 22:07:09.482 +08 [188771] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:07:09.482 +08 [188771] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:07:09.482 +08 [188771] HINT:  The transaction might succeed if retried.
+2026-10-07 22:07:09.482 +08 [188771] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 22:07:09.482 +08 [188771] STATEMENT:  SELECT public.place_order(
+	  (114)::bigint,
+	  (974114)::bigint,
+	  (5010800)::bigint,
+	  (2)::integer,
+	  ARRAY[(133114)::bigint, (169114)::bigint, (253114)::bigint,
+	        (492114)::bigint, (244114)::bigint],
+	  ARRAY[(4)::integer, (3)::integer, (1)::integer,
+	        (4)::integer, (1)::integer],
+	  ARRAY[(15032570)::bigint, (15032571)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:07:32.489 +08 [188760] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:07:32.489 +08 [188760] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:07:32.489 +08 [188760] HINT:  The transaction might succeed if retried.
+2026-10-07 22:07:32.489 +08 [188760] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:07:32.489 +08 [188760] STATEMENT:  SELECT public.place_order(
+	  (33)::bigint,
+	  (221033)::bigint,
+	  (5011583)::bigint,
+	  (2)::integer,
+	  ARRAY[(20033)::bigint, (28033)::bigint, (210033)::bigint,
+	        (6033)::bigint, (283033)::bigint],
+	  ARRAY[(1)::integer, (1)::integer, (1)::integer,
+	        (2)::integer, (2)::integer],
+	  ARRAY[(15034892)::bigint, (15034893)::bigint, (0)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:07:33.465 +08 [188805] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:07:33.465 +08 [188805] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:07:33.465 +08 [188805] HINT:  The transaction might succeed if retried.
+2026-10-07 22:07:33.465 +08 [188805] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:07:33.465 +08 [188805] STATEMENT:  SELECT public.place_order(
+	  (77)::bigint,
+	  (709077)::bigint,
+	  (5011609)::bigint,
+	  (3)::integer,
+	  ARRAY[(434077)::bigint, (19077)::bigint, (60077)::bigint,
+	        (197077)::bigint, (63077)::bigint],
+	  ARRAY[(2)::integer, (1)::integer, (5)::integer,
+	        (1)::integer, (5)::integer],
+	  ARRAY[(15034970)::bigint, (15034971)::bigint, (15034972)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:09:01.661 +08 [188772] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:09:01.661 +08 [188772] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 22:09:01.661 +08 [188772] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (59)::bigint
+	    AND product_id = (490059)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-07 22:09:11.366 +08 [188783] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:09:11.366 +08 [188783] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+	while executing command on xcnf20:5736
+2026-10-07 22:09:11.366 +08 [188783] STATEMENT:  SELECT public.place_order(
+	  (49)::bigint,
+	  (554049)::bigint,
+	  (5013779)::bigint,
+	  (3)::integer,
+	  ARRAY[(32049)::bigint, (380049)::bigint, (464049)::bigint,
+	        (143049)::bigint, (210049)::bigint],
+	  ARRAY[(3)::integer, (3)::integer, (1)::integer,
+	        (1)::integer, (5)::integer],
+	  ARRAY[(15041492)::bigint, (15041493)::bigint, (15041494)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:09:22.756 +08 [188801] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:09:22.756 +08 [188801] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:09:22.756 +08 [188801] HINT:  The transaction might succeed if retried.
+2026-10-07 22:09:22.756 +08 [188801] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:09:22.756 +08 [188801] STATEMENT:  SELECT public.place_order(
+	  (973)::bigint,
+	  (486973)::bigint,
+	  (5014203)::bigint,
+	  (5)::integer,
+	  ARRAY[(405973)::bigint, (489973)::bigint, (87973)::bigint,
+	        (419973)::bigint, (401973)::bigint],
+	  ARRAY[(2)::integer, (3)::integer, (5)::integer,
+	        (2)::integer, (3)::integer],
+	  ARRAY[(15042816)::bigint, (15042817)::bigint, (15042818)::bigint,
+	        (15042819)::bigint, (15042820)::bigint]
+	);
+2026-10-07 22:09:31.588 +08 [188809] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:09:31.588 +08 [188809] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:09:31.588 +08 [188809] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (103)::bigint
+	    AND product_id = (43103)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-07 22:09:31.937 +08 [188818] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:09:31.937 +08 [188818] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:09:31.937 +08 [188818] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (270)::bigint
+	    AND product_id = (441270)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-07 22:09:38.564 +08 [188818] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:09:38.564 +08 [188818] DETAIL:  Reason code: Canceled on conflict out to pivot 250141, during read.
+2026-10-07 22:09:38.564 +08 [188818] HINT:  The transaction might succeed if retried.
+2026-10-07 22:09:38.564 +08 [188818] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 22:09:38.564 +08 [188818] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 22:09:43.754 +08 [188762] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:09:43.754 +08 [188762] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:09:43.754 +08 [188762] HINT:  The transaction might succeed if retried.
+2026-10-07 22:09:43.754 +08 [188762] CONTEXT:  while executing command on xcnf18:5736
+2026-10-07 22:09:43.754 +08 [188762] STATEMENT:  SELECT public.place_order(
+	  (245)::bigint,
+	  (73245)::bigint,
+	  (5014963)::bigint,
+	  (3)::integer,
+	  ARRAY[(210245)::bigint, (2245)::bigint, (465245)::bigint,
+	        (46245)::bigint, (56245)::bigint],
+	  ARRAY[(1)::integer, (2)::integer, (4)::integer,
+	        (3)::integer, (3)::integer],
+	  ARRAY[(15045108)::bigint, (15045109)::bigint, (15045110)::bigint,
+	        (0)::bigint, (0)::bigint]
+	);
+2026-10-07 22:11:02.450 +08 [188806] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:11:02.450 +08 [188806] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:11:02.450 +08 [188806] HINT:  The transaction might succeed if retried.
+2026-10-07 22:11:02.450 +08 [188806] CONTEXT:  while executing command on xcnf19:5736
+2026-10-07 22:11:02.450 +08 [188806] STATEMENT:  SELECT public.place_order(
+	  (48)::bigint,
+	  (711048)::bigint,
+	  (5016320)::bigint,
+	  (4)::integer,
+	  ARRAY[(242048)::bigint, (442048)::bigint, (240048)::bigint,
+	        (220048)::bigint, (295048)::bigint],
+	  ARRAY[(4)::integer, (1)::integer, (5)::integer,
+	        (3)::integer, (1)::integer],
+	  ARRAY[(15049245)::bigint, (15049246)::bigint, (15049247)::bigint,
+	        (15049248)::bigint, (0)::bigint]
+	);
+2026-10-07 22:11:16.375 +08 [188785] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:11:16.375 +08 [188785] DETAIL:  Reason code: Canceled on conflict out to pivot 251201, during read.
+2026-10-07 22:11:16.375 +08 [188785] HINT:  The transaction might succeed if retried.
+2026-10-07 22:11:16.375 +08 [188785] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:11:16.375 +08 [188785] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 22:11:16.375 +08 [188801] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:11:16.375 +08 [188801] DETAIL:  Reason code: Canceled on conflict out to pivot 251201, during read.
+2026-10-07 22:11:16.375 +08 [188801] HINT:  The transaction might succeed if retried.
+2026-10-07 22:11:16.375 +08 [188801] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:11:16.375 +08 [188801] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 22:11:16.454 +08 [188759] ERROR:  could not serialize access due to concurrent update
+2026-10-07 22:11:16.454 +08 [188759] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:11:16.454 +08 [188759] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE merchant_id = (85)::bigint
+	    AND product_id = (486085)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-07 22:11:16.463 +08 [188816] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:11:16.463 +08 [188816] DETAIL:  Reason code: Canceled on conflict out to pivot 251201, during read.
+2026-10-07 22:11:16.463 +08 [188816] HINT:  The transaction might succeed if retried.
+2026-10-07 22:11:16.463 +08 [188816] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:11:16.463 +08 [188816] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 22:11:16.492 +08 [188813] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:11:16.492 +08 [188813] DETAIL:  Reason code: Canceled on conflict out to pivot 251201, during read.
+2026-10-07 22:11:16.492 +08 [188813] HINT:  The transaction might succeed if retried.
+2026-10-07 22:11:16.492 +08 [188813] CONTEXT:  while executing command on xcnf20:5736
+2026-10-07 22:11:16.492 +08 [188813] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-07 22:11:18.462 +08 [188808] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-07 22:11:18.462 +08 [188808] DETAIL:  Reason code: Canceled on identification as a pivot, during conflict in checking.
+2026-10-07 22:11:18.462 +08 [188808] HINT:  The transaction might succeed if retried.
+2026-10-07 22:11:18.462 +08 [188808] CONTEXT:  while executing command on xcnf21:5736
+2026-10-07 22:11:18.462 +08 [188808] STATEMENT:  SELECT public.place_order(
+	  (242)::bigint,
+	  (67242)::bigint,
+	  (5016915)::bigint,
+	  (5)::integer,
+	  ARRAY[(313242)::bigint, (191242)::bigint, (154242)::bigint,
+	        (224242)::bigint, (430242)::bigint],
+	  ARRAY[(5)::integer, (1)::integer, (3)::integer,
+	        (3)::integer, (5)::integer],
+	  ARRAY[(15051058)::bigint, (15051059)::bigint, (15051060)::bigint,
+	        (15051061)::bigint, (15051062)::bigint]
+	);
+2026-10-07 22:11:24.183 +08 [187422] LOG:  received fast shutdown request
+2026-10-07 22:11:24.184 +08 [187422] LOG:  aborting any active transactions
+2026-10-07 22:11:24.187 +08 [187422] LOG:  background worker "logical replication launcher" (PID 187444) exited with exit code 1
+2026-10-07 22:11:24.189 +08 [187438] LOG:  shutting down
+2026-10-07 22:11:24.190 +08 [187438] LOG:  checkpoint starting: shutdown immediate
+2026-10-07 22:11:24.196 +08 [187438] LOG:  checkpoint complete: wrote 396 buffers (0.3%), wrote 25 SLRU buffers; 0 WAL file(s) added, 0 removed, 2 recycled; write=0.005 s, sync=0.001 s, total=0.007 s; sync files=51, longest=0.001 s, average=0.001 s; distance=27627 kB, estimate=27627 kB; lsn=0/C4F85C8, redo lsn=0/C4F85C8
+2026-10-07 22:11:24.239 +08 [187422] LOG:  database system is shut down
