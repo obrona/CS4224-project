@@ -116,3 +116,68 @@ PostgreSQL server logs (`xcnf*-postgresql.log`) are committed gzipped, which
 takes the 50 cells of the 2^4 x 3 grid from 15.3 GB to 3.7 GB. Read them with
 `zcat`. Summaries, per-client result text, `metrics-c*` and `config.txt` stay
 uncompressed, and `analysis/ablation.py` reads only those.
+
+## Workload B
+
+The same grid on workload B: cells `expt_b<300 + 16*m + mask>` with the same
+factors, bits and T1 modes, listed in `manifest_b.csv` (the columns of
+`manifest.csv`; `source` is `generated`, `renamed from expt_b1xx` or
+`replicate of expt_b<id>`).
+
+```sh
+python3 ablation/generate.py --side b
+python3 ablation/validate.py --side b
+```
+
+- **Code.** A B cell's `transactions/` and `explain/` are byte-identical to
+  the A cell with the same id. Its `run.sh` is the rendered template with
+  exactly three substitutions, each of which must match exactly once or the
+  generator fails: the A node-pin comment and `--nodelist=xcnf[0-2,4,5]`
+  become the B-side comment and `--nodelist=xcnf[17-21]`; `--mail-user`
+  becomes `e1334269@u.nus.edu`; `WORKLOAD` defaults to `B`. `TEAM_ID` defaults
+  to 4 and `PGPORT` is derived from it, as on A.
+- **Node set.** Every B cell is pinned to `xcnf[17-21]`, disjoint from A's
+  `xcnf[0-2,4,5]`, so the two workloads can run at the same time without
+  sharing hardware. Compare B runs only with B runs.
+- **Reused runs.** The earlier 2^5 workload-B ablation (branch `ablation-b`;
+  bits T5R=1 T6R=2 T7R=4 DEL=8 RR=16, Citus's default 32 shards) has 16 cells
+  that are exactly cells of this grid: DEL = 0 / 1 with RR = 0 is T1 mode
+  `set` / `fn` with `shards8` off. They and their two replicates were moved
+  here with their results, under their grid names:
+
+  | 2^5 name | grid name | |
+  | -------- | --------- | - |
+  | `expt_b100` .. `expt_b107` | `expt_b300` .. `expt_b307` | m = 0, mask 0..7 |
+  | `expt_b108` .. `expt_b115` | `expt_b316` .. `expt_b323` | m = 1, mask 0..7 |
+  | `expt_b200` | `expt_b300_1` | replicate of `expt_b300` |
+  | `expt_b215` | `expt_b323_1` | replicate of `expt_b323` |
+
+  They are valid grid runs because they ran this grid's code on this node set.
+  `validate.py --side b` (check 1) shows that their `transactions/` and
+  `explain/` are byte-identical to the generator's output, and so is `run.sh`
+  except for the PGPORT lines: the 2^5 `run.sh` let `PGPORT` be overridden
+  (`PGPORT="${PGPORT:-$((10#${TEAM_ID} + 5432))}"`, with a three-line
+  comment) where the generator writes `PGPORT=$((10#${TEAM_ID} + 5432))`.
+  Every 2^5 job was submitted with `PGPORT` unset (one `TEAM_ID` per port
+  slot, 104 to 704), so the port was the same. The generator never writes
+  their `run.sh`, `transactions/` or `explain/`, only their
+  `optimisations.md`, which names the 2^5 cell and the commit on `ablation-b`
+  that added the result (`d26361a`, or `fa7d727` for `expt_b105` to
+  `expt_b107`, `expt_b113` and `expt_b215`, wave-1 cells that were rerun
+  there). The RR = 1 cells (`expt_b116` to `expt_b131`) and the 2^5 manifest,
+  run order and analysis have no place in this grid and stay on `ablation-b`.
+- **New runs.** The other 32 cells are generated: `shards8` on for m = 0 and
+  1 (`expt_b308` to `expt_b315`, `expt_b324` to `expt_b331`) and every
+  m = 2 cell (`expt_b332` to `expt_b347`), plus two replicates:
+  `expt_b331_1`, which mirrors `expt_a331_1`, and `expt_b300_2`.
+- **Batch drift.** Every reused cell has `shards8` off and m <= 1, and every
+  cell with `shards8` on or m = 2 is new, so any difference between the 2^5
+  batch and the new batch is confounded with those effects. `expt_b300_2`
+  reruns `expt_b300` in the new batch: its difference from `expt_b300` and
+  `expt_b300_1` measures that drift, on top of run-to-run variation. Its
+  `run.sh` is the generator's, so it differs from `expt_b300`'s only in the
+  PGPORT lines.
+- **Stored results and run order.** The reused runs' raw logs are gzipped as
+  on A ("Stored results"; 2.46 GB to 0.93 GB for the 18 directories).
+  `run_order_b.csv` has `run_order.csv`'s columns and lists each new B job as
+  it is submitted.

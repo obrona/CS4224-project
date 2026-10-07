@@ -1,0 +1,3 @@
+### Prev: expt_b300
+
+Replicate: a run of `expt_b300`'s code in the new batch of workload-B runs, the cells `ablation/generate.py --side b` writes (`ablation/README.md`, "Workload B"; levels in `ablation/manifest_b.csv`). `expt_b300` and `expt_b300_1` are runs of the earlier 2^5 workload-B ablation, renamed; comparing this run with them measures the drift between the reused batch and the new batch, on top of run-to-run variation. `run.sh`, `transactions/` and `explain/` are generated exactly as `expt_b300`'s would be: `transactions/` and `explain/` are byte-identical to `expt_b300`'s, and `run.sh` differs from `expt_b300`'s only in the PGPORT lines `expt_b300` kept from its run (`expt_b300/optimisations.md`).
