@@ -89,3 +89,38 @@ python3 ablation/generate.py --out /tmp/ablation --masks 0,1,2,3,5,11,15
   calls (`expt_a103`, `expt_a111`), which follows `expt_a115`. All tables are
   created before any is distributed, and `merchant_daily_sales` colocates with
   `merchants`, which is distributed first, so the order has no effect.
+
+## Workload B
+
+```sh
+python3 ablation/generate.py --side b
+```
+
+writes the same 32 cells for workload B as `expt_b<100 + mask>`
+(`expt_b100` to `expt_b131`), with the same factors and bits, plus the
+replicates `expt_b200` (of `expt_b100`) and `expt_b215` (of `expt_b115`), and
+`manifest_b.csv`. `--out DIR --masks ...` works the same way and writes
+`DIR/expt_b1xx`.
+
+- There are no renamed cells on B: every cell, including `expt_b100`, is
+  generated. `expt_b100` is `expt_b3`'s code on this template: its
+  `transactions/` are byte-identical to `expt_b3`'s (and `expt_a100`'s).
+- Each cell's `transactions/` and `explain/` are byte-identical to the A cell
+  with the same mask. Its `run.sh` is that A cell's generated `run.sh` with
+  exactly four substitutions, each of which must match exactly once or the
+  generator fails:
+  - the A node-pin comment and `#SBATCH --nodelist=xcnf[1,3-6]` become the
+    B-side comment and `#SBATCH --nodelist=xcnf[17-21]`, the set `expt_b6` and
+    `expt_b7` use (`expt_b0` to `expt_b5` ran on `xcnf[16-20]`);
+  - `#SBATCH --mail-user` becomes `e1334269@u.nus.edu`;
+  - `TEAM_ID` defaults to `4`;
+  - `WORKLOAD` defaults to `B`.
+- Against `expt_b3` itself, `expt_b100`'s `run.sh` therefore differs in the
+  node set and in the native EXPLAIN step.
+- Replicates are rendered exactly like the cell they repeat, so only their
+  `optimisations.md` differs.
+- `manifest_b.csv` has `manifest.csv`'s columns; `source` is `generated` or
+  `replicate of expt_b1xx`.
+- Shard count is the default (32); there are no B-only optimisations.
+- `validate.py` reads only `manifest.csv` and checks A-side settings, so it
+  does not cover the B cells.
