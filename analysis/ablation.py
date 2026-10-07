@@ -1,10 +1,16 @@
-"""Analyse the workload-A 2^5 factorial ablation (expt_a100 .. expt_a131).
+"""Analyse one side's 2^5 factorial ablation (workload A or workload B).
 
-Run from anywhere:  python3 analysis/ablation.py
+Run from anywhere:  python3 analysis/ablation.py [--side {a,b}]
 
-Cells and factor levels come only from ablation/manifest.csv: expt_a<100+mask>
-for mask 0..31 (bit0 T5R, bit1 T6R, bit2 T7R, bit3 DEL, bit4 RR) plus the
-replicates expt_a2xx ("replicate of expt_a1xx"). Each cell is loaded with
+  --side a (default)  workload-A: expt_a100 .. expt_a131, ablation/manifest.csv,
+                      output analysis/figures/ablation/
+  --side b            workload-B: expt_b100 .. expt_b131, ablation/manifest_b.csv,
+                      output analysis/figures/ablation_b/
+
+Below, <s> is the side letter. Cells and factor levels come only from the side's
+manifest: expt_<s><100+mask> for mask 0..31 (bit0 T5R, bit1 T6R, bit2 T7R, bit3
+DEL, bit4 RR) plus the replicates expt_<s>2xx ("replicate of expt_<s>1xx"); exp
+ids are <s><index> (a115, b115). Each cell is loaded with
 plot_results.load_experiment, so its cross-checks and its validity rule
 (pgbench exit code 0 and no aborted client) are the ones used everywhere else.
 A cell without slurm-results/ has not been run yet.
@@ -24,13 +30,14 @@ Factorial effects (only once all 32 cells have data):
   32 cells are valid for it; otherwise the non-valid cells are listed. Nothing
   is imputed.
 
-Output, all in analysis/figures/ablation/ (this script owns the directory's
+Output, all in the side's output directory (this script owns that directory's
 *.png, *.pdf and *.csv): figures as PNG (dpi 200) + PDF, one chart per file, and
 CSV tables. The module docstring of plot_results.py documents the palette; the
 extra roles used here are the documented diverging pair (blue <-> red with the
 neutral band grey midpoint) and the status "critical" red for non-valid points.
 """
 
+import argparse
 import math
 import re
 import sys
@@ -58,10 +65,8 @@ SHORT = [s for _, s in FACTORS]
 K = len(FACTORS)
 N_CELLS = 2 ** K
 MANIFEST_COLUMNS = ["experiment", "mask"] + [f for f, _ in FACTORS] + ["source"]
-CELL_OFFSET = 100            # factorial cell name: expt_a<100 + mask>
-REPLICATE_OFFSET = 200       # replicate name: expt_a<200 + mask>
-REPLICATE_SOURCE = re.compile(r"^replicate of (expt_a\d+)$")
-ABLATION_NAME = re.compile(r"^expt_a(\d+)$")
+CELL_OFFSET = 100            # factorial cell name: expt_<side><100 + mask>
+REPLICATE_OFFSET = 200       # replicate name: expt_<side><200 + mask>
 
 # Every contrast, by order then lexicographic factor order.
 EFFECTS = [combo for order in range(1, K + 1) for combo in combinations(range(K), order)]
@@ -70,7 +75,8 @@ DF_POOLED = sum(1 for c in EFFECTS if len(c) >= POOL_MIN_ORDER)   # 16
 T_975 = 2.120                # t(0.975, 16), for DF_POOLED = 16
 
 # Transactions no factor touches (ablation/README.md: T2, T3, T4, T8, T9 are
-# exactly expt_a100's in every cell); the replicate check compares their latency.
+# exactly expt_a100's in every cell, and every B cell's transactions/ are the A
+# cell's of the same mask); the replicate check compares their latency.
 UNCHANGED_TX = ["T2", "T3", "T4", "T8", "T9"]
 TX_EFFECT_CLIENTS = (1, 64)
 REPLICATE_TOLERANCE = 0.02   # CLAUDE.md: unchanged transactions within ~2% at 1 client
@@ -82,10 +88,34 @@ POOL_NOTE = ("SE is pooled from the 16 three-, four- and five-factor interaction
              "which are assumed to be noise (16 df, t(0.975, 16) = 2.120).")
 
 
+# ---- Sides -----------------------------------------------------------------
+@dataclass(frozen=True)
+class Side:
+    letter: str               # workload letter: cells expt_<letter><n>, exp ids <letter><n>
+    manifest: str             # file under ablation/
+    out_dir: str              # directory under analysis/figures/ that this script owns
+
+    def experiment(self, index):
+        return f"expt_{self.letter}{index}"
+
+    @property
+    def name_re(self):
+        return re.compile(rf"^expt_{self.letter}(\d+)$")
+
+    @property
+    def replicate_re(self):
+        return re.compile(rf"^replicate of (expt_{self.letter}\d+)$")
+
+
+SIDES = {"a": Side("a", "manifest.csv", "ablation"),
+         "b": Side("b", "manifest_b.csv", "ablation_b")}
+
+
 # ---- Manifest --------------------------------------------------------------
 @dataclass(frozen=True)
 class Cell:
     name: str                 # expt_a115
+    workload: str             # side letter, "a"
     index: int                # 115
     mask: int
     levels: tuple
@@ -94,7 +124,8 @@ class Cell:
 
     @property
     def id(self):
-        return f"a{self.index}"
+        # Same id as plot_results.Experiment(workload, index).id, the summary's exp column.
+        return f"{self.workload}{self.index}"
 
     @property
     def label(self):
@@ -102,9 +133,9 @@ class Cell:
         return "+".join(on) if on else "base"
 
 
-def read_manifest(repo):
+def read_manifest(repo, side):
     """Factorial cells ordered by mask, and replicates; raises on any inconsistency."""
-    path = repo / "ablation" / "manifest.csv"
+    path = repo / "ablation" / side.manifest
     if not path.is_file():
         raise FileNotFoundError(f"missing ablation manifest: {path}")
     m = pd.read_csv(path, dtype=str)
@@ -113,11 +144,12 @@ def read_manifest(repo):
     if m.experiment.duplicated().any():
         raise RuntimeError(f"{path}: duplicate experiments "
                            f"{sorted(m.experiment[m.experiment.duplicated()])}")
+    name_re, w = side.name_re, side.letter
     cells, replicates = {}, []
     for r in m.itertuples(index=False):
-        name_m = ABLATION_NAME.match(r.experiment)
+        name_m = name_re.match(r.experiment)
         if not name_m:
-            raise RuntimeError(f"{path}: experiment {r.experiment!r} is not expt_a<integer>")
+            raise RuntimeError(f"{path}: experiment {r.experiment!r} is not expt_{w}<integer>")
         levels = tuple(int(getattr(r, f)) for f, _ in FACTORS)
         if any(v not in (0, 1) for v in levels):
             raise RuntimeError(f"{path}: {r.experiment} has factor levels {levels}, not 0/1")
@@ -128,18 +160,18 @@ def read_manifest(repo):
         cell_path = repo / r.experiment
         if not cell_path.is_dir():
             raise FileNotFoundError(f"{path} lists {r.experiment}, but {cell_path} does not exist")
-        rep = REPLICATE_SOURCE.match(r.source)
+        rep = side.replicate_re.match(r.source)
         if rep:
             if index != REPLICATE_OFFSET + mask:
                 raise RuntimeError(f"{path}: replicate {r.experiment} should be named "
-                                   f"expt_a{REPLICATE_OFFSET + mask} for mask {mask}")
-            replicates.append((Cell(r.experiment, index, mask, levels, None, cell_path),
+                                   f"{side.experiment(REPLICATE_OFFSET + mask)} for mask {mask}")
+            replicates.append((Cell(r.experiment, w, index, mask, levels, None, cell_path),
                                rep.group(1)))
         else:
             if index != CELL_OFFSET + mask:
                 raise RuntimeError(f"{path}: {r.experiment} should be named "
-                                   f"expt_a{CELL_OFFSET + mask} for mask {mask}")
-            cells[mask] = Cell(r.experiment, index, mask, levels, None, cell_path)
+                                   f"{side.experiment(CELL_OFFSET + mask)} for mask {mask}")
+            cells[mask] = Cell(r.experiment, w, index, mask, levels, None, cell_path)
     if sorted(cells) != list(range(N_CELLS)):
         raise RuntimeError(f"{path}: factorial masks {sorted(cells)} != 0..{N_CELLS - 1}")
     by_name = {c.name: c for c in cells.values()}
@@ -150,12 +182,13 @@ def read_manifest(repo):
         if by_name[orig].mask != rc.mask:
             raise RuntimeError(f"{path}: {rc.name} (mask {rc.mask}) replicates {orig} "
                                f"(mask {by_name[orig].mask})")
-        reps.append(Cell(rc.name, rc.index, rc.mask, rc.levels, by_name[orig].id, rc.path))
+        reps.append(Cell(rc.name, w, rc.index, rc.mask, rc.levels, by_name[orig].id, rc.path))
 
+    # Only this side's names: the other side's expt_<letter>1xx/2xx are not strays.
     listed = set(m.experiment)
     stray = sorted(p.name for p in repo.iterdir()
-                   if p.is_dir() and ABLATION_NAME.match(p.name)
-                   and CELL_OFFSET <= int(ABLATION_NAME.match(p.name).group(1))
+                   if p.is_dir() and name_re.match(p.name)
+                   and CELL_OFFSET <= int(name_re.match(p.name).group(1))
                    < REPLICATE_OFFSET + 100
                    and p.name not in listed)
     if stray:
@@ -171,7 +204,7 @@ def load(cells):
         if not (c.path / "slurm-results").is_dir():
             missing.append(c.id)
             continue
-        s, t = pr.load_experiment(pr.Experiment("a", c.index, c.path))
+        s, t = pr.load_experiment(pr.Experiment(c.workload, c.index, c.path))
         for df in (s, t):
             df["mask"] = c.mask
             df["label"] = c.label
@@ -844,9 +877,9 @@ def print_effects(title, eff):
               f"  t={r.t_pooled:6.2f}  e/PSE={r.effect_over_pse:6.2f}{flag}")
 
 
-def run(repo, out):
+def run(repo, out, side):
     start = time.perf_counter()
-    cells, replicates = read_manifest(repo)
+    cells, replicates = read_manifest(repo, side)
     all_cells = cells + replicates
     out.mkdir(parents=True, exist_ok=True)
     # This script owns the directory: drop last run's outputs so a table or
@@ -875,6 +908,7 @@ def run(repo, out):
 
     by_mask = {c.mask: c for c in cells}
     full = N_CELLS - 1
+    base_id, full_id = by_mask[0].id, by_mask[full].id
     add_one, miss_a = compare(summary, by_mask, loaded, clients, lambda k: 0, lambda k: 1 << k)
     loo, miss_l = compare(summary, by_mask, loaded, clients, lambda k: full ^ (1 << k),
                           lambda k: full)
@@ -884,9 +918,10 @@ def run(repo, out):
         fig_ratio_bars(add_one[add_one.response == "r_peak"], miss_a,
                        "Peak throughput of each single-factor cell relative to the base cell",
                        "{factor}  ({cell} / {ref})",
-                       "Ratio = R_peak of the cell with only that factor ON / R_peak of a100 "
-                       "(no factor ON). R_peak = highest TPS among a cell's valid client counts; "
-                       "the two peaks may sit at different client counts (add_one.csv).",
+                       "Ratio = R_peak of the cell with only that factor ON / R_peak of "
+                       f"{base_id} (no factor ON). R_peak = highest TPS among a cell's valid "
+                       "client counts; the two peaks may sit at different client counts "
+                       "(add_one.csv).",
                        out, "add_one_peak")
     else:
         print(f"add-one: skipped, no pair has both cells yet (missing {', '.join(miss_a)})")
@@ -894,9 +929,9 @@ def run(repo, out):
         fig_ratio_bars(loo[loo.response == "r_peak"], miss_l,
                        "Peak throughput of the all-factor cell relative to each cell missing one",
                        "{factor}  ({cell} / {ref})",
-                       "Ratio = R_peak of a131 (every factor ON) / R_peak of the cell with only "
-                       "that factor OFF. R_peak = highest TPS among a cell's valid client "
-                       "counts (leave_one_out.csv).", out, "leave_one_out_peak")
+                       f"Ratio = R_peak of {full_id} (every factor ON) / R_peak of the cell "
+                       "with only that factor OFF. R_peak = highest TPS among a cell's valid "
+                       "client counts (leave_one_out.csv).", out, "leave_one_out_peak")
     else:
         print(f"leave-one-out: skipped, no pair has both cells yet (missing {', '.join(miss_l)})")
     if miss_a or miss_l:
@@ -989,7 +1024,11 @@ def effects_step(summary, tx, cells, clients, transactions, out):
 
 
 def main():
-    run(pr.REPO, pr.REPO / "analysis" / "figures" / "ablation")
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--side", choices=SIDES, default="a",
+                    help="workload whose ablation to analyse (default: a)")
+    side = SIDES[ap.parse_args().side]
+    run(pr.REPO, pr.REPO / "analysis" / "figures" / side.out_dir, side)
 
 
 if __name__ == "__main__":
