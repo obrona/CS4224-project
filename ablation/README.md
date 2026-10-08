@@ -1,9 +1,9 @@
-# Workload-A 2^4 x 2 factorial ablation
+# Workload-A 2^4 x 3 factorial ablation
 
-Four binary factors and a two-level T1 mode on one shared reference
-configuration, a full 2^5 factorial. Every combination is one experiment, so
-each factor's main effect and every interaction can be read off the 32 cells
-instead of off one progressive chain.
+Four binary factors and a three-level T1 mode on one shared reference
+configuration. Every combination is one experiment, so each factor's main
+effect and every interaction can be read off the 48 cells instead of off one
+progressive chain.
 
 | Factor | Levels | ON / level means |
 | ------ | ------ | ---------------- |
@@ -13,21 +13,34 @@ instead of off one progressive chain.
 | `shards8` | bit 8 | `run.sh` runs `SET citus.shard_count = 8` (`CITUS_SHARD_COUNT`) in the session that distributes every table, instead of Citus's default 32, and records it in `config.txt` |
 | `t1_mode` | m = 0 `set` | T1 is the set-based CTE T1 inside `BEGIN`/`COMMIT` |
 | | m = 1 `fn` | T1 is the `place_order` distributed function, called outside a transaction block; `run.sh` creates and distributes it |
+| | m = 2 `fn_rr` | `fn`, plus `PG_ISOLATION_LEVEL` defaults to `repeatable read` instead of `serializable` |
 
 T1 follows `t5_routing`, `t6_rollup` and `t1_mode`. With m = 0 it is the
 set-based T1 with neither, the map insert, the rollup upsert or both
-(`template/transactions/T1_place_order/set_<level>.sql`). With m = 1 it is
-`expt_a323`'s `place_order` with both steps, or that function with step 6
+(`template/transactions/T1_place_order/set_<level>.sql`). With m = 1 or 2 it
+is `expt_a323`'s `place_order` with both steps, or that function with step 6
 (rollup upsert) and/or step 7 (map insert) removed; nothing else in the file
 changes.
 
-**Dropped level.** The grid had a third T1 mode, m = 2 (`fn_rc`: the
-delegated function under READ COMMITTED with a stock lock), in cells
-`expt_a332` to `expt_a347` and `expt_b332` to `expt_b347`. It was dropped on
-2026-10-08 by decision of the project owner, with its cells, template files
-and generator support; its code and results are in git history at
-`f2b08264`. The remaining cell ids are unchanged. `run_order.csv` and
-`run_order_b.csv` are records of what was submitted and still list its jobs.
+**The `fn_rr` level.** m = 2 is the delegated T1 of m = 1 under REPEATABLE
+READ, the isolation level `expt_b14` runs under. Its `transactions/` and
+`explain/` are byte-identical to the m = 1 cell with the same mask, and its
+`run.sh` differs only in the `PG_ISOLATION_LEVEL` default. `run.sh` writes
+that value to every node's `default_transaction_isolation`, so it applies to
+every transaction of the workload, not only T1. The project team made
+REPEATABLE READ a level of the T1 mode rather than a binary factor: the grid
+has no set-based T1 under REPEATABLE READ, so its effect (`fn_rr` against
+`fn`) is measured only with delegation.
+
+**Replaced level.** Until 2026-10-08 the grid's m = 2 was `fn_rc`, the
+delegated function under READ COMMITTED with a `FOR UPDATE` stock lock and
+`plan_cache_mode = force_custom_plan`. It was dropped on 2026-10-08 by
+decision of the project owner, with its cells, template files and generator
+support; its code and results are in git history at `f2b08264`, under the
+cell names `expt_a332` to `expt_a347` and `expt_b332` to `expt_b347` that the
+`fn_rr` cells now use. `run_order.csv` and `run_order_b.csv` are records of
+what was submitted: every row already in them for those names (A: job ids up
+to 909389, B: up to 919242) is an `fn_rc` job, not an `fn_rr` one.
 
 Everything not controlled by a factor is the shared reference of
 `template/run.sh`, which is `expt_a323`'s `run.sh` with markers: the
@@ -41,14 +54,15 @@ benchmark.
 ## Naming
 
 - `expt_a<300 + 16*m + mask>`, where mask is the sum of the enabled bits:
-  `expt_a300` to `expt_a315` (m = 0), `expt_a316` to `expt_a331` (m = 1).
+  `expt_a300` to `expt_a315` (m = 0), `expt_a316` to `expt_a331` (m = 1),
+  `expt_a332` to `expt_a347` (m = 2).
 - `expt_a<id>_<k>` is the k-th additional run (k = 1, 2, ...) of
-  `expt_a<id>`, with the same code: `expt_a300_1` replicates `expt_a300` and
-  `expt_a331_1` replicates `expt_a331`. A replicate of a generated cell is
-  generated the same way; a replicate of an existing cell copies its
-  `run.sh`, `transactions/` and `explain/`.
+  `expt_a<id>`, with the same code: `expt_a300_1` replicates `expt_a300`, and
+  `expt_a331_1` and `expt_a331_2` replicate `expt_a331` ("Batch drift"). A
+  replicate of a generated cell is generated the same way; a replicate of an
+  existing cell copies its `run.sh`, `transactions/` and `explain/`.
 - `manifest.csv` lists every cell and replicate with its factor levels
-  (`t1_mode` is `set` or `fn`) and its source: `generated`,
+  (`t1_mode` is `set`, `fn` or `fn_rr`) and its source: `generated`,
   `existing` or `replicate of expt_a<id>`.
 - Each combination of optimisations is one experiment, its grid cell;
   replicates are reruns of that cell, not other combinations.
@@ -60,6 +74,15 @@ t5, t6, t7) and `expt_a331` (m = 1, mask 15).
 They keep their results and their hand-written `optimisations.md`, which
 records under which name each was first run.
 
+## Batch drift
+
+Every m = 2 cell is a new run and every m <= 1 cell ran before them, so any
+drift between the earlier runs and the `fn_rr` batch is confounded with RR
+(and with the `fn_rr` half of DEL). `expt_a331_2` reruns `expt_a331` in the
+`fn_rr` batch: its difference from `expt_a331` and `expt_a331_1` measures that
+drift, on top of run-to-run variation. Like `expt_a331_1`, it copies
+`expt_a331`'s `run.sh`, `transactions/` and `explain/`.
+
 ## Regenerating
 
 ```sh
@@ -68,7 +91,7 @@ python3 ablation/validate.py
 ```
 
 The first rewrites `run.sh`, `transactions/`, `explain/T*.sql` and
-`optimisations.md` of the 30 generated cells and the two replicates, and
+`optimisations.md` of the 46 generated cells and the three replicates, and
 `manifest.csv`. It never writes to an existing cell, and it refuses to change
 `run.sh`, `transactions/` or `explain/` of a directory that already has
 `slurm-results/` (its `optimisations.md` may still be rewritten). Each
@@ -77,9 +100,10 @@ nothing reads the generator at run time.
 
 The second checks that the generator reproduces the two existing cells byte
 for byte, the structure and template-file selection of every cell, that
-cells one factor apart differ only in that factor's lines and files, the
-generator's outputs and replicate names, and that a directory with
-`slurm-results/` keeps its code. It exits non-zero on failure.
+cells one factor step apart differ only in that factor's lines and files
+(m = 1 to 2: only the `PG_ISOLATION_LEVEL` line), the generator's outputs and
+replicate names, and that a directory with `slurm-results/` keeps its code.
+It exits non-zero on failure.
 
 To write the generator's output for any cell ids elsewhere, e.g. to compare
 with an existing directory:
@@ -93,14 +117,15 @@ python3 ablation/generate.py --out /tmp/ablation --cells 323,331
 - `template/run.sh`: lines between `# @ablation-begin F` and
   `# @ablation-end F` are kept only when factor `F` is ON (`!F`: only when
   OFF). `@{F:text}` inside a line becomes `text` only when `F` is ON; it
-  builds the `TRUNCATE` list. `F` is a bit name or `t1_delegation` (m = 1).
-  Generated files contain no markers.
+  builds the `TRUNCATE` list. `F` is a bit name, `t1_delegation` (m >= 1) or
+  `repeatable_read` (m = 2; its blocks hold only the `PG_ISOLATION_LEVEL`
+  line). Generated files contain no markers.
 - `template/transactions/` and `template/explain/`: `<T>.sql` is shared by
   every cell; `<T>/<variant>.sql` is chosen per cell. T1 transactions:
   `set_<level>.sql` for m = 0 and `fn_both.sql` (`expt_a323`'s T1) for
-  m = 1, where `generate.py` removes step 6 and/or 7 from the function for the
-  other `t5_routing`/`t6_rollup` levels. T1 explain: `set_<level>.sql` or
-  `fn.sql` (every m = 1 level issues the same call).
+  m = 1 and 2, where `generate.py` removes step 6 and/or 7 from the function
+  for the other `t5_routing`/`t6_rollup` levels. T1 explain: `set_<level>.sql`
+  or `fn.sql` (every delegated level issues the same call).
   T5, T6, T7: `on.sql`/`off.sql` by their own factor. `shards8` changes only
   `run.sh`.
 
@@ -108,8 +133,8 @@ python3 ablation/generate.py --out /tmp/ablation --cells 323,331
 
 Each run's raw `pgbench -l` transaction logs (`benchmark-results/logs/*`) and
 PostgreSQL server logs (`xcnf*-postgresql.log`) are committed gzipped, which
-took the 50 A directories committed before the dropped level was removed from
-15.3 GB to 3.7 GB. Read them with
+took the 50 A directories committed at `f2b08264` (with the `fn_rc` cells)
+from 15.3 GB to 3.7 GB. Read them with
 `zcat`. Summaries, per-client result text, `metrics-c*` and `config.txt` stay
 uncompressed, and `analysis/ablation.py` reads only those.
 
@@ -160,19 +185,33 @@ python3 ablation/validate.py --side b
   `optimisations.md`, which names the 2^5 cell and the commit on `ablation-b`
   that added the result (`d26361a`, or `fa7d727` for `expt_b105` to
   `expt_b107`, `expt_b113` and `expt_b215`, wave-1 cells that were rerun
-  there). The RR = 1 cells (`expt_b116` to `expt_b131`) and the 2^5 manifest,
-  run order and analysis have no place in this grid and stay on `ablation-b`.
-- **New runs.** The other 16 cells are generated: `shards8` on for m = 0 and
-  1 (`expt_b308` to `expt_b315`, `expt_b324` to `expt_b331`), plus two
-  replicates: `expt_b331_1`, which mirrors `expt_a331_1`, and `expt_b300_2`.
+  there). The 2^5 manifest, run order and analysis stay on `ablation-b`, and
+  so do its RR = 1 cells (`expt_b116` to `expt_b131`). Those with DEL = 0
+  (`expt_b116` to `expt_b123`, set-based T1 under REPEATABLE READ) have no
+  place in this grid. Those with DEL = 1 (`expt_b124` to `expt_b131`) are
+  `fn_rr` cells with `shards8` off (`expt_b332` to `expt_b339`): their
+  `transactions/` and `explain/` are byte-identical to the generator's
+  output, and `run.sh` differs only in the PGPORT lines, as the reused cells'
+  does. They are not reused, so that every `fn_rr` cell runs in one batch:
+  mixing them in would split the RR contrast across two batches, against the
+  one drift probe (`expt_b331_2`) that this batch has. It costs 8 runs.
+- **New runs.** The other 32 cells are generated: `shards8` on for m = 0 and
+  1 (`expt_b308` to `expt_b315`, `expt_b324` to `expt_b331`) and every
+  m = 2 cell (`expt_b332` to `expt_b347`), plus three replicates:
+  `expt_b331_1`, which mirrors `expt_a331_1`, `expt_b300_2` and
+  `expt_b331_2` ("Batch drift").
 - **Batch drift.** The 16 reused cells are exactly the cells with `shards8`
-  off and the 16 new ones exactly those with it on, so any difference between
-  the 2^5 batch and the new batch is fully confounded with `shards8`: on B,
-  every contrast involving SH8 is also a batch contrast. `expt_b300_2`
-  reruns `expt_b300` in the new batch: its difference from `expt_b300` and
+  off and m <= 1, the 16 cells with `shards8` on and m <= 1 are the second
+  batch, and the 16 `fn_rr` cells are a third. Any difference between the
+  2^5 batch and the second batch is fully confounded with `shards8` among the
+  m <= 1 cells, and any difference between the earlier batches and the
+  `fn_rr` batch with RR (and the `fn_rr` half of DEL), so on B every contrast
+  involving SH8 or RR also carries batch drift. `expt_b300_2` reruns
+  `expt_b300` in the second batch: its difference from `expt_b300` and
   `expt_b300_1` measures that drift, on top of run-to-run variation. Its
   `run.sh` is the generator's, so it differs from `expt_b300`'s only in the
-  PGPORT lines.
+  PGPORT lines. `expt_b331_2` reruns `expt_b331` in the `fn_rr` batch: its
+  difference from `expt_b331` and `expt_b331_1` measures that batch's drift.
 - **Stored results and run order.** The reused runs' raw logs are gzipped as
   on A ("Stored results"; 2.46 GB to 0.93 GB for the 18 directories).
   `run_order_b.csv` has `run_order.csv`'s columns and lists each new B job as

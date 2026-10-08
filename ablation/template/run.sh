@@ -70,7 +70,12 @@ PG_SHARED_BUFFERS="${PG_SHARED_BUFFERS:-1GB}"
 PG_WORK_MEM="${PG_WORK_MEM:-32MB}"
 PG_MAINTENANCE_WORK_MEM="${PG_MAINTENANCE_WORK_MEM:-256MB}"
 PG_MAX_CONNECTIONS="${PG_MAX_CONNECTIONS:-1000}"
+# @ablation-begin !repeatable_read
 PG_ISOLATION_LEVEL=${PG_ISOLATION_LEVEL:-serializable}
+# @ablation-end !repeatable_read
+# @ablation-begin repeatable_read
+PG_ISOLATION_LEVEL=${PG_ISOLATION_LEVEL:-"repeatable read"}
+# @ablation-end repeatable_read
 
 PG_MAX_WAL_SIZE="${PG_MAX_WAL_SIZE:-16GB}"
 PG_MIN_WAL_SIZE="${PG_MIN_WAL_SIZE:-2GB}"

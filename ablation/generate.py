@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Generate the cells of the 2^4 x 2 workload-A and workload-B ablations.
+"""Generate the cells of the 2^4 x 3 workload-A and workload-B ablations.
 
-Four binary factors (BITS) and a two-level T1 mode m (T1_MODES). A cell is
+Four binary factors (BITS) and a three-level T1 mode m (T1_MODES). A cell is
 expt_<side><300 + 16*m + mask>, where side is a or b (workload) and mask is the
 sum of the enabled bits. Two A cells were run before this script existed
 (EXISTING); it never writes to them. Eighteen B directories are runs of the
@@ -16,12 +16,12 @@ Sources, all under ablation/template/:
               "# @ablation-begin F" and "# @ablation-end F" is kept iff factor
               F is on ("!F": iff F is off); "@{F:text}" inside a line becomes
               text iff F is on. Every marker is removed from the output. F is
-              a bit name or t1_delegation (m == 1).
+              a bit name, t1_delegation (m >= 1) or repeatable_read (m == 2).
   transactions/, explain/
               <T>.sql is shared by every cell; <T>/<variant>.sql is picked per
               cell by variant_source(). The delegated T1 is stored only with
               both steps 6 and 7 (fn_both.sql); the other levels are derived
-              by remove_steps().
+              by remove_steps(). m == 1 and m == 2 use the same T1 files.
 The side-b run.sh is the rendered template with RUN_SH_SUBST["b"] applied;
 transactions/ and explain/ do not depend on the side.
 
@@ -69,8 +69,10 @@ T1_MODES = [
     ("set", "T1 is the set-based CTE T1 inside `BEGIN`/`COMMIT`"),
     ("fn", "T1 delegation: T1 is the `place_order` distributed function, called "
      "outside a transaction block; `run.sh` creates and distributes the function"),
+    ("fn_rr", "T1 delegation under REPEATABLE READ: as `fn`, plus `PG_ISOLATION_LEVEL` "
+     "defaults to `repeatable read` instead of `serializable`"),
 ]
-TEMPLATE_FACTORS = BIT_NAMES + ["t1_delegation"]
+TEMPLATE_FACTORS = BIT_NAMES + ["t1_delegation", "repeatable_read"]
 
 SIDES = ("a", "b")
 MANIFEST = {"a": "manifest.csv", "b": "manifest_b.csv"}
@@ -98,13 +100,18 @@ RENAMED = {"a": {}, "b": {
 }}
 # replicate directory expt_<side><id>_<k> (the k-th extra run) -> the cell it reruns
 REPLICATES = {
-    "a": {"expt_a300_1": "expt_a300", "expt_a331_1": "expt_a331"},
+    "a": {"expt_a300_1": "expt_a300", "expt_a331_1": "expt_a331",
+          "expt_a331_2": "expt_a331"},
     # expt_b300_1 and expt_b323_1 are renamed (same batch as their cells);
     # expt_b300_2 reruns a renamed cell in the new batch, to measure drift
     # between the two batches.
     "b": {"expt_b300_1": "expt_b300", "expt_b300_2": "expt_b300",
-          "expt_b323_1": "expt_b323", "expt_b331_1": "expt_b331"},
+          "expt_b323_1": "expt_b323", "expt_b331_1": "expt_b331",
+          "expt_b331_2": "expt_b331"},
 }
+# Replicates run in the fn_rr batch (the m == 2 cells, which are new on both
+# sides) to measure its drift from the earlier runs of the same cell.
+FN_RR_BATCH_PROBES = {"a": {"expt_a331_2"}, "b": {"expt_b331_2"}}
 REPLICATE_NAME = re.compile(r"^(expt_[ab]\d+)_([1-9]\d*)$")
 # (old, new) substitutions applied to the rendered template run.sh, per side;
 # each old text must occur exactly once (run_sh). The template's TEAM_ID
@@ -198,8 +205,10 @@ def all_cells():
 def enabled(m, mask):
     """Template factors that are on for a cell."""
     on = {name for bit, name, _ in BITS if mask & bit}
-    if m == 1:
+    if m >= 1:
         on.add("t1_delegation")
+    if m == 2:
+        on.add("repeatable_read")
     return on
 
 
@@ -324,6 +333,15 @@ def factor_lines(m, mask):
                     "v_order_total, v_created_at`, although only step 6 read them.")
         else:
             lines.append("T1 is `expt_a323`'s, unchanged.")
+    if m == 2:
+        lines += [
+            "",
+            f"The code is cell {cell_id(1, mask)}'s (T1 mode `fn`, the same mask) except "
+            "for one line of `run.sh`: `PG_ISOLATION_LEVEL` defaults to `repeatable read` "
+            "instead of `serializable`. `run.sh` writes it to every node's "
+            "`default_transaction_isolation`, so it applies to every transaction of the "
+            "workload, not only T1.",
+        ]
     return lines
 
 
@@ -337,7 +355,7 @@ def cell_heading(m, mask, side):
         f"### Prev: {prev}",
         "",
         f"Cell {cid} (T1 mode {m} `{T1_MODES[m][0]}`, mask {mask}) of the "
-        f"2^4 x 2 {workload}; every cell's factor levels are in "
+        f"2^4 x 3 {workload}; every cell's factor levels are in "
         f"`ablation/{MANIFEST[side]}`.",
     ]
 
@@ -406,7 +424,7 @@ def renamed_md(name, side):
         ]) + "\n"
     m, mask = parse_name(name, side)
     old_mask = int(old.removeprefix("expt_b")) - 100
-    if old_mask != mask + 8 * m:
+    if m not in (0, 1) or old_mask != mask + 8 * m:
         raise ValueError(f"{name} (m={m}, mask={mask}) is not 2^5 cell {old} (DEL=8)")
     return "\n".join([
         *cell_heading(m, mask, side),
@@ -458,6 +476,18 @@ def replicate_md(name, of, side):
     else:
         how = (f"`run.sh`, `transactions/` and `explain/` are generated exactly "
                f"as `{of}`'s and are byte-identical to them.")
+    if name in FN_RR_BATCH_PROBES[side]:
+        earlier = [of] + [r for r, o in REPLICATES[side].items()
+                          if o == of and r not in FN_RR_BATCH_PROBES[side]]
+        return (f"### Prev: {of}\n\n"
+                f"Replicate: a run of `{of}`'s code in the batch of the `fn_rr` cells "
+                f"(T1 mode m = 2, `{cell_name(2, 0, side)}` to "
+                f"`{cell_name(2, NUM_MASKS - 1, side)}`), which are new on this workload "
+                f"(`ablation/README.md`; levels in `ablation/{MANIFEST[side]}`). "
+                f"{' and '.join(f'`{r}`' for r in earlier)} ran before that batch; "
+                "comparing this run with them measures the drift between the earlier runs "
+                "and the `fn_rr` batch, on top of run-to-run variation. "
+                f"{how}\n")
     return (f"### Prev: {of}\n\n"
             f"Replicate: a second run of `{of}`, to measure run-to-run variation "
             f"(`ablation/README.md`; levels in `ablation/{MANIFEST[side]}`). "
@@ -527,6 +557,9 @@ def check_names(side):
         if not mt or mt.group(1) != of:
             raise ValueError(f"replicate {name} of {of} must be named {of}_<k>, k >= 1")
         parse_name(of, side)
+    if not FN_RR_BATCH_PROBES[side] <= set(REPLICATES[side]):
+        raise ValueError(f"fn_rr batch probes {sorted(FN_RR_BATCH_PROBES[side])} are not all "
+                         "replicates")
     for name, (old, _) in sorted(RENAMED[side].items()):
         if name not in REPLICATES[side]:
             parse_name(name, side)

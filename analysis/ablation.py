@@ -1,19 +1,22 @@
-"""Analyse one workload's ablation: a 2^4 x 2 factorial (expt_<s>300 .. expt_<s>331).
+"""Analyse one workload's ablation: a 2^4 x 3 factorial (expt_<s>300 .. expt_<s>347).
 
 Run from anywhere:  python3 analysis/ablation.py [--side a|b]     (default a)
 
 The side s is the workload, a or b; the two grids are analysed separately, never
 together (they run on disjoint node sets). Cells and factor levels come only from
 the side's manifest, ablation/manifest.csv (a) or ablation/manifest_b.csv (b).
-Five binary factors
+Four binary factors
   T5R  t5_routing     T6R  t6_rollup     T7R  t7_routing     SH8  shards8
-  DEL  t1_mode: set (OFF) or fn (ON, place_order delegated to a function)
-Cell expt_<s><300 + 16*m + mask>, m = 0/1 for set/fn, mask bits T5R=1, T6R=2,
+and one three-level factor, the T1 mode (t1_mode): set, fn (place_order delegated
+to a function) and fn_rr (fn with REPEATABLE READ instead of SERIALIZABLE as the
+default isolation level). The grid has no set-based T1 under REPEATABLE READ, so
+the T1 mode is one 3-level factor, not two bits. Cell
+expt_<s><300 + 16*m + mask>, m = 0/1/2 for set/fn/fn_rr, mask bits T5R=1, T6R=2,
 T7R=4, SH8=8; any manifest source other than "replicate of ..." (generated,
 existing, renamed from ...) is a grid cell. Replicates expt_<s><index>_<k>
 ("replicate of expt_<s><index>", k >= 1) are a further run of cell
 expt_<s><index> with the same code; they are reported separately
-(replicate_check), each against its cell, and are not part of the 32-cell fit.
+(replicate_check), each against its cell, and are not part of the 48-cell fit.
 
 Each cell is loaded with plot_results.load_experiment, so its cross-checks and its
 validity rule (pgbench exit code 0 and no aborted client) are the ones used
@@ -32,29 +35,36 @@ Responses, per cell, valid points only:
   R_c     TPS at client count c
 Effects are computed on log2 of the response and reported as ratios 2^effect.
 
-Factorial model (exact OLS on the 32 cells, a full 2^5 factorial; the columns are
-orthogonal, asserted): every factor coded -1 (OFF; DEL: set) / +1 (ON; DEL: fn),
-plus every product of these columns, 31 contrasts in all. A main effect is
-mean(ON) - mean(OFF) over 16 cells each. An interaction is the half difference,
-between the two levels of one factor, of the lower-order effect (nested for three
-or more factors), so a T5R:DEL interaction is half of (DEL effect with T5R ON - DEL
-effect with T5R OFF). In OLS terms effect = 2 * beta for every column.
+Factorial model (exact OLS on the 48 cells; the columns are orthogonal, asserted):
+  binary factors coded -1/+1; the T1 mode by two orthogonal contrasts
+    DEL  set -2, fn +1, fn_rr +1   effect = mean(fn, fn_rr cells) - mean(set cells)
+    RR   set  0, fn -1, fn_rr +1   effect = mean(fn_rr cells) - mean(fn cells)
+  plus every product of these columns (DEL x RR is not a column: the T1 mode has
+  2 df), 47 contrasts in all. A binary main effect is mean(ON) - mean(OFF). An
+  interaction is the half difference, between the two levels of a binary factor,
+  of the lower-order effect (nested for three or more factors), so a T5R:DEL
+  interaction is half of (DEL effect with T5R ON - DEL effect with T5R OFF). In
+  OLS terms effect = 2 * beta for columns without DEL and 3 * beta with DEL.
 
-Error model -- an ASSUMPTION, not a measurement: the 6 contrasts that involve >= 4
-of the 5 factors (C(5,4) + C(5,5) = 5 + 1) are ASSUMED TO BE NOISE. They are left
-out of the fit; the residual of the remaining 25 terms gives the per-cell noise SD
-(6 df), and every effect has the same SE, 2 * SD / sqrt(32). 95% interval =
-effect +- t(0.975, 6) * SE. Lenth's pseudo standard error over all 31 contrasts is
-a cross-check. The run-to-run SD measured by the replicate pairs is reported next
-to the pooled one. A response is estimated only when all 32 cells are valid for
-it; otherwise the non-valid cells are listed.
+Error model -- an ASSUMPTION, not a measurement: the 11 contrasts that involve
+>= 4 of the 5 factors (T5R, T6R, T7R, SH8, T1 mode; the T1 mode counts once for
+its DEL and RR columns) are ASSUMED TO BE NOISE. They are left out of the fit;
+the residual of the remaining 36 terms gives the per-cell noise SD (11 df), and
+each effect's SE follows from its own column (the contrasts do not share one
+variance, so this is the exact OLS SE, not the RMS of the pooled effects). 95%
+interval = effect +- t(0.975, 11) * SE. Lenth's pseudo standard error over all 47
+contrasts (standardised to a common variance) is a cross-check. The run-to-run SD
+measured by the replicate pairs is reported next to the pooled one. A response is
+estimated only when all 48 cells are valid for it; otherwise the non-valid cells
+are listed.
 
 Add-one / leave-one-out follow the agreed linear history
   <s>300 -> +T5R <s>301 -> +T6R <s>303 -> +T7R <s>307 -> +DEL (fn) <s>323 -> +SH8
-  <s>331
+  <s>331 -> +RR (fn_rr) <s>347
 Add-one is each step's ratio against the previous cell of the history;
-leave-one-out is <s>331 against the cell with one factor OFF (-DEL: T1 mode set).
-Both at R_peak and at every client count; a row whose cells have not run says so.
+leave-one-out is <s>347 against the cell with one optimisation removed (one binary
+factor OFF, or the T1 mode one level down: fn_rr -> fn). Both at R_peak and at
+every client count; a row whose cells have not run says so.
 
 Output, all in analysis/figures/ablation/ (side a) or analysis/figures/ablation_b/
 (side b) (this script owns the directory's *.png, *.pdf and *.csv): figures as
@@ -91,34 +101,32 @@ BINARY = [("t5_routing", "T5R"), ("t6_rollup", "T6R"), ("t7_routing", "T7R"),
 SHORT = [s for _, s in BINARY]
 NB = len(BINARY)
 T1_COLUMN = "t1_mode"
-T1_MODES = ["set", "fn"]                   # list index = m = level of DEL
-DEL = "DEL"                                # the T1 mode as a binary factor
-FACTORS = SHORT + [DEL]                    # factor k is bit k of Cell.bits
-NF = len(FACTORS)
-MAIN = FACTORS                             # main effects, in report order
+T1_MODES = ["set", "fn", "fn_rr"]          # list index = m
+DEL, RR = "DEL", "RR"                      # the two T1-mode contrasts
+MAIN = SHORT + [DEL, RR]                   # main effects, in report order
 N_MASKS = 2 ** NB
-N_CELLS = N_MASKS * len(T1_MODES)          # 32 = 2^5
+N_CELLS = N_MASKS * len(T1_MODES)          # 48
 MANIFEST_COLUMNS = ["experiment"] + [f for f, _ in BINARY] + [T1_COLUMN, "source"]
 CELL_OFFSET = 300            # factorial cell name: expt_<side><300 + 16*m + mask>
 # side (workload) -> (manifest file in ablation/, output directory in analysis/figures/)
 SIDES = {"a": ("manifest.csv", "ablation"), "b": ("manifest_b.csv", "ablation_b")}
 
-# Every contrast: a tuple of indices into FACTORS, by number of factors involved,
-# then without / with DEL, then combination of the binary factors.
-TERMS = [combo + ((NB,) if with_del else ())
-         for order in range(1, NF + 1)
-         for with_del in (False, True)
-         for combo in combinations(range(NB), order - with_del)
-         if combo or with_del]
+# Every contrast: (binary factor indices, T1 contrast or None), by number of the
+# 5 factors involved, then T1 contrast (none, DEL, RR), then binary combination.
+TERMS = [(combo, t1)
+         for order in range(1, NB + 2)
+         for t1 in (None, DEL, RR)
+         for combo in combinations(range(NB), order - (t1 is not None))
+         if combo or t1]
 POOL_MIN_ORDER = 4           # contrasts among >= 4 of the 5 factors form the error pool
-DF_POOLED = sum(1 for t in TERMS if len(t) >= POOL_MIN_ORDER)
-assert len(TERMS) == N_CELLS - 1 and DF_POOLED == 6, (len(TERMS), DF_POOLED)
-T_975 = 2.447                # t(0.975, 6), for DF_POOLED = 6
+DF_POOLED = sum(1 for c, t in TERMS if len(c) + (t is not None) >= POOL_MIN_ORDER)
+assert len(TERMS) == N_CELLS - 1 and DF_POOLED == 11, (len(TERMS), DF_POOLED)
+T_975 = 2.201                # t(0.975, 11), for DF_POOLED = 11
 
-# The agreed linear history of optimisations: the factor added at each step.
-HISTORY = ["T5R", "T6R", "T7R", DEL, "SH8"]
-HISTORY_INDICES = [300, 301, 303, 307, 323, 331]
-LEAVE_ONE_OUT_INDICES = [330, 329, 327, 323, 315]   # T5R, T6R, T7R, SH8, DEL OFF
+# The agreed linear history of optimisations: (step label, binary bit or T1 level).
+HISTORY = [("T5R", 0), ("T6R", 1), ("T7R", 2), (DEL, "fn"), ("SH8", 3), (RR, "fn_rr")]
+HISTORY_INDICES = [300, 301, 303, 307, 323, 331, 347]
+LEAVE_ONE_OUT_INDICES = [346, 345, 343, 339, 331]   # T5R, T6R, T7R, SH8, RR
 
 TX_EFFECT_CLIENTS = (1, 64)
 REPLICATE_TOLERANCE = 0.02   # CLAUDE.md: same code within ~2% at 1 client
@@ -127,10 +135,11 @@ SLOT1 = pr.CATEGORICAL[0]
 DIV_LOW, DIV_MID, DIV_HIGH = pr.CATEGORICAL[7], pr.BAND, pr.CATEGORICAL[0]
 CRITICAL = "#d03b3b"         # documented status "critical"; always paired with a label
 ERROR_MODEL = (f"assumed noise: the {DF_POOLED} interactions among >= 4 of the 5 factors "
-               f"({', '.join(FACTORS)})")
+               "(T5R, T6R, T7R, SH8, T1 mode)")
 POOL_NOTE = (f"ASSUMPTION: the {DF_POOLED} interaction contrasts among 4 or 5 of the 5 factors "
-             f"({', '.join(FACTORS)}) are noise; SE is the OLS SE from the residual of a fit "
-             f"without them ({DF_POOLED} df, t(0.975, {DF_POOLED}) = {T_975}).")
+             "(T5R, T6R, T7R, SH8, T1 mode; the T1 mode counts once for DEL and RR) are noise; "
+             f"SE is the exact OLS SE from the residual of a fit without them ({DF_POOLED} df, "
+             f"t(0.975, {DF_POOLED}) = {T_975}).")
 NOT_RUN = "not run yet"
 
 
@@ -141,7 +150,7 @@ class Cell:
     name: str                 # expt_a315, or expt_a300_1 for a replicate
     index: int                # 315; a replicate has its original's index
     mask: int                 # binary factors, bit k = BINARY[k]
-    mode: int                 # T1 mode, index into T1_MODES (level of DEL)
+    mode: int                 # T1 mode, index into T1_MODES
     replicate_of: str | None  # id of the original cell, e.g. "a300"
     run: int | None           # replicate number k of expt_<side><index>_<k>; None for a cell
     path: Path
@@ -152,13 +161,8 @@ class Cell:
         return base if self.run is None else f"{base}_{self.run}"
 
     @property
-    def bits(self):
-        """All five factors, bit k = FACTORS[k]; the cell index is CELL_OFFSET + bits."""
-        return self.mask | self.mode << NB
-
-    @property
     def levels(self):
-        return tuple((self.bits >> k) & 1 for k in range(NF))
+        return tuple((self.mask >> k) & 1 for k in range(NB))
 
     @property
     def t1_mode(self):
@@ -166,7 +170,9 @@ class Cell:
 
     @property
     def label(self):
-        on = [FACTORS[k] for k in range(NF) if self.levels[k]]
+        on = [SHORT[k] for k in range(NB) if self.levels[k]]
+        on += [DEL] if self.mode >= 1 else []
+        on += [RR] if self.mode == 2 else []
         return "+".join(on) if on else "base"
 
 
@@ -222,7 +228,7 @@ def read_manifest(repo, side):
         if index != cell_index(mask, mode):
             raise RuntimeError(f"{path}: {r.experiment} should be named "
                                f"{prefix}{cell_index(mask, mode)} for mask {mask}, t1_mode {t1}")
-        cells[cell.bits] = cell
+        cells[(mask, mode)] = cell
     if len(cells) != N_CELLS:
         raise RuntimeError(f"{path}: {len(cells)} factorial cells, expected {N_CELLS}")
     by_name = {c.name: c for c in cells.values()}
@@ -386,50 +392,66 @@ def validity_table(summary, all_cells, clients):
 
 # ---- Factorial effects -----------------------------------------------------
 def effect_name(term):
-    return ":".join(FACTORS[k] for k in term)
+    combo, t1 = term
+    return ":".join([SHORT[k] for k in combo] + ([t1] if t1 else []))
+
+
+def term_order(term):
+    combo, t1 = term
+    return len(combo) + (t1 is not None)
 
 
 def design(cells):
-    """(32 x 31 contrast matrix), rows in `cells` order: each column is the product
-    of the -1/+1 codes of its term's factors.
+    """(48 x 47 contrast matrix, effect scale per column), rows in `cells` order.
 
-    Asserts that the columns and the intercept are mutually orthogonal, so OLS is
-    exact per contrast.
+    effect = scale * beta: 2 for columns without DEL (difference between -1 and +1),
+    3 for columns with DEL (difference between -2 and +1). Asserts that the columns
+    and the intercept are mutually orthogonal, so OLS is exact per contrast.
     """
     X = np.array([[1 if lv else -1 for lv in c.levels] for c in cells], dtype=float)
-    C = np.column_stack([X[:, list(t)].prod(axis=1) for t in TERMS])
+    d = np.array([{0: -2, 1: 1, 2: 1}[c.mode] for c in cells], dtype=float)
+    r = np.array([{0: 0, 1: -1, 2: 1}[c.mode] for c in cells], dtype=float)
+    cols, scale = [], []
+    for combo, t1 in TERMS:
+        col = X[:, list(combo)].prod(axis=1) if combo else np.ones(len(cells))
+        if t1 == DEL:
+            col = col * d
+        elif t1 == RR:
+            col = col * r
+        cols.append(col)
+        scale.append(3.0 if t1 == DEL else 2.0)
+    C = np.column_stack(cols)
     full = np.column_stack([np.ones(len(cells)), C])
     gram = full.T @ full
     off = gram - np.diag(np.diag(gram))
     assert np.abs(off).max() < 1e-9, "factorial contrast columns are not orthogonal"
-    return C
+    return C, np.array(scale)
 
 
 def factorial_effects(y, cells):
-    """All 31 effects of log2 response y (one value per cell, `cells` order).
+    """All 47 effects of log2 response y (one value per cell, `cells` order).
 
-    Exact OLS: the full model (intercept + 31 columns) is saturated and gives the
-    effects (effect = 2 * beta, the difference between the -1 and +1 means); the
-    reduced model without the 6 pooled columns gives the residual SD.
+    Exact OLS: the full model (intercept + 47 columns) is saturated and gives the
+    effects; the reduced model without the 11 pooled columns gives the residual SD.
     """
-    C = design(cells)
+    C, scale = design(cells)
     n = len(cells)
     full = np.column_stack([np.ones(n), C])
     beta = np.linalg.lstsq(full, y, rcond=None)[0][1:]
-    effect = 2 * beta
-    pooled = np.array([len(t) >= POOL_MIN_ORDER for t in TERMS])
+    effect = scale * beta
+    pooled = np.array([term_order(t) >= POOL_MIN_ORDER for t in TERMS])
     reduced = full[:, np.r_[True, ~pooled]]
     resid = y - reduced @ np.linalg.lstsq(reduced, y, rcond=None)[0]
     sigma = math.sqrt(float(resid @ resid) / DF_POOLED)
-    k = 2 / math.sqrt(n)        # SE of every effect per unit per-cell noise SD
+    k = scale / np.sqrt((C ** 2).sum(axis=0))      # SE of each effect per unit noise SD
     se = k * sigma
-    # Lenth's PSE; every effect has the same variance, so no standardisation.
-    a = np.abs(effect)
-    s0 = 1.5 * np.median(a)
-    pse = 1.5 * np.median(a[a < 2.5 * s0])
+    # Lenth on effects standardised to one variance (they do not share one here).
+    z = np.abs(effect / k)
+    s0 = 1.5 * np.median(z)
+    pse_z = 1.5 * np.median(z[z < 2.5 * s0])
     df = pd.DataFrame({
         "effect": [effect_name(t) for t in TERMS],
-        "order": [len(t) for t in TERMS],
+        "order": [term_order(t) for t in TERMS],
         "effect_log2": effect,
         "in_error_pool": pooled,
     })
@@ -438,14 +460,13 @@ def factorial_effects(y, cells):
     df["ci95_low_ratio"] = 2 ** (df.effect_log2 - T_975 * se)
     df["ci95_high_ratio"] = 2 ** (df.effect_log2 + T_975 * se)
     df["t_pooled"] = df.effect_log2 / se
-    df["lenth_pse_log2"] = pse
+    df["lenth_pse_log2"] = k * pse_z
     df["effect_over_pse"] = df.effect_log2 / df.lenth_pse_log2
     df["residual_sd_log2"] = sigma
     df["df_pooled"] = DF_POOLED
     df["t_quantile"] = T_975
     df["error_model"] = ERROR_MODEL
-    # lenth_sigma: Lenth's PSE as a per-cell SD, comparable with sigma.
-    df.attrs.update(sigma=sigma, lenth_sigma=pse / k, grand_mean_log2=float(np.mean(y)))
+    df.attrs.update(sigma=sigma, pse_z=pse_z, grand_mean_log2=float(np.mean(y)))
     return df
 
 
@@ -544,9 +565,9 @@ def noise_note(eff, rep_sd):
 
 
 MAIN_EFFECT_DEF = (
-    f"Main effect: mean log2 response of the {N_CELLS // 2} cells with the factor ON minus "
-    f"the {N_CELLS // 2} with it OFF (DEL: delegated place_order, fn, vs set-based T1, set). "
-    "Shown as 2^effect.")
+    "Binary factor: mean log2 response of the 24 cells with it ON minus the 24 with it OFF. "
+    "DEL: mean of the 32 delegated cells (fn, fn_rr) minus the 16 set cells. RR: mean of the "
+    "16 fn_rr cells minus the 16 fn cells. Shown as 2^effect.")
 
 
 # ---- Figures ---------------------------------------------------------------
@@ -581,15 +602,15 @@ def fig_main_effects_peak(eff, rep_sd, out):
         f"count (peak client count differs by cell; see cells.csv). Interval = effect ± {T_975} × SE. "
         + POOL_NOTE,
         noise_note(eff, rep_sd) + " Cross-check, Lenth's estimate of the same per-cell SD "
-        f"from all {len(TERMS)} contrasts: {eff.attrs['lenth_sigma']:.4f} log2 (PSE in "
+        f"from all {len(TERMS)} contrasts: {eff.attrs['pse_z']:.4f} log2 (per-effect PSE in "
         "effects_peak.csv).",
     ], width)
     pr.save(fig, out, "main_effects_peak")
 
 
-# Two-factor interaction grid: rows x columns; every pair of the four mask factors
-# once (lower triangle) plus each of them with DEL, so every two-factor interaction.
-GRID_ROWS = SHORT[1:] + [DEL]
+# Two-factor interaction grid: rows x columns; every binary pair once (lower
+# triangle) plus each binary factor with DEL and with RR. DEL:RR is not a contrast.
+GRID_ROWS = SHORT[1:] + [DEL, RR]
 GRID_COLS = SHORT
 
 
@@ -640,10 +661,11 @@ def fig_interactions_peak(eff, out):
     cb.set_ticks(pos, labels=labels)
     cb.set_label("interaction ratio (log scale)", color=pr.INK_2)
     pr.caption(ax, [
-        "Cell (row, column) = interaction, shown as 2^effect with its 95% interval: half "
-        "the difference between the column factor's log2 effect with the row factor ON and "
-        "with it OFF (DEL ON = delegated place_order, fn; OFF = set-based T1). Blue: the "
-        "pair together gives more peak TPS than the two main effects "
+        "Cell (row, column) = interaction, shown as 2^effect with its 95% interval. Upper "
+        "rows (two binary factors): half the difference between the column factor's log2 "
+        "effect with the row factor ON and with it OFF. DEL / RR rows: half the difference "
+        "of the DEL (delegated vs set) or RR (fn_rr vs fn) effect between the column factor "
+        "ON and OFF. Blue: the pair together gives more peak TPS than the two main effects "
         f"predict; red: less. The colour scale spans the largest of all {len(TERMS)} effects, "
         "so interactions and main effects share one scale. " + POOL_NOTE,
     ], width, offset_pt=14)
@@ -656,8 +678,8 @@ def fig_half_normal_peak(eff, out):
     d["q"] = [normal_quantile(0.5 + 0.5 * (i + 0.5) / m) for i in range(m)]
     d["beyond"] = d.abs_t > T_975
     width = 6.6
-    fig, ax = plt.subplots(figsize=(width, 8.5))
-    fig.subplots_adjust(top=0.95, bottom=0.13)
+    fig, ax = plt.subplots(figsize=(width, 12.0))
+    fig.subplots_adjust(top=0.96, bottom=0.1)
     xmax = d.abs_t.max()
     xlo, xhi = -0.04 * xmax, 1.06 * xmax
     qmax = d.q.max() * 1.03
@@ -682,7 +704,7 @@ def fig_half_normal_peak(eff, out):
                                  color=pr.INK_2))
     ax.set_xlim(xlo, xhi)
     ax.set_ylim(0, qmax)
-    ax.set_xlabel("|effect| / SE  (SE from the pooled noise, the same for every effect)")
+    ax.set_xlabel("|effect| / SE  (each effect over its own pooled-noise SE)")
     ax.set_ylabel("half-normal quantile")
     ax.set_title(f"Half-normal plot of all {m} effects on peak throughput", loc="left")
     handles = [
@@ -696,9 +718,10 @@ def fig_half_normal_peak(eff, out):
     ]
     ax.legend(handles=handles, loc="lower right")
     pr.caption(ax, [
-        "Each label gives the signed effect as a ratio (ON / OFF; DEL delegated / set). "
-        "Every contrast is a -1/+1 column over the same cells, so all effects share one SE; "
-        "effects on the line behave like noise, effects far right of it do not. " + POOL_NOTE,
+        "Each label gives the signed effect as a ratio (ON / OFF; DEL delegated / set; RR "
+        "fn_rr / fn). The contrasts do not share one variance (DEL and RR columns are "
+        "estimated from different cell counts), so each is plotted over its own SE; effects "
+        "on the line behave like noise, effects far right of it do not. " + POOL_NOTE,
     ], width, offset_pt=30)
     pr.check_labels_disjoint(fig, texts)
     pr.save(fig, out, "half_normal_peak")
@@ -823,7 +846,8 @@ def fig_peak_tps_by_cell(cells_df, out):
     pr.caption(ax, [
         "R_peak = highest TPS over the client counts, only for cells valid at every "
         "client count (a cell with an aborted client has none); the value label gives it and the client count where it occurs. "
-        "Labels list the optimisations ON (base = none; DEL = delegated place_order).",
+        "Labels list the optimisations ON (base = none; DEL = delegated place_order, RR = "
+        "REPEATABLE READ instead of SERIALIZABLE on top of DEL).",
         f"No results yet: {', '.join(missing)}." if missing else "",
     ], width)
     pr.save(fig, out, "peak_tps_by_cell")
@@ -948,13 +972,19 @@ def fig_replicate_check(rep, lat1, out):
 
 
 # ---- Linear history: add-one and leave-one-out ------------------------------
-def history_cells(by_bits):
+def history_cells(by_key):
     """The cumulative cells of HISTORY, base first; asserted against HISTORY_INDICES."""
-    bits = 0
-    path = [by_bits[bits]]
-    for step in HISTORY:
-        bits |= 1 << FACTORS.index(step)
-        path.append(by_bits[bits])
+    mask, mode = 0, 0
+    path = [by_key[(mask, mode)]]
+    for _, step in HISTORY:
+        if isinstance(step, int):
+            mask |= 1 << step
+        else:
+            new = T1_MODES.index(step)
+            if new != mode + 1:
+                raise RuntimeError(f"history steps T1 mode {T1_MODES[mode]} -> {step}")
+            mode = new
+        path.append(by_key[(mask, mode)])
     indices = [c.index for c in path]
     if indices != HISTORY_INDICES:
         raise RuntimeError(f"linear history derived from the manifest {indices} "
@@ -962,10 +992,11 @@ def history_cells(by_bits):
     return path
 
 
-def leave_one_out_cells(by_bits):
+def leave_one_out_cells(by_key):
     """[(step, cell without it)] for the all-ON cell; asserted against LEAVE_ONE_OUT_INDICES."""
-    full = 2 ** NF - 1
-    out = [(FACTORS[k], by_bits[full ^ (1 << k)]) for k in range(NF)]
+    full_mask, full_mode = N_MASKS - 1, len(T1_MODES) - 1
+    out = [(SHORT[k], by_key[(full_mask ^ (1 << k), full_mode)]) for k in range(NB)]
+    out.append((RR, by_key[(full_mask, full_mode - 1)]))    # T1 mode one level down
     indices = [c.index for _, c in out]
     if indices != LEAVE_ONE_OUT_INDICES:
         raise RuntimeError(f"leave-one-out cells derived from the manifest {indices} "
@@ -1100,28 +1131,31 @@ def run(repo, side, out):
     fig_validity_map(vt, all_cells, clients, out)
     fig_peak_tps_by_cell(cells_df, out)
 
-    by_bits = {c.bits: c for c in cells}
-    hist = history_cells(by_bits)
+    by_key = {(c.mask, c.mode): c for c in cells}
+    hist = history_cells(by_key)
     add_one = history_table(summary, status, [(f"+{s}", hist[i + 1], hist[i])
-                                              for i, s in enumerate(HISTORY)], clients)
+                                              for i, (s, _) in enumerate(HISTORY)], clients)
     final = hist[-1]
     loo = history_table(summary, status, [(f"-{s}", final, ref)
-                                          for s, ref in leave_one_out_cells(by_bits)], clients)
+                                          for s, ref in leave_one_out_cells(by_key)], clients)
     add_one.to_csv(out / "add_one.csv", index=False)
     loo.to_csv(out / "leave_one_out.csv", index=False)
     fig_ratio_bars(add_one[add_one.response == "r_peak"],
                    "Peak throughput gained by each step of the optimisation history",
                    "Ratio = R_peak of the cell after the step / R_peak of the cell before it, "
-                   f"along {' -> +'.join([hist[0].id] + HISTORY)} (+DEL: T1 mode set -> fn). "
+                   f"along {hist[0].id} -> +T5R -> +T6R -> +T7R -> +DEL (fn) -> +SH8 -> "
+                   "+RR (fn_rr). "
                    "R_peak = highest TPS over the client counts; the two peaks may "
                    "sit at different client counts (add_one.csv, also per client count).",
                    out, "add_one_peak")
     fig_ratio_bars(loo[loo.response == "r_peak"],
                    f"Peak throughput of {final.id} relative to the cell missing one optimisation",
-                   f"Ratio = R_peak of {final.id} (every optimisation ON) / R_peak of the "
-                   "cell with that one factor OFF (-DEL: T1 mode set instead of fn). R_peak = "
-                   "highest TPS over the client counts, only for cells valid at every count "
-                   "(leave_one_out.csv, also per client count).",
+                   f"Ratio = R_peak of {final.id} (every optimisation ON, fn_rr) / R_peak of the "
+                   "cell with that optimisation removed: one binary factor OFF (T1 mode stays "
+                   "fn_rr), or -RR = T1 mode one level down (fn). Delegation alone cannot be "
+                   "removed from fn_rr (the grid has no set-based T1 under REPEATABLE READ), so "
+                   "it has no row. R_peak = highest TPS over the client counts, only for cells "
+                   "valid at every count (leave_one_out.csv, also per client count).",
                    out, "leave_one_out_peak")
     for name, t in (("add-one", add_one), ("leave-one-out", loo)):
         print(f"\n{name} (R_peak ratio):")
