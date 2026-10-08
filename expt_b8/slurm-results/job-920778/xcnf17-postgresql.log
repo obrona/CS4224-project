@@ -1,0 +1,2913 @@
+2026-10-08 15:29:24.981 +08 [285792] LOG:  There is no designated Main database.
+2026-10-08 15:29:24.981 +08 [285792] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-08 15:29:24.981 +08 [285792] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-08 15:29:25.092 +08 [285792] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-08 15:29:25.093 +08 [285792] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-08 15:29:25.093 +08 [285792] LOG:  listening on IPv6 address "::", port 5436
+2026-10-08 15:29:25.093 +08 [285792] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-08 15:29:25.097 +08 [285799] LOG:  database system was shut down at 2026-10-08 15:29:22 +08
+2026-10-08 15:29:25.101 +08 [285792] LOG:  database system is ready to accept connections
+2026-10-08 15:29:27.247 +08 [285827] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-08 15:29:27.247 +08 [285827] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-08 15:42:07.436 +08 [285792] LOG:  received fast shutdown request
+2026-10-08 15:42:07.436 +08 [285792] LOG:  aborting any active transactions
+2026-10-08 15:42:07.438 +08 [285792] LOG:  background worker "logical replication launcher" (PID 285802) exited with exit code 1
+2026-10-08 15:42:07.441 +08 [285797] LOG:  shutting down
+2026-10-08 15:42:07.441 +08 [285797] LOG:  checkpoint starting: shutdown immediate
+2026-10-08 15:42:07.465 +08 [285797] LOG:  checkpoint complete: wrote 1508 buffers (1.2%), wrote 11 SLRU buffers; 0 WAL file(s) added, 0 removed, 2 recycled; write=0.021 s, sync=0.002 s, total=0.025 s; sync files=495, longest=0.001 s, average=0.001 s; distance=31091 kB, estimate=31091 kB; lsn=0/35BBC40, redo lsn=0/35BBC40
+2026-10-08 15:42:07.509 +08 [285792] LOG:  database system is shut down
+2026-10-08 15:42:12.693 +08 [286199] LOG:  There is no designated Main database.
+2026-10-08 15:42:12.693 +08 [286199] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-08 15:42:12.693 +08 [286199] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-08 15:42:12.811 +08 [286199] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-08 15:42:12.812 +08 [286199] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-08 15:42:12.812 +08 [286199] LOG:  listening on IPv6 address "::", port 5436
+2026-10-08 15:42:12.812 +08 [286199] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-08 15:42:12.816 +08 [286206] LOG:  database system was shut down at 2026-10-08 15:42:07 +08
+2026-10-08 15:42:12.819 +08 [286199] LOG:  database system is ready to accept connections
+2026-10-08 15:42:13.727 +08 [286230] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-08 15:42:13.727 +08 [286230] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-08 15:43:36.400 +08 [286265] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:43:36.400 +08 [286265] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 15:43:36.400 +08 [286265] HINT:  The transaction might succeed if retried.
+2026-10-08 15:43:36.400 +08 [286265] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 15:43:36.400 +08 [286265] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (188142)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 15:43:57.902 +08 [286267] ERROR:  could not serialize access due to concurrent update
+2026-10-08 15:43:57.902 +08 [286267] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 15:43:57.902 +08 [286267] STATEMENT:  UPDATE inventory
+	SET quantity = quantity + (10)::integer,
+	    updated_at = CURRENT_TIMESTAMP
+	WHERE inventory_id = (250041)::bigint
+	  AND merchant_id = (41)::bigint
+	  AND product_id = (250041)::bigint
+	  AND quantity + (10)::integer >= 0;
+2026-10-08 15:45:24.457 +08 [286294] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:45:24.457 +08 [286294] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 15:45:24.457 +08 [286294] HINT:  The transaction might succeed if retried.
+2026-10-08 15:45:24.457 +08 [286294] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 15:45:24.457 +08 [286294] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (81131)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 15:51:31.836 +08 [286297] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:51:31.836 +08 [286297] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 15:51:31.836 +08 [286297] HINT:  The transaction might succeed if retried.
+2026-10-08 15:51:31.836 +08 [286297] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 15:51:31.836 +08 [286297] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (1331798)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 15:53:16.875 +08 [286296] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:53:16.875 +08 [286296] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 15:53:16.875 +08 [286296] HINT:  The transaction might succeed if retried.
+2026-10-08 15:53:16.875 +08 [286296] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 15:53:16.875 +08 [286296] STATEMENT:  UPDATE orders
+	SET order_status = 'SHIPPED'::text
+	WHERE order_id = (949574)::bigint
+	  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+2026-10-08 15:53:37.059 +08 [286295] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:53:37.059 +08 [286295] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 15:53:37.059 +08 [286295] HINT:  The transaction might succeed if retried.
+2026-10-08 15:53:37.059 +08 [286295] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 15:53:37.059 +08 [286295] STATEMENT:  UPDATE orders
+	SET order_status = 'SHIPPED'::text
+	WHERE order_id = (2822245)::bigint
+	  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+2026-10-08 15:54:03.184 +08 [286199] LOG:  received fast shutdown request
+2026-10-08 15:54:03.184 +08 [286199] LOG:  aborting any active transactions
+2026-10-08 15:54:03.188 +08 [286199] LOG:  background worker "logical replication launcher" (PID 286209) exited with exit code 1
+2026-10-08 15:54:03.189 +08 [286204] LOG:  shutting down
+2026-10-08 15:54:03.189 +08 [286204] LOG:  checkpoint starting: shutdown immediate
+2026-10-08 15:54:03.200 +08 [286204] LOG:  checkpoint complete: wrote 1044 buffers (0.8%), wrote 33 SLRU buffers; 0 WAL file(s) added, 0 removed, 5 recycled; write=0.010 s, sync=0.001 s, total=0.012 s; sync files=47, longest=0.001 s, average=0.001 s; distance=82532 kB, estimate=82532 kB; lsn=0/8654ED8, redo lsn=0/8654ED8
+2026-10-08 15:54:03.243 +08 [286199] LOG:  database system is shut down
+2026-10-08 15:54:08.134 +08 [286568] LOG:  There is no designated Main database.
+2026-10-08 15:54:08.134 +08 [286568] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-08 15:54:08.134 +08 [286568] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-08 15:54:08.268 +08 [286568] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-08 15:54:08.268 +08 [286568] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-08 15:54:08.269 +08 [286568] LOG:  listening on IPv6 address "::", port 5436
+2026-10-08 15:54:08.269 +08 [286568] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-08 15:54:08.273 +08 [286575] LOG:  database system was shut down at 2026-10-08 15:54:03 +08
+2026-10-08 15:54:08.276 +08 [286568] LOG:  database system is ready to accept connections
+2026-10-08 15:54:09.169 +08 [286599] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-08 15:54:09.169 +08 [286599] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-08 15:55:14.404 +08 [286639] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:55:14.404 +08 [286639] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 15:55:14.404 +08 [286639] HINT:  The transaction might succeed if retried.
+2026-10-08 15:55:14.404 +08 [286639] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 15:55:14.404 +08 [286639] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (198666)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 15:55:17.007 +08 [286640] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:55:17.007 +08 [286640] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 15:55:17.007 +08 [286640] HINT:  The transaction might succeed if retried.
+2026-10-08 15:55:17.007 +08 [286640] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 15:55:17.007 +08 [286640] STATEMENT:  UPDATE orders
+	SET order_status = 'SHIPPED'::text
+	WHERE order_id = (1985720)::bigint
+	  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+2026-10-08 15:55:37.838 +08 [286635] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:55:37.838 +08 [286635] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 15:55:37.838 +08 [286635] HINT:  The transaction might succeed if retried.
+2026-10-08 15:55:37.838 +08 [286635] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 15:55:37.838 +08 [286635] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (460155)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 15:55:38.069 +08 [286635] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:55:38.069 +08 [286635] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 15:55:38.069 +08 [286635] HINT:  The transaction might succeed if retried.
+2026-10-08 15:55:38.069 +08 [286635] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 15:55:38.069 +08 [286635] STATEMENT:  UPDATE orders
+	SET order_status = 'SHIPPED'::text
+	WHERE order_id = (2266934)::bigint
+	  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+2026-10-08 15:56:08.207 +08 [286675] ERROR:  could not serialize access due to concurrent update
+2026-10-08 15:56:08.207 +08 [286675] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 15:56:08.207 +08 [286675] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (91126)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 15:56:14.120 +08 [286669] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:56:14.120 +08 [286669] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 15:56:14.120 +08 [286669] HINT:  The transaction might succeed if retried.
+2026-10-08 15:56:14.120 +08 [286669] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 15:56:14.120 +08 [286669] STATEMENT:  UPDATE orders
+	SET total_amount = (10413.79)::numeric(12,2)
+	WHERE merchant_id = (539)::bigint
+	  AND order_id = (5001598)::bigint;
+2026-10-08 15:57:22.376 +08 [286671] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:57:22.376 +08 [286671] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 15:57:22.376 +08 [286671] HINT:  The transaction might succeed if retried.
+2026-10-08 15:57:22.376 +08 [286671] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 15:57:22.376 +08 [286671] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (1097565)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 15:57:29.171 +08 [286671] WARNING:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:57:29.171 +08 [286671] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-10-08 15:57:29.171 +08 [286671] HINT:  The transaction might succeed if retried.
+2026-10-08 15:57:29.171 +08 [286671] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 15:57:29.171 +08 [286671] WARNING:  failed to commit transaction on xcnf18:5436
+2026-10-08 15:57:29.171 +08 [286671] ERROR:  could not commit transaction for shard 102168 on at least one active node
+2026-10-08 15:57:29.171 +08 [286671] STATEMENT:  COMMIT;
+2026-10-08 15:58:10.831 +08 [286674] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 15:58:10.831 +08 [286674] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 15:58:10.831 +08 [286674] HINT:  The transaction might succeed if retried.
+2026-10-08 15:58:10.831 +08 [286674] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 15:58:10.831 +08 [286674] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (3268282)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:00:10.385 +08 [286668] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:00:10.385 +08 [286668] DETAIL:  Reason code: Canceled on conflict out to pivot 128726, during read.
+2026-10-08 16:00:10.385 +08 [286668] HINT:  The transaction might succeed if retried.
+2026-10-08 16:00:10.385 +08 [286668] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:00:10.385 +08 [286668] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-08 16:01:44.372 +08 [286673] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:01:44.372 +08 [286673] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:01:44.372 +08 [286673] HINT:  The transaction might succeed if retried.
+2026-10-08 16:01:44.372 +08 [286673] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:01:44.372 +08 [286673] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (263245)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:01:54.395 +08 [286668] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:01:54.395 +08 [286668] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:01:54.395 +08 [286668] HINT:  The transaction might succeed if retried.
+2026-10-08 16:01:54.395 +08 [286668] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:01:54.395 +08 [286668] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (2805035)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:02:12.925 +08 [286670] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:02:12.925 +08 [286670] DETAIL:  Reason code: Canceled on conflict out to pivot 138455, during read.
+2026-10-08 16:02:12.925 +08 [286670] HINT:  The transaction might succeed if retried.
+2026-10-08 16:02:12.925 +08 [286670] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:02:12.925 +08 [286670] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-08 16:03:15.939 +08 [286668] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:03:15.939 +08 [286668] DETAIL:  Reason code: Canceled on conflict out to pivot 150271, during read.
+2026-10-08 16:03:15.939 +08 [286668] HINT:  The transaction might succeed if retried.
+2026-10-08 16:03:15.939 +08 [286668] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:03:15.939 +08 [286668] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-08 16:03:36.110 +08 [286670] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:03:36.110 +08 [286670] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:03:36.110 +08 [286670] HINT:  The transaction might succeed if retried.
+2026-10-08 16:03:36.110 +08 [286670] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:03:36.110 +08 [286670] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (4779541)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:04:24.967 +08 [286668] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:04:24.967 +08 [286668] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:04:24.967 +08 [286668] HINT:  The transaction might succeed if retried.
+2026-10-08 16:04:24.967 +08 [286668] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:04:24.967 +08 [286668] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (3275983)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:05:17.371 +08 [286675] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:05:17.371 +08 [286675] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:05:17.371 +08 [286675] HINT:  The transaction might succeed if retried.
+2026-10-08 16:05:17.371 +08 [286675] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:05:17.371 +08 [286675] STATEMENT:  UPDATE orders
+	SET order_status = 'SHIPPED'::text
+	WHERE order_id = (4910513)::bigint
+	  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+2026-10-08 16:05:34.723 +08 [286668] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:05:34.723 +08 [286668] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:05:34.723 +08 [286668] HINT:  The transaction might succeed if retried.
+2026-10-08 16:05:34.723 +08 [286668] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:05:34.723 +08 [286668] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (2892412)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:05:58.474 +08 [286568] LOG:  received fast shutdown request
+2026-10-08 16:05:58.474 +08 [286568] LOG:  aborting any active transactions
+2026-10-08 16:05:58.479 +08 [286568] LOG:  background worker "logical replication launcher" (PID 286578) exited with exit code 1
+2026-10-08 16:05:58.479 +08 [286573] LOG:  shutting down
+2026-10-08 16:05:58.479 +08 [286573] LOG:  checkpoint starting: shutdown immediate
+2026-10-08 16:05:58.491 +08 [286573] LOG:  checkpoint complete: wrote 1123 buffers (0.9%), wrote 35 SLRU buffers; 0 WAL file(s) added, 0 removed, 5 recycled; write=0.010 s, sync=0.001 s, total=0.012 s; sync files=47, longest=0.001 s, average=0.001 s; distance=90500 kB, estimate=90500 kB; lsn=0/DEB62D0, redo lsn=0/DEB62D0
+2026-10-08 16:05:58.535 +08 [286568] LOG:  database system is shut down
+2026-10-08 16:06:03.441 +08 [286977] LOG:  There is no designated Main database.
+2026-10-08 16:06:03.441 +08 [286977] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-08 16:06:03.441 +08 [286977] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-08 16:06:03.580 +08 [286977] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-08 16:06:03.580 +08 [286977] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-08 16:06:03.580 +08 [286977] LOG:  listening on IPv6 address "::", port 5436
+2026-10-08 16:06:03.580 +08 [286977] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-08 16:06:03.584 +08 [286984] LOG:  database system was shut down at 2026-10-08 16:05:58 +08
+2026-10-08 16:06:03.588 +08 [286977] LOG:  database system is ready to accept connections
+2026-10-08 16:06:04.471 +08 [287009] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-08 16:06:04.471 +08 [287009] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-08 16:06:56.161 +08 [287045] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:06:56.161 +08 [287045] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:06:56.161 +08 [287045] HINT:  The transaction might succeed if retried.
+2026-10-08 16:06:56.161 +08 [287045] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:06:56.161 +08 [287045] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (431089)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:06:58.070 +08 [287050] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:06:58.070 +08 [287050] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:06:58.070 +08 [287050] HINT:  The transaction might succeed if retried.
+2026-10-08 16:06:58.070 +08 [287050] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:06:58.070 +08 [287050] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (89583)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:06:58.808 +08 [287053] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:06:58.808 +08 [287053] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:06:58.808 +08 [287053] HINT:  The transaction might succeed if retried.
+2026-10-08 16:06:58.808 +08 [287053] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:06:58.808 +08 [287053] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (67614)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:06:59.620 +08 [287055] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:06:59.620 +08 [287055] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:06:59.620 +08 [287055] HINT:  The transaction might succeed if retried.
+2026-10-08 16:06:59.620 +08 [287055] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:06:59.620 +08 [287055] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (429221)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:07:00.636 +08 [287051] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:00.636 +08 [287051] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:00.636 +08 [287051] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:00.636 +08 [287051] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:07:00.636 +08 [287051] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (107039)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:07:00.798 +08 [287053] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:00.798 +08 [287053] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:00.798 +08 [287053] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:00.798 +08 [287053] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:07:00.798 +08 [287053] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (381702)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:07:01.338 +08 [287052] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:01.338 +08 [287052] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:01.338 +08 [287052] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:01.338 +08 [287052] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:07:01.338 +08 [287052] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (460297)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:07:04.509 +08 [287050] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:04.509 +08 [287050] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:04.509 +08 [287050] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:04.509 +08 [287050] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:07:04.509 +08 [287050] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (164219)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:07:07.423 +08 [287055] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:07.423 +08 [287055] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:07.423 +08 [287055] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:07.423 +08 [287055] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:07:07.423 +08 [287055] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (228415)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:07:15.086 +08 [287058] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:15.086 +08 [287058] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:15.086 +08 [287058] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:15.086 +08 [287058] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:07:15.086 +08 [287058] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (223782)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:07:15.142 +08 [287048] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:15.142 +08 [287048] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:15.142 +08 [287048] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:15.142 +08 [287048] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:07:15.142 +08 [287048] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (119551)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:07:21.383 +08 [287053] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:21.383 +08 [287053] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:21.383 +08 [287053] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:21.383 +08 [287053] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:07:21.383 +08 [287053] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (215378)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:07:25.896 +08 [287045] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:25.896 +08 [287045] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:25.896 +08 [287045] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:25.896 +08 [287045] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:07:25.896 +08 [287045] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (75977)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:07:33.427 +08 [287057] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:33.427 +08 [287057] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:33.427 +08 [287057] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:33.427 +08 [287057] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:07:33.427 +08 [287057] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (94718)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:07:45.631 +08 [287050] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:45.631 +08 [287050] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:45.631 +08 [287050] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:45.631 +08 [287050] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:07:45.631 +08 [287050] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (73123)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:07:51.078 +08 [287046] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:51.078 +08 [287046] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:51.078 +08 [287046] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:51.078 +08 [287046] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:07:51.078 +08 [287046] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (129573)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:07:52.078 +08 [287054] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:07:52.078 +08 [287054] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:07:52.078 +08 [287054] HINT:  The transaction might succeed if retried.
+2026-10-08 16:07:52.078 +08 [287054] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:07:52.078 +08 [287054] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (251626)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:08:04.389 +08 [287091] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:08:04.389 +08 [287091] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:08:04.389 +08 [287091] HINT:  The transaction might succeed if retried.
+2026-10-08 16:08:04.389 +08 [287091] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:08:04.389 +08 [287091] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (214198)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:08:20.328 +08 [287093] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:08:20.328 +08 [287093] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:08:20.328 +08 [287093] HINT:  The transaction might succeed if retried.
+2026-10-08 16:08:20.328 +08 [287093] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:08:20.328 +08 [287093] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (326050)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:09:17.743 +08 [287096] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:09:17.743 +08 [287096] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:09:17.743 +08 [287096] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (465562)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:09:55.439 +08 [287085] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:09:55.439 +08 [287085] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:09:55.439 +08 [287085] HINT:  The transaction might succeed if retried.
+2026-10-08 16:09:55.439 +08 [287085] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:09:55.439 +08 [287085] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (4030305)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:11:25.238 +08 [287099] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:11:25.238 +08 [287099] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:11:25.238 +08 [287099] HINT:  The transaction might succeed if retried.
+2026-10-08 16:11:25.238 +08 [287099] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:11:25.238 +08 [287099] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (2580584)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:11:43.144 +08 [287087] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:11:43.144 +08 [287087] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:11:43.144 +08 [287087] HINT:  The transaction might succeed if retried.
+2026-10-08 16:11:43.144 +08 [287087] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:11:43.144 +08 [287087] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (1912928)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:12:23.015 +08 [287096] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:12:23.015 +08 [287096] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:12:23.015 +08 [287096] HINT:  The transaction might succeed if retried.
+2026-10-08 16:12:23.015 +08 [287096] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:12:23.015 +08 [287096] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (4405115)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:12:59.821 +08 [287094] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:12:59.821 +08 [287094] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:12:59.821 +08 [287094] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (228636)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:13:51.491 +08 [287096] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:13:51.491 +08 [287096] DETAIL:  Reason code: Canceled on conflict out to pivot 208392, during read.
+2026-10-08 16:13:51.491 +08 [287096] HINT:  The transaction might succeed if retried.
+2026-10-08 16:13:51.491 +08 [287096] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:13:51.491 +08 [287096] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-08 16:14:10.407 +08 [287086] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:14:10.407 +08 [287086] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:14:10.407 +08 [287086] HINT:  The transaction might succeed if retried.
+2026-10-08 16:14:10.407 +08 [287086] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:14:10.407 +08 [287086] STATEMENT:  UPDATE orders
+	SET total_amount = (9262.24)::numeric(12,2)
+	WHERE merchant_id = (356)::bigint
+	  AND order_id = (5009784)::bigint;
+2026-10-08 16:16:00.347 +08 [287087] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:16:00.347 +08 [287087] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:16:00.347 +08 [287087] HINT:  The transaction might succeed if retried.
+2026-10-08 16:16:00.347 +08 [287087] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:16:00.347 +08 [287087] STATEMENT:  UPDATE orders
+	SET order_status = 'SHIPPED'::text
+	WHERE order_id = (2941490)::bigint
+	  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+2026-10-08 16:16:37.206 +08 [287085] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:16:37.206 +08 [287085] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:16:37.206 +08 [287085] HINT:  The transaction might succeed if retried.
+2026-10-08 16:16:37.206 +08 [287085] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:16:37.206 +08 [287085] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (3514468)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:17:23.240 +08 [287095] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:17:23.240 +08 [287095] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:17:23.240 +08 [287095] HINT:  The transaction might succeed if retried.
+2026-10-08 16:17:23.240 +08 [287095] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:17:23.240 +08 [287095] STATEMENT:  UPDATE orders
+	SET order_status = 'SHIPPED'::text
+	WHERE order_id = (699078)::bigint
+	  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+2026-10-08 16:17:47.189 +08 [287095] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:17:47.189 +08 [287095] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:17:47.189 +08 [287095] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (413024)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:17:54.166 +08 [286977] LOG:  received fast shutdown request
+2026-10-08 16:17:54.166 +08 [286977] LOG:  aborting any active transactions
+2026-10-08 16:17:54.170 +08 [286977] LOG:  background worker "logical replication launcher" (PID 286987) exited with exit code 1
+2026-10-08 16:17:54.171 +08 [286982] LOG:  shutting down
+2026-10-08 16:17:54.172 +08 [286982] LOG:  checkpoint starting: shutdown immediate
+2026-10-08 16:17:54.183 +08 [286982] LOG:  checkpoint complete: wrote 1088 buffers (0.8%), wrote 35 SLRU buffers; 0 WAL file(s) added, 0 removed, 6 recycled; write=0.010 s, sync=0.001 s, total=0.012 s; sync files=47, longest=0.001 s, average=0.001 s; distance=87719 kB, estimate=87719 kB; lsn=0/134601D0, redo lsn=0/134601D0
+2026-10-08 16:17:54.227 +08 [286977] LOG:  database system is shut down
+2026-10-08 16:17:59.117 +08 [287384] LOG:  There is no designated Main database.
+2026-10-08 16:17:59.117 +08 [287384] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-08 16:17:59.117 +08 [287384] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-08 16:17:59.253 +08 [287384] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-08 16:17:59.254 +08 [287384] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-08 16:17:59.254 +08 [287384] LOG:  listening on IPv6 address "::", port 5436
+2026-10-08 16:17:59.254 +08 [287384] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-08 16:17:59.258 +08 [287391] LOG:  database system was shut down at 2026-10-08 16:17:54 +08
+2026-10-08 16:17:59.261 +08 [287384] LOG:  database system is ready to accept connections
+2026-10-08 16:18:00.144 +08 [287415] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-08 16:18:00.144 +08 [287415] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-08 16:18:50.811 +08 [287458] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:18:50.811 +08 [287458] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:18:50.811 +08 [287458] HINT:  The transaction might succeed if retried.
+2026-10-08 16:18:50.811 +08 [287458] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:18:50.811 +08 [287458] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (386736)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:18:51.626 +08 [287451] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:18:51.626 +08 [287451] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:18:51.626 +08 [287451] HINT:  The transaction might succeed if retried.
+2026-10-08 16:18:51.626 +08 [287451] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:18:51.626 +08 [287451] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (180921)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:18:51.892 +08 [287472] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:18:51.892 +08 [287472] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:18:51.892 +08 [287472] HINT:  The transaction might succeed if retried.
+2026-10-08 16:18:51.892 +08 [287472] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:18:51.892 +08 [287472] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (216610)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:18:51.962 +08 [287454] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:18:51.962 +08 [287454] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:18:51.962 +08 [287454] HINT:  The transaction might succeed if retried.
+2026-10-08 16:18:51.962 +08 [287454] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:18:51.962 +08 [287454] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (294067)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:18:54.152 +08 [287459] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:18:54.152 +08 [287459] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:18:54.152 +08 [287459] HINT:  The transaction might succeed if retried.
+2026-10-08 16:18:54.152 +08 [287459] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:18:54.152 +08 [287459] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (71492)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:18:56.331 +08 [287456] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:18:56.331 +08 [287456] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:18:56.331 +08 [287456] HINT:  The transaction might succeed if retried.
+2026-10-08 16:18:56.331 +08 [287456] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:18:56.331 +08 [287456] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (395725)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:18:58.181 +08 [287455] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:18:58.181 +08 [287455] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:18:58.181 +08 [287455] HINT:  The transaction might succeed if retried.
+2026-10-08 16:18:58.181 +08 [287455] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:18:58.181 +08 [287455] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (452811)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:18:59.982 +08 [287445] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:18:59.982 +08 [287445] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:18:59.982 +08 [287445] HINT:  The transaction might succeed if retried.
+2026-10-08 16:18:59.982 +08 [287445] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:18:59.982 +08 [287445] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (492302)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:00.474 +08 [287449] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:00.474 +08 [287449] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:00.474 +08 [287449] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:00.474 +08 [287449] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:19:00.474 +08 [287449] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (164112)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:01.221 +08 [287465] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:19:01.221 +08 [287465] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:19:01.221 +08 [287465] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (64055)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:03.170 +08 [287470] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:03.170 +08 [287470] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:03.170 +08 [287470] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:03.170 +08 [287470] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:19:03.170 +08 [287470] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (359069)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:05.281 +08 [287462] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:05.281 +08 [287462] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:05.281 +08 [287462] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:05.281 +08 [287462] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:19:05.281 +08 [287462] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (425048)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:05.608 +08 [287445] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:05.608 +08 [287445] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:05.608 +08 [287445] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:05.608 +08 [287445] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:19:05.608 +08 [287445] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (461297)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:08.504 +08 [287450] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:08.504 +08 [287450] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:08.504 +08 [287450] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:08.504 +08 [287450] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:19:08.504 +08 [287450] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (312836)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:09.419 +08 [287458] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:09.419 +08 [287458] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:09.419 +08 [287458] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:09.419 +08 [287458] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:19:09.419 +08 [287458] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (80933)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:10.059 +08 [287465] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:10.059 +08 [287465] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:10.059 +08 [287465] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:10.059 +08 [287465] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:19:10.059 +08 [287465] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (390619)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:10.734 +08 [287471] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:10.734 +08 [287471] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:10.734 +08 [287471] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:10.734 +08 [287471] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:19:10.734 +08 [287471] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (375382)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:14.155 +08 [287449] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:14.155 +08 [287449] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:14.155 +08 [287449] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:14.155 +08 [287449] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:19:14.155 +08 [287449] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (469113)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:16.273 +08 [287469] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:16.273 +08 [287469] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:16.273 +08 [287469] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:16.273 +08 [287469] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:19:16.273 +08 [287469] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (256808)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:17.484 +08 [287450] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:17.484 +08 [287450] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:17.484 +08 [287450] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:17.484 +08 [287450] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:19:17.484 +08 [287450] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (158511)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:17.919 +08 [287464] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:17.919 +08 [287464] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:17.919 +08 [287464] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:17.919 +08 [287464] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:19:17.919 +08 [287464] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (289512)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:18.981 +08 [287451] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:18.981 +08 [287451] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:18.981 +08 [287451] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:18.981 +08 [287451] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:19:18.981 +08 [287451] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (22508)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:20.985 +08 [287454] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:20.985 +08 [287454] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:20.985 +08 [287454] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:20.985 +08 [287454] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:19:20.985 +08 [287454] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (312176)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:21.674 +08 [287451] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:21.674 +08 [287451] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:21.674 +08 [287451] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:21.674 +08 [287451] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:19:21.674 +08 [287451] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (277338)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:23.983 +08 [287458] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:23.983 +08 [287458] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:23.983 +08 [287458] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:23.983 +08 [287458] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:19:23.983 +08 [287458] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (278782)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:32.385 +08 [287468] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:32.385 +08 [287468] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:32.385 +08 [287468] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:32.385 +08 [287468] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:19:32.385 +08 [287468] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (56773)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:36.486 +08 [287469] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:36.486 +08 [287469] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:36.486 +08 [287469] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:36.486 +08 [287469] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:19:36.486 +08 [287469] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (141055)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:36.836 +08 [287465] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:36.836 +08 [287465] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:36.836 +08 [287465] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:36.836 +08 [287465] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:19:36.836 +08 [287465] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (316381)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:38.361 +08 [287466] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:38.361 +08 [287466] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:38.361 +08 [287466] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:38.361 +08 [287466] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:19:38.361 +08 [287466] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (108501)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:43.256 +08 [287456] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:43.256 +08 [287456] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:43.256 +08 [287456] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:43.256 +08 [287456] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:19:43.256 +08 [287456] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (56752)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:43.392 +08 [287475] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:43.392 +08 [287475] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:43.392 +08 [287475] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:43.392 +08 [287475] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:19:43.392 +08 [287475] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (346915)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:19:44.013 +08 [287467] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:44.013 +08 [287467] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:44.013 +08 [287467] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:44.013 +08 [287467] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:19:44.013 +08 [287467] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (305739)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:19:56.431 +08 [287520] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:19:56.431 +08 [287520] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:19:56.431 +08 [287520] HINT:  The transaction might succeed if retried.
+2026-10-08 16:19:56.431 +08 [287520] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:19:56.431 +08 [287520] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (94328)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:20:01.514 +08 [287523] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:20:01.514 +08 [287523] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:20:01.514 +08 [287523] HINT:  The transaction might succeed if retried.
+2026-10-08 16:20:01.514 +08 [287523] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:20:01.514 +08 [287523] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (154807)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:20:01.744 +08 [287528] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:20:01.744 +08 [287528] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:20:01.744 +08 [287528] HINT:  The transaction might succeed if retried.
+2026-10-08 16:20:01.744 +08 [287528] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:20:01.744 +08 [287528] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (3010)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:20:59.948 +08 [287523] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:20:59.948 +08 [287523] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:20:59.948 +08 [287523] HINT:  The transaction might succeed if retried.
+2026-10-08 16:20:59.948 +08 [287523] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:20:59.948 +08 [287523] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (276864)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:21:26.599 +08 [287537] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:21:26.599 +08 [287537] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:21:26.599 +08 [287537] HINT:  The transaction might succeed if retried.
+2026-10-08 16:21:26.599 +08 [287537] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:21:26.599 +08 [287537] STATEMENT:  UPDATE orders
+	SET order_status = 'SHIPPED'::text
+	WHERE order_id = (2112376)::bigint
+	  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+2026-10-08 16:21:39.744 +08 [287533] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:21:39.744 +08 [287533] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:21:39.744 +08 [287533] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (268989)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:21:45.204 +08 [287529] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:21:45.204 +08 [287529] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:21:45.204 +08 [287529] HINT:  The transaction might succeed if retried.
+2026-10-08 16:21:45.204 +08 [287529] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:21:45.204 +08 [287529] STATEMENT:  UPDATE orders
+	SET order_status = 'SHIPPED'::text
+	WHERE order_id = (1419952)::bigint
+	  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+2026-10-08 16:22:02.252 +08 [287524] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:22:02.252 +08 [287524] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:22:02.252 +08 [287524] HINT:  The transaction might succeed if retried.
+2026-10-08 16:22:02.252 +08 [287524] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:22:02.252 +08 [287524] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (3895657)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:22:11.667 +08 [287534] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:22:11.667 +08 [287534] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:22:11.667 +08 [287534] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (440945)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:22:38.955 +08 [287522] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:22:38.955 +08 [287522] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:22:38.955 +08 [287522] HINT:  The transaction might succeed if retried.
+2026-10-08 16:22:38.955 +08 [287522] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:22:38.955 +08 [287522] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (787041)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:22:40.037 +08 [287534] WARNING:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:22:40.037 +08 [287534] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-10-08 16:22:40.037 +08 [287534] HINT:  The transaction might succeed if retried.
+2026-10-08 16:22:40.037 +08 [287534] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:22:40.037 +08 [287534] WARNING:  failed to commit transaction on xcnf21:5436
+2026-10-08 16:22:40.037 +08 [287534] ERROR:  could not commit transaction for shard 102175 on at least one active node
+2026-10-08 16:22:40.037 +08 [287534] STATEMENT:  COMMIT;
+2026-10-08 16:22:40.083 +08 [287529] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:22:40.083 +08 [287529] DETAIL:  Reason code: Canceled on conflict out to pivot 268996, during read.
+2026-10-08 16:22:40.083 +08 [287529] HINT:  The transaction might succeed if retried.
+2026-10-08 16:22:40.083 +08 [287529] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:22:40.083 +08 [287529] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-08 16:23:31.654 +08 [287537] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:23:31.654 +08 [287537] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:23:31.654 +08 [287537] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (414003)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:23:37.149 +08 [287521] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:23:37.149 +08 [287521] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:23:37.149 +08 [287521] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (63509)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:23:59.559 +08 [287525] WARNING:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:23:59.559 +08 [287525] DETAIL:  Reason code: Canceled on commit attempt with conflict in from prepared pivot.
+2026-10-08 16:23:59.559 +08 [287525] HINT:  The transaction might succeed if retried.
+2026-10-08 16:23:59.559 +08 [287525] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:23:59.559 +08 [287525] WARNING:  failed to commit transaction on xcnf18:5436
+2026-10-08 16:23:59.559 +08 [287525] ERROR:  could not commit transaction for shard 102052 on at least one active node
+2026-10-08 16:23:59.559 +08 [287525] STATEMENT:  COMMIT;
+2026-10-08 16:25:40.543 +08 [287522] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:25:40.543 +08 [287522] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:25:40.543 +08 [287522] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (73840)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:26:07.191 +08 [287532] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:26:07.191 +08 [287532] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:26:07.191 +08 [287532] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (461301)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:27:49.042 +08 [287517] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:27:49.042 +08 [287517] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:27:49.042 +08 [287517] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (329730)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:28:01.689 +08 [287531] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:28:01.689 +08 [287531] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:28:01.689 +08 [287531] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (192398)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:29:37.805 +08 [287523] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:29:37.805 +08 [287523] DETAIL:  Reason code: Canceled on conflict out to pivot 306691, during read.
+2026-10-08 16:29:37.805 +08 [287523] HINT:  The transaction might succeed if retried.
+2026-10-08 16:29:37.805 +08 [287523] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:29:37.805 +08 [287523] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-08 16:29:50.186 +08 [287384] LOG:  received fast shutdown request
+2026-10-08 16:29:50.186 +08 [287384] LOG:  aborting any active transactions
+2026-10-08 16:29:50.189 +08 [287384] LOG:  background worker "logical replication launcher" (PID 287394) exited with exit code 1
+2026-10-08 16:29:50.191 +08 [287389] LOG:  shutting down
+2026-10-08 16:29:50.192 +08 [287389] LOG:  checkpoint starting: shutdown immediate
+2026-10-08 16:29:50.203 +08 [287389] LOG:  checkpoint complete: wrote 1137 buffers (0.9%), wrote 34 SLRU buffers; 0 WAL file(s) added, 0 removed, 5 recycled; write=0.010 s, sync=0.001 s, total=0.012 s; sync files=47, longest=0.001 s, average=0.001 s; distance=89080 kB, estimate=89080 kB; lsn=0/18B5E228, redo lsn=0/18B5E228
+2026-10-08 16:29:50.246 +08 [287384] LOG:  database system is shut down
+2026-10-08 16:29:55.157 +08 [287826] LOG:  There is no designated Main database.
+2026-10-08 16:29:55.157 +08 [287826] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-08 16:29:55.157 +08 [287826] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-08 16:29:55.293 +08 [287826] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-08 16:29:55.293 +08 [287826] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-08 16:29:55.293 +08 [287826] LOG:  listening on IPv6 address "::", port 5436
+2026-10-08 16:29:55.294 +08 [287826] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-08 16:29:55.298 +08 [287833] LOG:  database system was shut down at 2026-10-08 16:29:50 +08
+2026-10-08 16:29:55.301 +08 [287826] LOG:  database system is ready to accept connections
+2026-10-08 16:29:56.186 +08 [287857] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-08 16:29:56.186 +08 [287857] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-08 16:30:46.237 +08 [287932] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:46.237 +08 [287932] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:46.237 +08 [287932] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:46.237 +08 [287932] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:30:46.237 +08 [287932] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (344730)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:30:47.725 +08 [287904] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:47.725 +08 [287904] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:47.725 +08 [287904] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:47.725 +08 [287904] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:30:47.725 +08 [287904] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (325846)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:47.989 +08 [287917] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:47.989 +08 [287917] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:47.989 +08 [287917] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:47.989 +08 [287917] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:30:47.989 +08 [287917] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (288278)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:48.508 +08 [287886] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:48.508 +08 [287886] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:48.508 +08 [287886] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:48.508 +08 [287886] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:30:48.508 +08 [287886] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (449819)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:30:49.322 +08 [287915] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:49.322 +08 [287915] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:49.322 +08 [287915] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:49.322 +08 [287915] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:30:49.322 +08 [287915] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (243643)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:49.459 +08 [287913] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:49.459 +08 [287913] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:49.459 +08 [287913] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:49.459 +08 [287913] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:30:49.459 +08 [287913] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (364960)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:49.646 +08 [287910] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:49.646 +08 [287910] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:49.646 +08 [287910] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:49.646 +08 [287910] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:30:49.646 +08 [287910] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (164539)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:51.095 +08 [287930] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:51.095 +08 [287930] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:51.095 +08 [287930] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:51.095 +08 [287930] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:30:51.095 +08 [287930] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (15973)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:30:51.367 +08 [287940] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:51.367 +08 [287940] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:51.367 +08 [287940] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:51.367 +08 [287940] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:30:51.367 +08 [287940] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (343881)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:30:51.592 +08 [287918] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:51.592 +08 [287918] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:51.592 +08 [287918] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:51.592 +08 [287918] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:30:51.592 +08 [287918] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (66867)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:51.660 +08 [287890] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:30:51.660 +08 [287890] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:30:51.660 +08 [287890] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (12485)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:52.025 +08 [287921] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:52.025 +08 [287921] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:52.025 +08 [287921] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:52.025 +08 [287921] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:30:52.025 +08 [287921] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (449021)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:52.598 +08 [287903] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:52.598 +08 [287903] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:52.598 +08 [287903] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:52.598 +08 [287903] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:30:52.598 +08 [287903] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (263363)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:54.157 +08 [287921] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:54.157 +08 [287921] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:54.157 +08 [287921] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:54.157 +08 [287921] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:30:54.157 +08 [287921] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (272097)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:30:54.251 +08 [287919] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:54.251 +08 [287919] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:54.251 +08 [287919] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:54.251 +08 [287919] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:30:54.251 +08 [287919] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (109847)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:30:54.394 +08 [287898] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:54.394 +08 [287898] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:54.394 +08 [287898] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:54.394 +08 [287898] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:30:54.394 +08 [287898] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (10252)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:30:54.444 +08 [287928] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:54.444 +08 [287928] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:54.444 +08 [287928] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:54.444 +08 [287928] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:30:54.444 +08 [287928] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (29200)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:55.202 +08 [287945] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:55.202 +08 [287945] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:55.202 +08 [287945] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:55.202 +08 [287945] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:30:55.202 +08 [287945] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (184760)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:55.216 +08 [287893] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:55.216 +08 [287893] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:55.216 +08 [287893] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:55.216 +08 [287893] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:30:55.216 +08 [287893] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (482340)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:55.474 +08 [287896] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:55.474 +08 [287896] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:55.474 +08 [287896] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:55.474 +08 [287896] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:30:55.474 +08 [287896] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (14219)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:55.576 +08 [287936] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:55.576 +08 [287936] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:55.576 +08 [287936] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:55.576 +08 [287936] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:30:55.576 +08 [287936] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (268645)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:55.910 +08 [287926] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:55.910 +08 [287926] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:55.910 +08 [287926] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:55.910 +08 [287926] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:30:55.910 +08 [287926] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (200854)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:30:56.400 +08 [287928] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:56.400 +08 [287928] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:56.400 +08 [287928] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:56.400 +08 [287928] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:30:56.400 +08 [287928] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (47946)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:56.651 +08 [287914] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:56.651 +08 [287914] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:56.651 +08 [287914] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:56.651 +08 [287914] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:30:56.651 +08 [287914] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (58157)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:30:56.733 +08 [287913] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:56.733 +08 [287913] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:56.733 +08 [287913] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:56.733 +08 [287913] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:30:56.733 +08 [287913] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (489916)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:57.768 +08 [287895] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:57.768 +08 [287895] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:57.768 +08 [287895] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:57.768 +08 [287895] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:30:57.768 +08 [287895] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (478472)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:30:57.787 +08 [287944] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:57.787 +08 [287944] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:57.787 +08 [287944] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:57.787 +08 [287944] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:30:57.787 +08 [287944] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (86289)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:30:58.450 +08 [287898] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:30:58.450 +08 [287898] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:30:58.450 +08 [287898] HINT:  The transaction might succeed if retried.
+2026-10-08 16:30:58.450 +08 [287898] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:30:58.450 +08 [287898] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (350900)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:00.822 +08 [287893] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:00.822 +08 [287893] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:00.822 +08 [287893] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:00.822 +08 [287893] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:00.822 +08 [287893] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (461852)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:01.370 +08 [287916] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:01.370 +08 [287916] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:01.370 +08 [287916] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:01.370 +08 [287916] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:01.370 +08 [287916] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (48530)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:02.080 +08 [287934] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:02.080 +08 [287934] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:02.080 +08 [287934] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:02.080 +08 [287934] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:31:02.080 +08 [287934] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (80099)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:02.797 +08 [287933] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:02.797 +08 [287933] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:02.797 +08 [287933] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:02.797 +08 [287933] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:02.797 +08 [287933] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (220879)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:03.395 +08 [287936] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:03.395 +08 [287936] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:03.395 +08 [287936] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:03.395 +08 [287936] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:03.395 +08 [287936] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (18012)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:04.608 +08 [287913] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:04.608 +08 [287913] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:04.608 +08 [287913] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:04.608 +08 [287913] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:04.608 +08 [287913] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (422915)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:04.898 +08 [287937] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:04.898 +08 [287937] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:04.898 +08 [287937] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:04.898 +08 [287937] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:31:04.898 +08 [287937] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (35476)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:06.255 +08 [287895] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:06.255 +08 [287895] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:06.255 +08 [287895] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:06.255 +08 [287895] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:31:06.255 +08 [287895] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (372887)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:08.686 +08 [287913] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:31:08.686 +08 [287913] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:31:08.686 +08 [287913] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (321690)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:09.244 +08 [287896] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:09.244 +08 [287896] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:09.244 +08 [287896] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:09.244 +08 [287896] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:31:09.244 +08 [287896] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (35516)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:12.019 +08 [287894] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:12.019 +08 [287894] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:12.019 +08 [287894] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:12.019 +08 [287894] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:31:12.019 +08 [287894] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (131513)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:12.397 +08 [287926] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:12.397 +08 [287926] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:12.397 +08 [287926] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:12.397 +08 [287926] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:12.397 +08 [287926] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (81065)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:12.996 +08 [287923] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:12.996 +08 [287923] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:12.996 +08 [287923] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:12.996 +08 [287923] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:12.996 +08 [287923] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (63186)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:16.583 +08 [287924] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:16.583 +08 [287924] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:16.583 +08 [287924] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:16.583 +08 [287924] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:16.583 +08 [287924] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (444046)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:18.631 +08 [287935] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:18.631 +08 [287935] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:18.631 +08 [287935] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:18.631 +08 [287935] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:18.631 +08 [287935] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (405847)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:19.575 +08 [287914] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:19.575 +08 [287914] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:19.575 +08 [287914] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:19.575 +08 [287914] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:31:19.575 +08 [287914] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (324476)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:19.654 +08 [287923] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:19.654 +08 [287923] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:19.654 +08 [287923] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:19.654 +08 [287923] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:19.654 +08 [287923] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (176155)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:19.933 +08 [287913] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:19.933 +08 [287913] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:19.933 +08 [287913] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:19.933 +08 [287913] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:19.933 +08 [287913] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (60376)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:20.497 +08 [287910] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:20.497 +08 [287910] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:20.497 +08 [287910] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:20.497 +08 [287910] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:31:20.497 +08 [287910] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (275833)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:20.694 +08 [287917] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:31:20.694 +08 [287917] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:31:20.694 +08 [287917] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (203570)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:21.435 +08 [287912] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:21.435 +08 [287912] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:21.435 +08 [287912] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:21.435 +08 [287912] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:31:21.435 +08 [287912] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (212692)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:21.462 +08 [287944] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:21.462 +08 [287944] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:21.462 +08 [287944] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:21.462 +08 [287944] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:21.462 +08 [287944] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (253577)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:24.438 +08 [287946] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:24.438 +08 [287946] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:24.438 +08 [287946] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:24.438 +08 [287946] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:24.438 +08 [287946] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (187049)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:24.554 +08 [287939] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:24.554 +08 [287939] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:24.554 +08 [287939] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:24.554 +08 [287939] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:24.554 +08 [287939] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (192340)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:25.557 +08 [287935] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:25.557 +08 [287935] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:25.557 +08 [287935] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:25.557 +08 [287935] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:31:25.557 +08 [287935] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (478800)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:27.091 +08 [287889] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:27.091 +08 [287889] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:27.091 +08 [287889] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:27.091 +08 [287889] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:27.091 +08 [287889] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (159251)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:27.710 +08 [287897] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:27.710 +08 [287897] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:27.710 +08 [287897] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:27.710 +08 [287897] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:27.710 +08 [287897] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (354668)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:28.640 +08 [287901] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:28.640 +08 [287901] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:28.640 +08 [287901] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:28.640 +08 [287901] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:31:28.640 +08 [287901] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (119911)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:29.764 +08 [287918] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:29.764 +08 [287918] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:29.764 +08 [287918] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:29.764 +08 [287918] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:29.764 +08 [287918] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (305637)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:29.802 +08 [287902] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:29.802 +08 [287902] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:29.802 +08 [287902] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:29.802 +08 [287902] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:31:29.802 +08 [287902] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (160237)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:30.008 +08 [287927] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:30.008 +08 [287927] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:30.008 +08 [287927] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:30.008 +08 [287927] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:30.008 +08 [287927] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (128749)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:30.752 +08 [287891] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:30.752 +08 [287891] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:30.752 +08 [287891] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:30.752 +08 [287891] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:30.752 +08 [287891] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (250907)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:31.822 +08 [287887] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:31.822 +08 [287887] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:31.822 +08 [287887] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:31.822 +08 [287887] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:31.822 +08 [287887] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (47779)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:34.901 +08 [287896] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:34.901 +08 [287896] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:34.901 +08 [287896] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:34.901 +08 [287896] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:34.901 +08 [287896] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (397819)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:37.287 +08 [287932] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:37.287 +08 [287932] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:37.287 +08 [287932] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:37.287 +08 [287932] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:31:37.287 +08 [287932] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (493232)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:39.961 +08 [287914] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:39.961 +08 [287914] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:39.961 +08 [287914] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:39.961 +08 [287914] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:39.961 +08 [287914] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (480136)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:40.292 +08 [287890] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:31:40.292 +08 [287890] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:40.292 +08 [287890] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (195926)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:31:40.899 +08 [287942] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:40.899 +08 [287942] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:40.899 +08 [287942] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:40.899 +08 [287942] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:40.899 +08 [287942] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (352213)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:42.061 +08 [287943] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:42.061 +08 [287943] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:42.061 +08 [287943] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:42.061 +08 [287943] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:42.061 +08 [287943] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (490005)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:44.128 +08 [287922] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:31:44.128 +08 [287922] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:31:44.128 +08 [287922] HINT:  The transaction might succeed if retried.
+2026-10-08 16:31:44.128 +08 [287922] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:31:44.128 +08 [287922] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (99350)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:31:48.357 +08 [287991] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:31:48.357 +08 [287991] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:31:48.357 +08 [287991] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (369858)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:32:18.020 +08 [287994] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:32:18.020 +08 [287994] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:32:18.020 +08 [287994] HINT:  The transaction might succeed if retried.
+2026-10-08 16:32:18.020 +08 [287994] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:32:18.020 +08 [287994] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (156657)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:32:24.146 +08 [288019] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:32:24.146 +08 [288019] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:32:24.146 +08 [288019] HINT:  The transaction might succeed if retried.
+2026-10-08 16:32:24.146 +08 [288019] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:32:24.146 +08 [288019] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (50385)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:32:42.597 +08 [287985] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:32:42.597 +08 [287985] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:32:42.597 +08 [287985] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (397759)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:32:58.878 +08 [287999] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:32:58.878 +08 [287999] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:32:58.878 +08 [287999] HINT:  The transaction might succeed if retried.
+2026-10-08 16:32:58.878 +08 [287999] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:32:58.878 +08 [287999] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (455343)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:33:10.367 +08 [287976] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:33:10.367 +08 [287976] DETAIL:  Reason code: Canceled on conflict out to pivot 336047, during read.
+2026-10-08 16:33:10.367 +08 [287976] HINT:  The transaction might succeed if retried.
+2026-10-08 16:33:10.367 +08 [287976] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:33:10.367 +08 [287976] STATEMENT:  SELECT
+	  merchant_id,
+	  COUNT(*) AS order_count,
+	  SUM(total_amount) AS revenue
+	FROM orders
+	WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+	  AND created_at < CURRENT_TIMESTAMP
+	GROUP BY merchant_id
+	ORDER BY revenue DESC
+	LIMIT 20;
+2026-10-08 16:33:13.637 +08 [288011] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:33:13.637 +08 [288011] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:33:13.637 +08 [288011] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (36899)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:33:14.269 +08 [287977] WARNING:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:33:14.269 +08 [287977] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:33:14.269 +08 [287977] HINT:  The transaction might succeed if retried.
+2026-10-08 16:33:14.269 +08 [287977] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:33:14.269 +08 [287977] WARNING:  failed to commit transaction on xcnf19:5436
+2026-10-08 16:33:14.269 +08 [287977] ERROR:  could not commit transaction for shard 102085 on at least one active node
+2026-10-08 16:33:14.269 +08 [287977] STATEMENT:  COMMIT;
+2026-10-08 16:33:26.891 +08 [288036] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:33:26.891 +08 [288036] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:33:26.891 +08 [288036] HINT:  The transaction might succeed if retried.
+2026-10-08 16:33:26.891 +08 [288036] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:33:26.891 +08 [288036] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (51265)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:33:31.810 +08 [287976] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:33:31.810 +08 [287976] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:33:31.810 +08 [287976] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (194315)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:33:32.777 +08 [287984] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:33:32.777 +08 [287984] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:33:32.777 +08 [287984] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (159043)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:33:38.748 +08 [287999] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:33:38.748 +08 [287999] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:33:38.748 +08 [287999] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (303092)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:33:46.799 +08 [288012] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:33:46.799 +08 [288012] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:33:46.799 +08 [288012] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (61803)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:34:09.921 +08 [288023] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:34:09.921 +08 [288023] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:34:09.921 +08 [288023] HINT:  The transaction might succeed if retried.
+2026-10-08 16:34:09.921 +08 [288023] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:34:09.921 +08 [288023] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (692958)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:34:27.957 +08 [288032] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:34:27.957 +08 [288032] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:34:27.957 +08 [288032] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (20889)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:34:31.861 +08 [287987] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:34:31.861 +08 [287987] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:34:31.861 +08 [287987] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (80352)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:34:31.903 +08 [287978] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:34:31.903 +08 [287978] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:34:31.903 +08 [287978] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (377690)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:34:46.225 +08 [288007] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:34:46.225 +08 [288007] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:34:46.225 +08 [288007] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (97722)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:35:01.831 +08 [287991] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:35:01.831 +08 [287991] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:35:01.831 +08 [287991] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (275721)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:35:12.371 +08 [287982] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:35:12.371 +08 [287982] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:35:12.371 +08 [287982] HINT:  The transaction might succeed if retried.
+2026-10-08 16:35:12.371 +08 [287982] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:35:12.371 +08 [287982] STATEMENT:  UPDATE orders
+	SET order_status = 'SHIPPED'::text
+	WHERE order_id = (1298033)::bigint
+	  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+2026-10-08 16:35:36.030 +08 [288016] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:35:36.030 +08 [288016] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:35:36.030 +08 [288016] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (271375)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:35:47.272 +08 [287983] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:35:47.272 +08 [287983] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:35:47.272 +08 [287983] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (286261)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:35:53.980 +08 [287993] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:35:53.980 +08 [287993] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:35:53.980 +08 [287993] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (160850)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:35:58.015 +08 [287997] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:35:58.015 +08 [287997] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:35:58.015 +08 [287997] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (339504)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:36:11.517 +08 [288010] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:36:11.517 +08 [288010] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:36:11.517 +08 [288010] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (15583)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:36:22.608 +08 [287987] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:36:22.608 +08 [287987] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:36:22.608 +08 [287987] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (193104)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:36:27.342 +08 [287975] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:36:27.342 +08 [287975] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-08 16:36:27.342 +08 [287975] HINT:  The transaction might succeed if retried.
+2026-10-08 16:36:27.342 +08 [287975] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:36:27.342 +08 [287975] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (4449480)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:36:42.699 +08 [287993] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:36:42.699 +08 [287993] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:36:42.699 +08 [287993] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (191585)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:37:00.286 +08 [288032] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:37:00.286 +08 [288032] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:37:00.286 +08 [288032] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (109095)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:37:00.902 +08 [288028] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:37:00.902 +08 [288028] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:37:00.902 +08 [288028] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (367061)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:37:15.911 +08 [288032] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:37:15.911 +08 [288032] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:37:15.911 +08 [288032] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (389148)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:37:28.091 +08 [287999] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:37:28.091 +08 [287999] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:37:28.091 +08 [287999] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (297650)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:37:29.629 +08 [288036] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:37:29.629 +08 [288036] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:37:29.629 +08 [288036] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (166525)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:37:31.773 +08 [288018] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:37:31.773 +08 [288018] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:37:31.773 +08 [288018] HINT:  The transaction might succeed if retried.
+2026-10-08 16:37:31.773 +08 [288018] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:37:31.773 +08 [288018] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (3351432)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:37:31.859 +08 [288002] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:37:31.859 +08 [288002] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:37:31.859 +08 [288002] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (791)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:37:35.725 +08 [288007] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:37:35.725 +08 [288007] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:37:35.725 +08 [288007] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (311025)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:37:45.766 +08 [287996] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:37:45.766 +08 [287996] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:37:45.766 +08 [287996] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (324020)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:37:48.712 +08 [288012] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:37:48.712 +08 [288012] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:37:48.712 +08 [288012] STATEMENT:  WITH reserved AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (359305)::bigint
+	    AND merchant_id = (305)::bigint
+	    AND product_id = (359305)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT CASE WHEN EXISTS (SELECT 1 FROM reserved)
+	            THEN 1 ELSE 0 END AS stock_ok
+	
+2026-10-08 16:37:49.515 +08 [287981] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:37:49.515 +08 [287981] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:37:49.515 +08 [287981] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (337386)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:38:04.864 +08 [287976] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:38:04.864 +08 [287976] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:38:04.864 +08 [287976] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (253011)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:38:19.255 +08 [287995] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:38:19.255 +08 [287995] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:38:19.255 +08 [287995] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (196006)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:38:40.195 +08 [287976] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:38:40.195 +08 [287976] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:38:40.195 +08 [287976] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (26978)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:39:07.147 +08 [288014] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:39:07.147 +08 [288014] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:39:07.147 +08 [288014] HINT:  The transaction might succeed if retried.
+2026-10-08 16:39:07.147 +08 [288014] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:39:07.147 +08 [288014] STATEMENT:  UPDATE orders
+	SET order_status = 'SHIPPED'::text
+	WHERE order_id = (2759368)::bigint
+	  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+2026-10-08 16:39:14.870 +08 [288020] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:39:14.870 +08 [288020] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:39:14.870 +08 [288020] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (234018)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:39:17.520 +08 [288026] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:39:17.520 +08 [288026] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:39:17.520 +08 [288026] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (418536)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:39:18.637 +08 [287991] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:39:18.637 +08 [287991] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:39:18.637 +08 [287991] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (427557)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:39:22.424 +08 [288035] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:39:22.424 +08 [288035] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:39:22.424 +08 [288035] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (185730)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:39:25.432 +08 [287987] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:39:25.432 +08 [287987] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:39:25.432 +08 [287987] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (66172)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:39:43.196 +08 [287980] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:39:43.196 +08 [287980] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:39:43.196 +08 [287980] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (158047)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:39:50.106 +08 [288007] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:39:50.106 +08 [288007] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:39:50.106 +08 [288007] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (484506)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:39:55.296 +08 [287995] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:39:55.296 +08 [287995] CONTEXT:  while executing command on xcnf21:5436
+2026-10-08 16:39:55.296 +08 [287995] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (161042)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:40:05.383 +08 [287979] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:40:05.383 +08 [287979] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:40:05.383 +08 [287979] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (275481)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-08 16:40:30.158 +08 [287979] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:40:30.158 +08 [287979] CONTEXT:  while executing command on xcnf19:5436
+2026-10-08 16:40:30.158 +08 [287979] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (198172)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:40:48.610 +08 [288025] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:40:48.610 +08 [288025] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:40:48.610 +08 [288025] HINT:  The transaction might succeed if retried.
+2026-10-08 16:40:48.610 +08 [288025] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:40:48.610 +08 [288025] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (2711525)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:40:49.586 +08 [288015] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-08 16:40:49.586 +08 [288015] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-08 16:40:49.586 +08 [288015] HINT:  The transaction might succeed if retried.
+2026-10-08 16:40:49.586 +08 [288015] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:40:49.586 +08 [288015] STATEMENT:  UPDATE orders
+	SET order_status = 'PENDING'::text
+	WHERE order_id = (2281603)::bigint
+	  AND order_status IS DISTINCT FROM 'PENDING'::text;
+2026-10-08 16:41:23.900 +08 [288001] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:41:23.900 +08 [288001] CONTEXT:  while executing command on xcnf20:5436
+2026-10-08 16:41:23.900 +08 [288001] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (167456)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:41:32.995 +08 [287990] ERROR:  could not serialize access due to concurrent update
+2026-10-08 16:41:32.995 +08 [287990] CONTEXT:  while executing command on xcnf18:5436
+2026-10-08 16:41:32.995 +08 [287990] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (454030)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-08 16:41:47.490 +08 [287826] LOG:  received fast shutdown request
+2026-10-08 16:41:47.490 +08 [287826] LOG:  aborting any active transactions
+2026-10-08 16:41:47.494 +08 [287826] LOG:  background worker "logical replication launcher" (PID 287836) exited with exit code 1
+2026-10-08 16:41:47.494 +08 [287831] LOG:  shutting down
+2026-10-08 16:41:47.494 +08 [287831] LOG:  checkpoint starting: shutdown immediate
+2026-10-08 16:41:47.504 +08 [287831] LOG:  checkpoint complete: wrote 901 buffers (0.7%), wrote 35 SLRU buffers; 0 WAL file(s) added, 0 removed, 5 recycled; write=0.009 s, sync=0.001 s, total=0.011 s; sync files=47, longest=0.001 s, average=0.001 s; distance=84118 kB, estimate=84118 kB; lsn=0/1DD83CA8, redo lsn=0/1DD83CA8
+2026-10-08 16:41:47.549 +08 [287826] LOG:  database system is shut down
