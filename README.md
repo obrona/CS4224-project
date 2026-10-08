@@ -32,37 +32,37 @@ expt_b7 - workload B with all tenant tables colocated by merchant_id, query-matc
 
 - Problem: The baseline distributes each table by its own id, so a merchant's customers, products, inventory, orders and items sit on unrelated shards and merchant-scoped transactions span workers.
 - Optimisation: Distribute all tenant tables by `merchant_id` in one colocation group with composite keys, replace the indexes with ones matched to the queries, set fill factors that allow HOT updates, and drop `BEGIN`/`COMMIT` around single-statement transactions.
-- Result: 8.6 TPS at 1 client and 11.2 at 64 with no serialization failures, but T3 still takes 2.0 s and is 88% of total latency at 1 client.
+- Result: 9.2 TPS at 1 client and 11.3 at 64 with no serialization failures, but T3 still takes 1.9 s and is 86% of total latency at 1 client.
 
 expt_b8 - expt_b7 with T3 routed to one worker by adding merchant_id to its join
 
 - Problem: T3's join of `orders` and `order_items` omits `merchant_id`, so Citus cannot route it to one worker.
 - Optimisation: Add `merchant_id` to T3's join, `IS DISTINCT FROM` guards to T5 and T8 so unchanged rows are not rewritten, and `merchant_id` to T1's final `UPDATE orders`.
-- Result: T3 falls from 2,040 ms to 1.4 ms at 1 client and throughput rises to 62.4 TPS at 1 client and 230.2 at 64 (7x and 20x `expt_b7`), leaving T7 as 97% of latency at 64 clients.
+- Result: T3 falls from 1,873 ms to 1.4 ms at 1 client and throughput rises to 61.6 TPS at 1 client and 237.1 at 64 (7x and 21x `expt_b7`), leaving T7 as 97% of latency at 64 clients.
 
 expt_b9 - expt_b8 with T1 rewritten as one set-based statement
 
 - Problem: T1 sends up to 26 statements per order (about 18 on average), each a separate round trip through the coordinator.
 - Optimisation: Rewrite T1 as one statement of chained CTEs that checks stock, reserves it and inserts the order and its items together.
-- Result: T1 got slower at 1 client (10.2 to 19.1 ms) and throughput barely moved (59.0 TPS at 1 client, 239.8 at 64), since T7 still dominates.
+- Result: T1 got slower at 1 client (10.3 to 19.2 ms) and throughput barely moved (58.4 TPS at 1 client, 233.2 at 64), since T7 still dominates.
 
 expt_b10 - expt_b9 with T7 routed through a product-to-merchant lookup table
 
 - Problem: T7 does not name `merchant_id`, so each of its six statements goes to all 32 inventory shards, and at 64 clients about 62 of the 64 clients are inside T7.
 - Optimisation: Add a `product_merchant_map` table, distributed by `product_id`, so T7 looks up each product's merchant and then debits and credits with single-shard `UPDATE`s.
-- Result: T7 falls from 861 to 9.0 ms at 64 clients and throughput rises to 118.6 TPS at 1 client and 367.1 at 64, after which T5 (1,554 ms at 64 clients) caps throughput.
+- Result: T7 falls from 885 to 9.0 ms at 64 clients and throughput rises to 116.4 TPS at 1 client and 364.5 at 64, after which T5 (1,562 ms at 64 clients) caps throughput.
 
 expt_b11 - expt_b10 with T5 routed through an order-to-merchant lookup table
 
-- Problem: T5 updates `orders` by `order_id` alone, so it goes to all 32 shards and saturates at about 36 TPS, capping overall throughput near 366 TPS.
+- Problem: T5 updates `orders` by `order_id` alone, so it goes to all 32 shards and saturates at about 36 TPS, capping overall throughput near 363 TPS.
 - Optimisation: Add an `order_merchant_map` table, distributed by `order_id` and written by T1 for each new order, so T5 looks up the merchant and updates one shard.
-- Result: T5 falls from 1,554 to 28.5 ms at 64 clients, but throughput only rises to 123.6 TPS at 1 client and 405.2 at 64, because T6 now caps it at 65% of latency.
+- Result: T5 falls from 1,562 to 28.6 ms at 64 clients, but throughput only rises to 122.9 TPS at 1 client and 398.9 at 64, because T6 now caps it at 66% of latency.
 
 expt_b12 - expt_b11 with T6 answered from a per-merchant daily sales rollup
 
-- Problem: T6 re-aggregates about 411,000 orders for its 30-day window on every call and takes 1,030 ms at 64 clients.
+- Problem: T6 re-aggregates about 411,000 orders for its 30-day window on every call and takes 1,067 ms at 64 clients.
 - Optimisation: Add a per-merchant, per-day `merchant_daily_sales` rollup, colocated with `orders` and updated by T1 in the same transaction, so T6 reads the rollup for whole days and `orders` only for the boundary day.
-- Result: T6 falls from 1,030 to 245 ms at 64 clients and throughput reaches 165.9 TPS at 1 client, a peak of 1,519.7 at 8 and 1,098.7 at 64.
+- Result: T6 falls from 1,067 to 245 ms at 64 clients and throughput reaches 165.9 TPS at 1 client, a peak of 1,519.7 at 8 and 1,098.7 at 64.
 
 expt_b13 - expt_b12 with T1 as a distributed function delegated to the merchant's worker
 

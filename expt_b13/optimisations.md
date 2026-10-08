@@ -9,7 +9,7 @@ transactions, or server parameters carried over from `expt_b12`.
 ### Motivation
 
 `expt_b12` removed T6's scan of `orders`. Throughput went from
-405.2 TPS in `expt_b11` to a peak of 1529.2 TPS at 8 clients, and 1099.8 TPS at 64. T1 is now the largest share of latency at low client counts and the second
+398.9 TPS in `expt_b11` to a peak of 1529.2 TPS at 8 clients, and 1099.8 TPS at 64. T1 is now the largest share of latency at low client counts and the second
 largest at 64:
 
 | Transaction            | Share at 1 client | Share at 8 clients | Share at 64 clients |

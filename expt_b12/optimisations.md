@@ -8,8 +8,8 @@ rollup.
 
 ### Motivation
 
-`expt_b11` removed T5 as the bottleneck: T5's average latency fell from 1554.3 ms
-to 28.5 ms at 64 clients. Overall throughput rose only from 367.1 to 405.2 TPS,
+`expt_b11` removed T5 as the bottleneck: T5's average latency fell from 1561.7 ms
+to 28.6 ms at 64 clients. Overall throughput rose only from 364.5 to 398.9 TPS,
 because T6 took over.
 
 Each transaction's share of total measured latency in `expt_b11`
@@ -17,15 +17,15 @@ Each transaction's share of total measured latency in `expt_b11`
 
 | Transaction            | Share at 1 client | Share at 64 clients |
 | ---------------------- | ----------------- | ------------------- |
-| T6 Global Sales        | 52.5%             | 65.4%               |
-| T7 Inventory Transfer  | 16.6%             | 14.6%               |
-| T1 Place Order         | 24.0%             | 13.6%               |
+| T6 Global Sales        | 52.5%             | 66.0%               |
+| T7 Inventory Transfer  | 16.5%             | 14.3%               |
+| T1 Place Order         | 24.0%             | 13.4%               |
 | T5 Update Order Status | 2.0%              | 1.8%                |
 
-T6's latency across client counts is 42.9, 64.7, 128.5, 296.0, 565.4,
-1030.2 ms. By Little's law 40.115 x 1.030 = 41.3, so about 41 of the 64 clients
-are inside T6 at any moment. T6 is 10% of workload B, so 40.115 / 0.10 = 401
-TPS, which is the observed overall throughput (405.2). T6 sets the ceiling.
+T6's latency across client counts is 43.2, 64.7, 131.3, 292.8, 573.9,
+1067.0 ms. By Little's law 39.490 x 1.067 = 42.1, so about 42 of the 64 clients
+are inside T6 at any moment. T6 is 10% of workload B, so 39.490 / 0.10 = 395
+TPS, which is the observed overall throughput (398.9). T6 sets the ceiling.
 
 ### Why T6 is slow
 

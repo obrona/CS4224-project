@@ -10,10 +10,10 @@ Computing each transaction's share of total measured latency
 
 | Transaction | Share at 1 client | Share at 64 clients |
 | --- | --- | --- |
-| T3 Customer Order History | 88.2% | 45.7% |
-| T7 Inventory Transfer | 6.5% | 24.1% |
-| T1 Place Order | 1.1% | 15.0% |
-| T5 Update Order Status | 0.5% | 13.4% |
+| T3 Customer Order History | 85.6% | 40.7% |
+| T7 Inventory Transfer | 8.0% | 14.8% |
+| T1 Place Order | 1.6% | 21.6% |
+| T5 Update Order Status | 0.6% | 20.7% |
 
 T3 dominates at every client count despite being only 5% of workload B, so it
 is addressed first.

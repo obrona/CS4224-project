@@ -10,16 +10,16 @@ Each transaction's share of total measured latency in `expt_b9`
 
 | Transaction            | Share at 1 client | Share at 64 clients |
 | ---------------------- | ----------------- | ------------------- |
-| T7 Inventory Transfer  | 57.1%             | 96.7%               |
-| T6 Global Sales        | 25.2%             | 2.1%                |
-| T1 Place Order         | 11.3%             | 0.7%                |
-| T5 Update Order Status | 3.9%              | 0.3%                |
+| T7 Inventory Transfer  | 57.1%             | 96.8%               |
+| T6 Global Sales        | 25.3%             | 2.1%                |
+| T1 Place Order         | 11.2%             | 0.6%                |
+| T5 Update Order Status | 3.9%              | 0.4%                |
 
-At 64 clients T7 runs at 73.0 TPS with an average latency of 848 ms, so by
+At 64 clients T7 runs at 70.0 TPS with an average latency of 885 ms, so by
 Little's law about 62 of the 64 clients are inside T7 at any moment. T7 is 30%
-of workload B, and 73.0 / 0.30 = 243 TPS, which is the observed overall
-throughput (243.2). The same calculation gives `expt_b8`'s 117.0 TPS from its
-T7 rate (35.0 / 0.30 = 116.8). Overall throughput is set entirely by how fast
+of workload B, and 70.0 / 0.30 = 233 TPS, which is the observed overall
+throughput (233.2). The same calculation gives `expt_b8`'s 237.1 TPS from its
+T7 rate (71.2 / 0.30 = 237.2). Overall throughput is set entirely by how fast
 T7 can run, so T7 is the only transaction worth changing next.
 
 ### Why T7 is slow
@@ -141,10 +141,10 @@ as well.
 
 ### What to look at when this is run
 
-- **Comparability.** Run on the same nodes as `expt_b9` (`xcnf[16-20]`). At 1
+- **Comparability.** Run on the same nodes as `expt_b9` (`xcnf[17-21]`). At 1
   client the unchanged transactions (T2, T3, T4, T5, T6, T8, T9) should be
   within a few percent of `expt_b9`.
-- **T7 latency.** `expt_b9` had 32.4 ms at 1 client. The discarded
+- **T7 latency.** `expt_b9` had 32.7 ms at 1 client. The discarded
   formula-routed T7 measured 5.1 ms at 1 client on `xcnf[17-21]`, with the same
   shape of two routed `UPDATE`s. This version adds two routed lookups, so it
   should land slightly above that. A T7 p99 anywhere near `expt_b9`'s p50 would

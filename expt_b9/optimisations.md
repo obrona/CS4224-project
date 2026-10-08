@@ -11,11 +11,11 @@ Computing each transaction's share of total measured latency
 
 | Transaction            | Share at 1 client | Share at 64 clients |
 | ---------------------- | ----------------- | ------------------- |
-| T7 Inventory Transfer  | 65.9%             | 96.8%               |
-| T5 Update Order Status | 18.5%             | 0.5%                |
-| T6 Global Sales        | 5.1%              | 2.3%                |
-| T1 Place Order         | 4.2%              | 0.3%                |
-| T2 Update Inventory    | 2.4%              | 0.1%                |
+| T7 Inventory Transfer  | 59.9%             | 97.0%               |
+| T6 Global Sales        | 27.0%             | 2.1%                |
+| T1 Place Order         | 6.4%              | 0.3%                |
+| T5 Update Order Status | 4.1%              | 0.4%                |
+| T2 Update Inventory    | 0.6%              | 0.0%                |
 
 T1 is not the dominant cost at either client count. T7 is, and this experiment
 does not touch it. T1 is targeted for a different reason: it sends by far the

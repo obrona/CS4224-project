@@ -13,8 +13,8 @@ the `expt_b10` to `expt_b11` delta should be attributed to the pair.
 
 ### Motivation
 
-`expt_b10` removed T7 as the bottleneck: T7's average latency fell from 860.6 ms
-to 9.0 ms at 64 clients, and overall throughput rose from 239.8 to 367.1 TPS.
+`expt_b10` removed T7 as the bottleneck: T7's average latency fell from 884.8 ms
+to 9.0 ms at 64 clients, and overall throughput rose from 233.2 to 364.5 TPS.
 That made a transaction which had never mattered before into the one that now
 sets throughput.
 
@@ -23,20 +23,20 @@ Each transaction's share of total measured latency in `expt_b10`
 
 | Transaction            | Share at 1 client | Share at 64 clients |
 | ---------------------- | ----------------- | ------------------- |
-| T5 Update Order Status | 7.5%              | 88.8%               |
-| T6 Global Sales        | 50.0%             | 7.2%                |
-| T1 Place Order         | 22.1%             | 1.9%                |
-| T7 Inventory Transfer  | 15.8%             | 1.5%                |
+| T5 Update Order Status | 7.4%              | 88.8%               |
+| T6 Global Sales        | 50.8%             | 7.3%                |
+| T1 Place Order         | 21.7%             | 1.9%                |
+| T7 Inventory Transfer  | 15.5%             | 1.5%                |
 
-T5's latency across client counts in `expt_b10` is 6.3, 10.6, 44.0, 211.5,
-685.4, 1554.3 ms, while its throughput stays flat at about 36 TPS from 4
+T5's latency across client counts in `expt_b10` is 6.4, 10.4, 43.3, 239.0,
+688.3, 1561.7 ms, while its throughput stays flat at about 36 TPS from 8
 clients onwards. A transaction whose throughput stops rising while its latency
 grows in proportion to the client count is saturated. By Little's law
-36.59 x 1.554 = 56.9, so about 57 of the 64 clients are inside T5 at any
-moment. T5 is 10% of workload B, so 36.59 / 0.10 = 366 TPS, which is the
-observed overall throughput (367.1).
+36.32 x 1.562 = 56.7, so about 57 of the 64 clients are inside T5 at any
+moment. T5 is 10% of workload B, so 36.32 / 0.10 = 363 TPS, which is the
+observed overall throughput (364.5).
 
-The same T5 statement measured 9.3 ms at 64 clients in `expt_b9`. It is 167
+The same T5 statement measured 9.7 ms at 64 clients in `expt_b9`. It is 162
 times slower in `expt_b10` without having been modified. In `expt_b9` T7 held
 62 of the 64 clients, so few T5s ever ran at the same time; once T7 became
 cheap, T5 ran at full concurrency and its cost became visible.
@@ -180,14 +180,14 @@ plus 1 single-shard `UPDATE`.
 
 ### Expected effect
 
-T5 should join T2, T8 and T9 at roughly 1-2 ms instead of 1554 ms, and stop
-capping throughput at 366 TPS. T6 (Global Sales) is the next candidate: it is
+T5 should join T2, T8 and T9 at roughly 1-2 ms instead of 1562 ms, and stop
+capping throughput at 363 TPS. T6 (Global Sales) is the next candidate: it is
 un-routable by construction, since it aggregates across all merchants, and it
-is already 50% of latency at 1 client and 7.2% at 64.
+is already 51% of latency at 1 client and 7.3% at 64.
 
 ### What to look at when this is run
 
-- **Comparability.** Run on the same nodes as `expt_b10` (`xcnf[16-20]`). At 1
+- **Comparability.** Run on the same nodes as `expt_b10` (`xcnf[17-21]`). At 1
   client the unchanged transactions (T2, T3, T4, T6, T7, T8, T9) should be
   within a few percent of `expt_b10`.
 - **T5 latency and its curve across client counts.** The flat ~36 TPS ceiling
@@ -204,7 +204,3 @@ is already 50% of latency at 1 client and 7.2% at 64.
   (merchant tables, then the map), so T1s cannot deadlock against each other on
   that ordering, but the count is worth checking.
 - **`pgbench_exit_code` and `failed_log_records`.**
-
-### Note: this experiment has not been run yet
-
-This folder contains no `slurm-results/`.
