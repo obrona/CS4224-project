@@ -27,10 +27,7 @@ set -euo pipefail
 TEAM_ID=${TEAM_ID:-4}
 
 ################# PostgreSQL environment variables
-# PGPORT may be overridden so several experiments can share the pinned node set
-# concurrently; each needs its own port because they run on the same hosts.
-# Unset, it is exactly the per-team port the project spec assigns.
-PGPORT="${PGPORT:-$((10#${TEAM_ID} + 5432))}"
+PGPORT=$((10#${TEAM_ID} + 5432))
 PGUSER="${SLURM_JOB_USER:-${USER}}"
 
 DATA_ROOT=/tmp/${PGUSER}/citus-${SLURM_JOB_ID}
@@ -49,7 +46,6 @@ LOG_DIR="${RUN_DIR}/logs"
 
 SCRIPT_DIR="${SCRIPT_DIR:-${SLURM_SUBMIT_DIR}}"
 TX_DIR="${SCRIPT_DIR}/transactions"
-EXPLAIN_DIR="${SCRIPT_DIR}/explain"
 
 ################# Files
 BENCHMARK_LOG_FILE="${JOB_RESULT_DIR}/benchmark.log"
@@ -425,9 +421,6 @@ create_schema() {
 
 	if [[ "$DROP_EXISTING" == "1" ]]; then
 		psqlx <<'SQL'
-DROP TABLE IF EXISTS merchant_daily_sales CASCADE;
-DROP TABLE IF EXISTS product_merchant_map CASCADE;
-DROP TABLE IF EXISTS order_merchant_map CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS inventory CASCADE;
@@ -492,32 +485,6 @@ CREATE TABLE IF NOT EXISTS order_items (
 	PRIMARY KEY (merchant_id, order_item_id)
 );
 
--- Routing table for T7, which is given only product ids. Sharded by
--- product_id, so a lookup by product_id is routed to a single shard.
-CREATE TABLE IF NOT EXISTS product_merchant_map (
-	product_id BIGINT NOT NULL,
-	merchant_id BIGINT NOT NULL,
-	PRIMARY KEY (product_id)
-);
-
--- Routing table for T5, which is given only an order id. Sharded by order_id,
--- so a lookup by order_id is routed to a single shard.
-CREATE TABLE IF NOT EXISTS order_merchant_map (
-	order_id BIGINT NOT NULL,
-	merchant_id BIGINT NOT NULL,
-	PRIMARY KEY (order_id)
-);
-
--- Per-merchant, per-day revenue rollup for T6. Distributed by merchant_id and
--- colocated with orders.
-CREATE TABLE IF NOT EXISTS merchant_daily_sales (
-	merchant_id BIGINT NOT NULL,
-	sales_date DATE NOT NULL,
-	order_count BIGINT NOT NULL,
-	revenue NUMERIC(14, 2) NOT NULL,
-	PRIMARY KEY (merchant_id, sales_date)
-);
-
 CREATE INDEX IF NOT EXISTS idx_orders_customer_recent
 	ON orders (merchant_id, customer_id, created_at DESC, order_id);
 
@@ -527,10 +494,6 @@ CREATE INDEX IF NOT EXISTS idx_order_items_order
 CREATE INDEX IF NOT EXISTS idx_orders_sales_period
 	ON orders (created_at)
 	INCLUDE (merchant_id, total_amount);
-
-CREATE INDEX IF NOT EXISTS idx_mds_period
-	ON merchant_daily_sales (sales_date)
-	INCLUDE (merchant_id, order_count, revenue);
 SQL
 
 	psqlx <<'SQL'
@@ -560,30 +523,10 @@ BEGIN
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_items'::regclass) THEN
 			PERFORM create_distributed_table('order_items', 'merchant_id', colocate_with => 'merchants');
 		END IF;
-
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'product_merchant_map'::regclass) THEN
-			PERFORM create_distributed_table('product_merchant_map', 'product_id', colocate_with => 'none');
-		END IF;
-
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_merchant_map'::regclass) THEN
-			PERFORM create_distributed_table('order_merchant_map', 'order_id', colocate_with => 'none');
-		END IF;
-
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'merchant_daily_sales'::regclass) THEN
-			PERFORM create_distributed_table('merchant_daily_sales', 'merchant_id', colocate_with => 'merchants');
-		END IF;
 	END IF;
 END
 $$;
 SQL
-
-	# T1 runs as one distributed function, delegated to its merchant's worker.
-	# Its definition is the \if 0 ... \endif block in T1_place_order.sql, which
-	# pgbench skips; only the lines between the two markers go to psql.
-	local t1_function
-	t1_function=$(sed -n '/^\\if 0/,/^\\endif/p' "$TX_DIR/T1_place_order.sql" | sed '1d;$d')
-	[[ -n "$t1_function" ]] || fail "No \\if 0 block with place_order in $TX_DIR/T1_place_order.sql"
-	psqlx <<<"$t1_function"
 }
 
 ############### create database schema
@@ -602,7 +545,7 @@ generate_data() {
 	COLD_MERCHANTS=$((NUM_MERCHANTS - HOT_MERCHANTS))
 	((COLD_MERCHANTS >= 1)) || COLD_MERCHANTS=1
 
-	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE merchant_daily_sales,product_merchant_map,order_merchant_map,order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
+	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
 
 	psqlx <<SQL
 INSERT INTO merchants SELECT i,'Merchant-'||i,(ARRAY['North','South','East','West','Central'])[1+(i%5)] FROM generate_series(1::bigint, $NUM_MERCHANTS::bigint) g(i);
@@ -614,13 +557,6 @@ INSERT INTO products SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Product-'||i,'
 INSERT INTO inventory SELECT product_id,merchant_id,product_id,10+((hashint8extended(product_id,$DATA_SEED)&9223372036854775807)%991)::int,current_timestamp FROM products;
 SQL
 
-	# No transaction inserts products or changes a product's merchant, 
-	# so the map stays exact for the whole run.
-	psqlx <<'SQL'
-INSERT INTO product_merchant_map (product_id, merchant_id)
-SELECT product_id, merchant_id FROM products;
-SQL
-
 	psqlx <<SQL
 WITH g AS (
   SELECT i::bigint,(hashint8extended(i,$DATA_SEED)&9223372036854775807) h1,(hashint8extended(i,$((DATA_SEED + 1)))&9223372036854775807) h2 FROM generate_series(1::bigint, $NUM_ORDERS::bigint) g(i)
@@ -630,11 +566,6 @@ WITH g AS (
 INSERT INTO orders
 SELECT i::bigint,merchant_id,merchant_id+$NUM_MERCHANTS*((hashint8extended(i,$((DATA_SEED + 2)))&9223372036854775807)%((($NUM_CUSTOMERS-merchant_id)/$NUM_MERCHANTS)+1)),
        'COMPLETED',0.00,current_timestamp-(((i::bigint * 31))%365)*interval '1 day' FROM m;
-SQL
-
-	psqlx <<'SQL'
-INSERT INTO order_merchant_map (order_id, merchant_id)
-SELECT order_id, merchant_id FROM orders;
 SQL
 
 	psqlx <<SQL
@@ -660,14 +591,6 @@ FROM (
 WHERE o.merchant_id=x.merchant_id
   AND o.order_id=x.order_id;
 SQL
-
-	psqlx <<'SQL'
-INSERT INTO merchant_daily_sales (merchant_id, sales_date, order_count, revenue)
-SELECT merchant_id, created_at::date, COUNT(*), SUM(total_amount)
-FROM orders
-GROUP BY merchant_id, created_at::date;
-SQL
-
 	[[ "$RUN_ANALYZE" == "1" ]] && psqlx -c "ANALYZE;"
 	echo "Synthetic data generation complete. Default scale creates about $((NUM_ORDER_ITEMS / NUM_ORDERS)) historical items/order."
 }
@@ -1330,19 +1253,6 @@ EOF
 	# arguments for pgbench
 	common_defs=(
 		-D DEBUG_MODE=0
-		-D DEBUG_MERCHANT_ID=1
-		-D DEBUG_CUSTOMER_ID=1
-		-D DEBUG_ITEM_COUNT=1
-		-D DEBUG_PRODUCT_ID_1=1
-		-D DEBUG_QTY_1=1
-		-D DEBUG_PRODUCT_ID_2=1
-		-D DEBUG_QTY_2=1
-		-D DEBUG_PRODUCT_ID_3=1
-		-D DEBUG_QTY_3=1
-		-D DEBUG_PRODUCT_ID_4=1
-		-D DEBUG_QTY_4=1
-		-D DEBUG_PRODUCT_ID_5=1
-		-D DEBUG_QTY_5=1
 		-D NUM_MERCHANTS="$NUM_MERCHANTS"
 		-D NUM_CUSTOMERS="$NUM_CUSTOMERS"
 		-D NUM_PRODUCTS="$NUM_PRODUCTS"
@@ -1544,30 +1454,6 @@ EOF
 	echo "Overall metrics: $SUMMARY_FILE"
 	echo "Per-transaction metrics: $TX_METRICS_FILE"
 }
-
-#####################  Explain transactions
-# Record the plan of every statement T1-T9 runs, once, on the freshly loaded
-# data and outside the timed benchmark.
-explain_transactions() {
-	local f
-	reset_benchmark_sequences # T1 draws from benchmark_order_id_seq
-	for f in "$EXPLAIN_DIR"/T*.sql; do
-		echo "==================== $(basename "$f")"
-		if ! psqlx -v REPORT_DAYS="$REPORT_DAYS" -f "$f" >/dev/null ||
-			! psqlx -v REPORT_DAYS="$REPORT_DAYS" --echo-queries --no-align --tuples-only -f "$f"; then
-			echo "FAILED: $(basename "$f")"
-			wait_for_coordinator 120 || return 1
-		fi
-	done
-}
-wait_for_coordinator() {
-	local timeout="$1" waited=0
-	until "${PG_BIN_DIR}/pg_isready" -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d postgres >/dev/null 2>&1; do
-		((waited++ < timeout)) || { echo "Coordinator not ready after ${timeout}s"; return 1; }
-		sleep 1
-	done
-}
-explain_transactions &>"$JOB_RESULT_DIR/explain.log" || echo "EXPLAIN step failed; see $JOB_RESULT_DIR/explain.log"
 
 #####################  perform benchmarking
 run_benchmark &>"${BENCHMARK_LOG_FILE}"

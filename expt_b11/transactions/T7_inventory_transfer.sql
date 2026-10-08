@@ -11,8 +11,8 @@
 \set transfer_ok 1
 
 -- T7 is given product id, but inventory is sharded by merchant_id.
--- product_merchant_map is a reference table with a copy on the coordinator, so
--- each lookup is read locally there without going to a worker.
+-- product_merchant_map is sharded by product_id, so each lookup is routed to a
+-- single shard.
 SELECT COALESCE(MAX(merchant_id), 0) AS source_merchant_id
 FROM product_merchant_map
 WHERE product_id = (:source_product_id)::bigint

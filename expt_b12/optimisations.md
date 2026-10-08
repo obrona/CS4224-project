@@ -1,98 +1,221 @@
-### Prev: expt_b9
+### Prev: expt_b11
 
-This experiment merges T7 (Inventory Transfer)'s two product-to-merchant
-lookups into one statement. `product_merchant_map` stays a distributed table
-sharded by `product_id`, as in `expt_b9`.
-
-It is one cell of a two-by-two comparison of T7's lookup:
-
-|                             | Two lookup statements | One merged lookup |
-| --------------------------- | --------------------- | ----------------- |
-| Map sharded by `product_id` | `expt_b9`             | `expt_b12`        |
-| Map as a reference table    | `expt_b11`            | `expt_b13`        |
-
-`expt_b12` isolates the effect of merging the lookups, without the reference
-table and the coordinator registration that `expt_b11` and `expt_b13` add.
+This experiment answers T6 (Global Sales) from a per-merchant, per-day revenue
+rollup instead of scanning `orders`. There is no change to the schema of the
+existing tables, to data distribution, to the other transactions, or to server
+parameters carried over from `expt_b11`, apart from T1 maintaining the new
+rollup.
 
 ### Motivation
 
-In `expt_b9` (job-883179) T7 is the largest share of latency at every client
-count: 36.2% at 1 client, 37.0% at 8 and 45.6% at 64. It takes 4.6 ms at 1
-client although each of its statements executes in 0.09 to 0.20 ms on the
-shard and takes 1.1 to 1.7 ms end to end. Its routed path sends 6 statements
-one after another: two map lookups, `BEGIN`, the debit, the credit and
-`COMMIT`.
+`expt_b11` removed T5 as the bottleneck: T5's average latency fell from 1561.7 ms
+to 28.6 ms at 64 clients. Overall throughput rose only from 364.5 to 398.9 TPS,
+because T6 took over.
 
-The two lookups are independent: neither needs the other's result. Only the
-transfer that follows needs both.
+Each transaction's share of total measured latency in `expt_b11`
+(`avg_latency_ms` x `successful_transactions`, over the workload total):
 
-### Optimisation: one lookup statement instead of two
+| Transaction            | Share at 1 client | Share at 64 clients |
+| ---------------------- | ----------------- | ------------------- |
+| T6 Global Sales        | 52.5%             | 66.0%               |
+| T7 Inventory Transfer  | 16.5%             | 14.3%               |
+| T1 Place Order         | 24.0%             | 13.4%               |
+| T5 Update Order Status | 2.0%              | 1.8%                |
+
+T6's latency across client counts is 43.2, 64.7, 131.3, 292.8, 573.9,
+1067.0 ms. By Little's law 39.490 x 1.067 = 42.1, so about 42 of the 64 clients
+are inside T6 at any moment. T6 is 10% of workload B, so 39.490 / 0.10 = 395
+TPS, which is the observed overall throughput (398.9). T6 sets the ceiling.
+
+### Why T6 is slow
+
+T6 aggregates revenue per merchant over a rolling 30-day window:
 
 ```sql
-SELECT COALESCE(MAX(merchant_id) FILTER (WHERE product_id = :source_product_id), 0) AS source_merchant_id,
-       COALESCE(MAX(merchant_id) FILTER (WHERE product_id = :dest_product_id), 0)   AS dest_merchant_id
-FROM product_merchant_map
-WHERE product_id IN (:source_product_id, :dest_product_id)
+SELECT merchant_id, COUNT(*), SUM(total_amount)
+FROM orders
+WHERE created_at >= CURRENT_TIMESTAMP - 30 * INTERVAL '1 day'
+  AND created_at < CURRENT_TIMESTAMP
+GROUP BY merchant_id
+ORDER BY revenue DESC
+LIMIT 20;
 ```
 
-Citus prunes the `IN` list to the shards that hold the two products: one task
-when both are on the same shard, otherwise two, which it runs in parallel.
-Either way pgbench sends one statement and waits for one reply instead of two
-in sequence. Each shard computes its part of both `MAX ... FILTER`
-aggregates and the coordinator combines them.
+Unlike every earlier bottleneck, this one is not a routing problem. T6 spans
+all merchants by definition, so no distribution column can prune it and no
+rewrite can route it to one worker. Citus already does the right thing:
+each shard computes partial per-merchant aggregates and the coordinator merges
+them. The cost is the volume. The generator spreads 5,000,000 orders over 365
+days, so a 30-day window covers roughly 411,000 order rows, and every T6
+re-derives the same historical sums from scratch.
 
-T7 now sends 5 statements through the coordinator instead of 6. The trade-off
-is on the coordinator: a routed single-shard lookup is planned on Citus's
-fast path, while this statement is an aggregate over up to two shards, which
-takes the general planner and a final combine step.
+The only way to make it cheaper is to stop recomputing what cannot change.
 
-### Why T7 still behaves like expt_b0
+### Optimisation 1: merchant_daily_sales
 
-- **Same answers.** Each column is the merchant of one product, or 0 when
-  that product is not in the map, as each separate lookup returned before.
-  When the two ids are equal both columns hold the same merchant, and the
-  existing `source_product_id = dest_product_id` check still rejects the
-  transfer.
-- **Same timing.** The lookups ran outside the transfer's transaction in
-  `expt_b9` too. Both ids are now read in the same statement, and the map
-  never changes during the benchmark, so this makes no difference to the
-  result.
-- The debit, the credit and the fallback path are unchanged.
+```sql
+CREATE TABLE merchant_daily_sales (
+  merchant_id BIGINT NOT NULL,
+  sales_date  DATE   NOT NULL,
+  order_count BIGINT NOT NULL,
+  revenue     NUMERIC(14, 2) NOT NULL,
+  PRIMARY KEY (merchant_id, sales_date)
+);
+SELECT create_distributed_table('merchant_daily_sales', 'merchant_id',
+                                colocate_with => 'merchants');
+```
+
+`revenue` is `NUMERIC(14,2)` rather than `orders.total_amount`'s `(12,2)`
+because one row sums many orders.
+
+T6 filters on `sales_date` across all merchants, which is not a prefix of the
+primary key, so a covering index makes that scan index-only:
+
+```sql
+CREATE INDEX idx_mds_period ON merchant_daily_sales (sales_date)
+  INCLUDE (merchant_id, order_count, revenue);
+```
+
+It is preloaded in `generate_data` by aggregating `orders`, not by recomputing
+the generator's formula:
+
+```sql
+INSERT INTO merchant_daily_sales (merchant_id, sales_date, order_count, revenue)
+SELECT merchant_id, created_at::date, COUNT(*), SUM(total_amount)
+FROM orders
+GROUP BY merchant_id, created_at::date;
+```
+
+This must run **after** `generate_data`'s `UPDATE orders SET total_amount`.
+Orders are inserted with `total_amount` 0.00 and backfilled from `order_items`
+later; preloading any earlier records zero revenue for every merchant-day, and
+nothing errors — the benchmark would simply produce a wrong T6.
+
+The table is in the `TRUNCATE` for every reset and is covered by the
+whole-database `ANALYZE` at the end of `generate_data`.
+
+### Optimisation 2: T1 maintains the rollup
+
+`inserted_order` now returns `total_amount` and `created_at` alongside
+`order_id`, and T1 adds one upsert inside its existing transaction:
+
+```sql
+INSERT INTO merchant_daily_sales AS s (merchant_id, sales_date, order_count, revenue)
+VALUES ((:merchant_id)::bigint, DATE '2000-01-01' + (:t1_new_order_day)::integer, 1, (:t1_new_order_total)::numeric(12,2))
+ON CONFLICT (merchant_id, sales_date)
+DO UPDATE SET order_count = s.order_count + 1,
+              revenue     = s.revenue + EXCLUDED.revenue;
+```
+
+Unlike `order_merchant_map`, this costs no extra commit participant.
+`merchant_daily_sales` is distributed by `merchant_id` and colocated with
+`orders`, so the upsert lands on the same shard as the order T1 just inserted.
+T1 keeps exactly the two participants it had in `expt_b11`.
+
+The bucket is the inserted order's own `created_at::date`, returned by
+`inserted_order` as a day number (`created_at::date - DATE '2000-01-01'`)
+because pgbench substitutes variables unquoted. It is the same expression the
+preload groups by, so an order and its rollup contribution always share a day.
+
+### Optimisation 3: T6 reads the rollup and the boundary day
+
+Day buckets cannot express a rolling `CURRENT_TIMESTAMP` boundary. The day
+containing the window start is therefore read from `orders` with the baseline's
+own predicate, and only the whole days after it come from the rollup:
+
+```sql
+WITH partial_day AS (   -- from orders, one day, baseline predicate kept intact
+  ... WHERE o.created_at >= CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day'
+        AND o.created_at <  CURRENT_TIMESTAMP
+        AND o.created_at <  (CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day')::date + 1
+),
+whole_days AS (         -- from the rollup
+  ... WHERE s.sales_date >= (CURRENT_TIMESTAMP - (:REPORT_DAYS)::integer * INTERVAL '1 day')::date + 1
+)
+SELECT merchant_id, SUM(order_count), SUM(revenue)
+FROM (partial_day UNION ALL whole_days) combined
+GROUP BY merchant_id ORDER BY revenue DESC LIMIT 20;
+```
+
+The `created_at < CURRENT_TIMESTAMP` upper bound is kept verbatim even though
+no visible order can have a future `created_at`, so the scan side stays
+textually the baseline's. `CURRENT_TIMESTAMP` is fixed for the whole
+transaction, so both branches see the same window.
+
+Rows touched per T6: about 13,700 for the boundary day plus about 30,000
+rollup rows (1,000 merchants x 30 days), against roughly 411,000 order rows
+before � close to a 9x reduction, on much narrower tuples.
+
+### Why this returns the baseline's answer exactly
+
+Let `W` be the window start, `CURRENT_TIMESTAMP - REPORT_DAYS days`, `N` be
+`CURRENT_TIMESTAMP` and `D` be `W::date`.
+
+- **Disjoint.** Every order in `partial_day` has `created_at` in `[W, D+1)`, and
+  since `W >= D` they all fall in bucket `D`. `whole_days` starts at bucket
+  `D+1`. No order is counted twice.
+- **Covering.** `partial_day` covers `[W, D+1)` and `whole_days` covers
+  `[D+1, infinity)`, so together they cover `[W, infinity)`, which contains the
+  baseline's `[W, N)`. Nothing lands beyond `N`, because `created_at` is the
+  inserting transaction's start time and T6 only sees committed rows, so
+  `created_at < commit < T6's snapshot`.
+- **Consistent.** The upsert is in T1's transaction, so any snapshot sees an
+  order and its rollup contribution together. This is what makes reading two
+  sources safe; an asynchronous rollup would let T6 see an order in `orders`
+  that no bucket had counted yet.
+- **Stable summands.** T5 writes `order_status`, T9 writes product `price`, and
+  nothing deletes orders, so an order's contribution is fixed at insert. Note
+  this depends on `expt_b9`'s set-based T1, which computes `total_amount`
+  inline; `expt_b8`'s trailing `UPDATE orders SET total_amount` would have made
+  buckets drift.
+- **Exact arithmetic.** `total_amount` is `NUMERIC`, so summing per-day
+  subtotals gives bit-identical results to summing the orders directly. With
+  `DOUBLE PRECISION` this would not hold.
+
+The only visible difference is a type label: the baseline's `COUNT(*)` is
+`bigint` while `SUM(order_count)` is `numeric`.
+
+### What this does not assume about the data
+
+The rollup is built by aggregating `orders`, maintained for whatever T1
+creates, and the boundary day is computed from `orders` with the exact
+predicate. None of that depends on how the synthetic data was generated.
+
+This is worth stating because the naive version of this optimisation — reading
+only the rollup, with `sales_date >= (win_start)::date` — _would_ have depended
+on it. The generator gives every order at a given day-offset an identical
+timestamp, so the boundary day is a solid block of about 13,700 orders that
+falls entirely in or entirely out depending on the time of day the job started
+and how long it has been running. The two-way split removes that.
+
+What does depend on the data is the size of the win, not the answer. Because
+`(i * 31) % 365` cycles evenly, days hold about 13,700 orders each and the
+boundary scan is cheap. Skewed data would make `partial_day` more expensive
+while still returning the correct result.
 
 ### Recording plans
 
-`explain/T7_inventory_transfer.sql` runs the merged lookup once before the
-EXPLAIN, so the plan is not the session's first read of the map, then shows
-it with `ANALYZE`. The debit and credit are shown as before, inside
-`BEGIN ... ROLLBACK`.
+After data generation, `run.sh` writes `explain.log` with an
+`EXPLAIN (ANALYZE, VERBOSE, BUFFERS)` of every statement T1 to T9 runs. The
+scripts are in `explain/`, one per transaction. They are psql rather than
+pgbench scripts, because the transaction files rely on pgbench's `random()`
+and `\if` expressions: each takes merchant 1, its lowest-numbered customer or
+products, order 1 and a transfer between merchants 1 and 2 from the loaded
+data, and follows the routed path. Writes run inside `BEGIN` ... `ROLLBACK`.
 
-### Results (job-886108)
+Each script is run once untimed to warm the cache and then again with its
+output kept. `VERBOSE` shows the SQL sent to the shards, and `ANALYZE` shows
+one sample shard's plan. The step runs outside the timed benchmark, and a
+failing script is reported in the log without stopping the job.
 
-`explain.log` shows the merged lookup as one statement with `Task Count: 2`
-(the two test products are on different shards), taking 0.96 ms in total.
+**The `explain/` scripts duplicate the statements in `transactions/`.** A
+change to a transaction must be copied into its explain script, or the log
+will describe the old query.
 
-| Clients | `expt_b9` TPS | `expt_b12` TPS | Change | T7 avg, `expt_b9` | T7 avg, `expt_b12` |
-| ------- | ------------- | -------------- | ------ | ----------------- | ------------------ |
-| 1       | 263.1         | 270.9          | +3.0%  | 4.59 ms           | 4.06 ms            |
-| 4       | 1187.7        | 1245.9         | +4.9%  | 3.53 ms           | 3.07 ms            |
-| 8       | 2642.1        | 2699.8         | +2.2%  | 3.73 ms           | 3.33 ms            |
-| 16      | 3386.2        | 3430.6         | +1.3%  | 6.59 ms           | 6.03 ms            |
-| 32      | 3792.3        | 3838.0         | +1.2%  | 12.45 ms          | 11.34 ms           |
-| 64      | 3897.1        | 3920.0         | +0.6%  | 24.93 ms          | 22.18 ms           |
+### Possible refinement
 
-- **T7 is 9 to 13% faster** at every client count, consistent with one
-  lookup wait fewer.
-- **The gain in throughput shrinks as clients increase**, from 3 to 5% at 1
-  to 4 clients to 0.6% at 64. At high client counts the extra planning work
-  of the multi-shard aggregate on the coordinator offsets part of the saved
-  wait.
-- **The comparison with `expt_b9` is clean.** T2, T4, T8 and T9 never touch
-  the map, and their latencies are within 5% of `expt_b9`'s at every client
-  count (mostly within 3%), so the two runs saw the same conditions.
-- **Retries rose** at 64 clients, from 5996 to 6895 retried transactions,
-  and serialization failures from 83 to 121. Almost all of them are T1's (see
-  `expt_b13/optimisations.md` and `expt_b14/optimisations.md`). They grow
-  with throughput.
-
-`expt_b13` adds the reference table on top of this merged lookup and is
-faster again at every client count.
+T1's upsert is a second statement to a worker already in the transaction. It
+could instead be folded into T1's single statement as another data-modifying
+CTE reading `inserted_order`, saving one round trip. That was left out here
+because `ON CONFLICT` inside a distributed multi-CTE statement is the least
+proven part of the pattern, and a failed run costs a full job.

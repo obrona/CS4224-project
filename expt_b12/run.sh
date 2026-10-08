@@ -79,9 +79,6 @@ CITUS_ENABLE_REPARTITION_JOINS="${CITUS_ENABLE_REPARTITION_JOINS:-on}"
 CITUS_MAX_SHARED_POOL_SIZE="${CITUS_MAX_SHARED_POOL_SIZE:-300}"
 CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE="${CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE:-4}"
 CITUS_LOCAL_SHARED_POOL_SIZE="${CITUS_LOCAL_SHARED_POOL_SIZE:-150}"
-# Shards per distributed table. Citus's default is 32, i.e. 8 per worker with
-# 4 workers; 4 gives 1 per worker.
-CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT:-4}"
 
 ################# Data generation configuration
 SCALE="${SCALE:-1}"          # scaling factor
@@ -536,11 +533,7 @@ CREATE INDEX IF NOT EXISTS idx_mds_period
 	INCLUDE (merchant_id, order_count, revenue);
 SQL
 
-	# psql does not substitute variables inside the $$ body, so the shard
-	# count is set for the session, where every create_distributed_table
-	# below reads it.
-	psqlx -v shard_count="$CITUS_SHARD_COUNT" <<'SQL'
-SET citus.shard_count = :shard_count;
+	psqlx <<'SQL'
 DO $$
 BEGIN
 	IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'citus') THEN
@@ -583,14 +576,6 @@ BEGIN
 END
 $$;
 SQL
-
-	# T1 runs as one distributed function, delegated to its merchant's worker.
-	# Its definition is the \if 0 ... \endif block in T1_place_order.sql, which
-	# pgbench skips; only the lines between the two markers go to psql.
-	local t1_function
-	t1_function=$(sed -n '/^\\if 0/,/^\\endif/p' "$TX_DIR/T1_place_order.sql" | sed '1d;$d')
-	[[ -n "$t1_function" ]] || fail "No \\if 0 block with place_order in $TX_DIR/T1_place_order.sql"
-	psqlx <<<"$t1_function"
 }
 
 ############### create database schema
@@ -1399,7 +1384,6 @@ CITUS_ENABLE_REPARTITION_JOINS="${CITUS_ENABLE_REPARTITION_JOINS}"
 CITUS_MAX_SHARED_POOL_SIZE="${CITUS_MAX_SHARED_POOL_SIZE}"
 CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE="${CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE}"
 CITUS_LOCAL_SHARED_POOL_SIZE="${CITUS_LOCAL_SHARED_POOL_SIZE}"
-CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT}"
 
 DATA_SEED="${DATA_SEED}"
 HOT_MERCHANT_PERCENT="${HOT_MERCHANT_PERCENT}"

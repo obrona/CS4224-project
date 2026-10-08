@@ -26,4 +26,3 @@ JOIN inventory AS i
 WHERE p.merchant_id = (:merchant_id)::bigint
   AND p.product_id = (:product_id)::bigint;
 
-

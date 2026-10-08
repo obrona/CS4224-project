@@ -16,4 +16,3 @@ SET price = price + (:price_increase)::numeric(12,2)
 WHERE product_id = (:product_id)::bigint
   AND merchant_id = (:merchant_id)::bigint;
 
-

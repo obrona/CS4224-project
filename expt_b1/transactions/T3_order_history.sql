@@ -11,7 +11,7 @@
 \set customer_id :merchant_id + (:customer_slot * :NUM_MERCHANTS)
 \endif
 
-
+BEGIN;
 
 SELECT
   o.order_id,
@@ -29,3 +29,4 @@ WHERE o.merchant_id = (:merchant_id)::bigint
 ORDER BY o.created_at DESC
 LIMIT 20;
 
+COMMIT;

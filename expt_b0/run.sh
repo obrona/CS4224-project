@@ -12,11 +12,11 @@
 # temporarily exclude xcnc13 as server is problematic
 #SBATCH --exclude=xcng0,xcng1,xgpj0,xcnh[0-3],xcnc13
 
-# Pin every B-side run to one fixed node set, disjoint from the A-side set so
-# the two series can run concurrently without sharing hardware. The compute
-# nodes are shared and this job does not request --exclusive, so an unpinned
-# run measures whoever else is on the node as much as the design change.
-#SBATCH --nodelist=xcnf[16-20]
+# The baseline parameter study (expt_b0 to expt_b6) runs on xcnf[17-21],
+# the node set of expt_b12 onwards, instead of xcnf[16-20], where the
+# baseline first ran (job 873005). expt_b0 reruns it unchanged on these
+# nodes as the reference for the others.
+#SBATCH --nodelist=xcnf[17-21]
 
 # IMPORTANT - replace this with your email
 #SBATCH --mail-user=e1334269@u.nus.edu
