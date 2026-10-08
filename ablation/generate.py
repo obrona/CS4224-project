@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Generate the cells of the 2^4 x 3 workload-A and workload-B ablations.
+"""Generate the cells of the 2^4 x 2 workload-A and workload-B ablations.
 
-Four binary factors (BITS) and a three-level T1 mode m (T1_MODES). A cell is
+Four binary factors (BITS) and a two-level T1 mode m (T1_MODES). A cell is
 expt_<side><300 + 16*m + mask>, where side is a or b (workload) and mask is the
-sum of the enabled bits. Three A cells were run before this script existed
+sum of the enabled bits. Two A cells were run before this script existed
 (EXISTING); it never writes to them. Eighteen B directories are runs of the
 earlier 2^5 workload-B ablation renamed into this grid (RENAMED); it writes
 only their optimisations.md. Every other cell, and the replicates in
@@ -16,12 +16,12 @@ Sources, all under ablation/template/:
               "# @ablation-begin F" and "# @ablation-end F" is kept iff factor
               F is on ("!F": iff F is off); "@{F:text}" inside a line becomes
               text iff F is on. Every marker is removed from the output. F is
-              a bit name, t1_delegation (m >= 1) or rc_lock (m == 2).
+              a bit name or t1_delegation (m == 1).
   transactions/, explain/
               <T>.sql is shared by every cell; <T>/<variant>.sql is picked per
               cell by variant_source(). The delegated T1 is stored only with
-              both steps 6 and 7 (fn_both.sql, fn_both_rc.sql); the other
-              levels are derived by remove_steps().
+              both steps 6 and 7 (fn_both.sql); the other levels are derived
+              by remove_steps().
 The side-b run.sh is the rendered template with RUN_SH_SUBST["b"] applied;
 transactions/ and explain/ do not depend on the side.
 
@@ -69,19 +69,15 @@ T1_MODES = [
     ("set", "T1 is the set-based CTE T1 inside `BEGIN`/`COMMIT`"),
     ("fn", "T1 delegation: T1 is the `place_order` distributed function, called "
      "outside a transaction block; `run.sh` creates and distributes the function"),
-    ("fn_rc", "T1 delegation under READ COMMITTED: as `fn`, plus "
-     "`PG_ISOLATION_LEVEL` defaults to `read committed`, `place_order`'s stock "
-     "check takes `FOR UPDATE OF i`, and the function sets "
-     "`plan_cache_mode = force_custom_plan`"),
 ]
-TEMPLATE_FACTORS = BIT_NAMES + ["t1_delegation", "rc_lock"]
+TEMPLATE_FACTORS = BIT_NAMES + ["t1_delegation"]
 
 SIDES = ("a", "b")
 MANIFEST = {"a": "manifest.csv", "b": "manifest_b.csv"}
 # Cells that were run before this script existed. Their directories hold
 # results and a hand-written optimisations.md; this script never writes to them.
 # Their code equals this script's output (ablation/validate.py, check 1).
-EXISTING = {"a": {"expt_a323", "expt_a331", "expt_a347"}, "b": set()}
+EXISTING = {"a": {"expt_a323", "expt_a331"}, "b": set()}
 # Runs of the 2^5 workload-B ablation (branch ablation-b) that are exactly a
 # cell or replicate of this grid, moved to their grid names: name -> (name in
 # the 2^5 ablation, commit on ablation-b that added its result). That design's
@@ -202,10 +198,8 @@ def all_cells():
 def enabled(m, mask):
     """Template factors that are on for a cell."""
     on = {name for bit, name, _ in BITS if mask & bit}
-    if m >= 1:
+    if m == 1:
         on.add("t1_delegation")
-    if m == 2:
-        on.add("rc_lock")
     return on
 
 
@@ -275,16 +269,14 @@ def variant_source(kind, tx, on):
     if shared.exists():
         return shared, ()
     removed = ()
-    rc = "_rc" if "rc_lock" in on else ""
     if tx == "T1_place_order":
         if "t1_delegation" not in on:
             variant = f"set_{t1_level(on)}"
         elif kind == "explain":
-            # Every delegation level issues the same call, so one explain file
-            # per mode; fn_rc also plans the locking stock check.
-            variant = f"fn{rc}"
+            # Every delegation level issues the same call, so one explain file.
+            variant = "fn"
         else:
-            variant = f"fn_both{rc}"
+            variant = "fn_both"
             removed = FN_REMOVED[t1_level(on)]
     else:
         factor = {"T5_update_order_status": "t5_routing",
@@ -318,12 +310,11 @@ def factor_lines(m, mask):
         lines.append(f"T1 is `ablation/template/transactions/T1_place_order/set_{level}.sql`, "
                      "unchanged.")
     else:
-        fn_src = "`expt_a323`" if m == 1 else "`expt_a347`"
         removed = FN_REMOVED[level]
         if removed:
             steps = " and ".join(FN_STEP_DESC[s] for s in removed)
             lines.append(
-                f"T1's `place_order` is {fn_src}'s with step{'s' if len(removed) > 1 else ''} "
+                f"T1's `place_order` is `expt_a323`'s with step{'s' if len(removed) > 1 else ''} "
                 f"{steps} removed from the function body. The signature, the "
                 "pgbench-side statements and the rest of the body are unchanged, "
                 "and the remaining steps keep the original numbering.")
@@ -332,20 +323,7 @@ def factor_lines(m, mask):
                     "Step 4 still has `RETURNING total_amount, created_at INTO "
                     "v_order_total, v_created_at`, although only step 6 read them.")
         else:
-            lines.append(f"T1 is {fn_src}'s, unchanged.")
-    if m == 2:
-        lines += [
-            "",
-            "READ COMMITTED is only valid together with the stock lock, which only "
-            "the delegated function has. Without `FOR UPDATE OF i`, two concurrent "
-            "orders can both pass the stock check before either decrements, and the "
-            "decrement has no stock predicate for READ COMMITTED to recheck: the "
-            "second order is accepted against stock that is gone, and only "
-            "`CHECK (quantity >= 0)` stops it, as an error rather than a clean "
-            "rejection. The lock makes the second check wait for the first order "
-            "and read its result. The full argument is in "
-            "`expt_a347/optimisations.md`.",
-        ]
+            lines.append("T1 is `expt_a323`'s, unchanged.")
     return lines
 
 
@@ -359,7 +337,7 @@ def cell_heading(m, mask, side):
         f"### Prev: {prev}",
         "",
         f"Cell {cid} (T1 mode {m} `{T1_MODES[m][0]}`, mask {mask}) of the "
-        f"2^4 x 3 {workload}; every cell's factor levels are in "
+        f"2^4 x 2 {workload}; every cell's factor levels are in "
         f"`ablation/{MANIFEST[side]}`.",
     ]
 
@@ -407,7 +385,7 @@ def renamed_md(name, side):
     """optimisations.md of a directory in RENAMED[side]: a run of the 2^5
     workload-B ablation, kept as run under its grid name."""
     old, commit = RENAMED[side][name]
-    origin = (f"of the 2^5 workload-B ablation (branch `ablation-b`; bits T5R=1 T6R=2 "
+    origin = ("of the 2^5 workload-B ablation (branch `ablation-b`; bits T5R=1 T6R=2 "
               "T7R=4 DEL=8 RR=16, Citus's default 32 shards)")
     result = (f"Its result (`slurm-results/`, `citus-*.out`, `citus-*.err`) was added on "
               f"that branch in {commit}; the raw logs are gzipped here "
@@ -428,7 +406,7 @@ def renamed_md(name, side):
         ]) + "\n"
     m, mask = parse_name(name, side)
     old_mask = int(old.removeprefix("expt_b")) - 100
-    if m not in (0, 1) or old_mask != mask + 8 * m:
+    if old_mask != mask + 8 * m:
         raise ValueError(f"{name} (m={m}, mask={mask}) is not 2^5 cell {old} (DEL=8)")
     return "\n".join([
         *cell_heading(m, mask, side),

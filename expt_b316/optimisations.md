@@ -1,6 +1,6 @@
 ### Prev: expt_b300 (grid base)
 
-Cell 316 (T1 mode 1 `fn`, mask 0) of the 2^4 x 3 workload-B ablation (`ablation/README.md`, "Workload B"); every cell's factor levels are in `ablation/manifest_b.csv`.
+Cell 316 (T1 mode 1 `fn`, mask 0) of the 2^4 x 2 workload-B ablation (`ablation/README.md`, "Workload B"); every cell's factor levels are in `ablation/manifest_b.csv`.
 
 Renamed from `expt_b108` of the 2^5 workload-B ablation (branch `ablation-b`; bits T5R=1 T6R=2 T7R=4 DEL=8 RR=16, Citus's default 32 shards), where it was mask 8: DEL=1 and RR=0, which is this grid's T1 mode `fn` with `shards8` off. Its result (`slurm-results/`, `citus-*.out`, `citus-*.err`) was added on that branch in d26361a; the raw logs are gzipped here (`ablation/README.md`, "Stored results").
 

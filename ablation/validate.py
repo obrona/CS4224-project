@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Validation for the 2^4 x 3 ablation grid. Run from the repo root after
+"""Validation for the 2^4 x 2 ablation grid. Run from the repo root after
 ablation/generate.py [--side b]; exits non-zero on any failure.
 
   ablation/validate.py [--side a|b]
 
   1. Existing cells (side a): the generator's run.sh, transactions/ and
-     explain/ for expt_a323/a331/a347 equal the existing directories
+     explain/ for expt_a323/a331 equal the existing directories
      byte-for-byte (optimisations.md is hand-written there and excluded).
      Renamed directories (side b): the same, except that run.sh is compared
      after replacing the generator's PGPORT lines with those the 2^5 run had
@@ -16,7 +16,7 @@ ablation/generate.py [--side b]; exits non-zero on any failure.
      explained statements present in the cell's own transaction. Side b also:
      code equal to the workload-A cell with the same levels, with the side-b
      run.sh substitutions (and a renamed directory's PGPORT lines) applied.
-  3. Cells differing in one binary bit or one step of m differ only in lines
+  3. Cells differing in one binary bit or in m differ only in lines
      and files belonging to that factor (a renamed cell is represented by the
      generator's output, which check 1 ties to it).
   4. The generator's outputs: the generated cells and replicates, never an
@@ -105,8 +105,7 @@ with tempfile.TemporaryDirectory() as tmp:
 EXTRA = {"order_merchant_map": "t5_routing", "merchant_daily_sales": "t6_rollup",
          "product_merchant_map": "t7_routing"}
 BASE = {"merchants", "customers", "products", "inventory", "orders", "order_items"}
-# "FOR UPDATE OF i" is a row lock, not a table reference.
-SQL_KW = re.compile(r"\b(?:FROM|JOIN|INTO|(?<!FOR )UPDATE)\s+(?:public\.)?([a-z_][a-z0-9_]*)", re.I)
+SQL_KW = re.compile(r"\b(?:FROM|JOIN|INTO|UPDATE)\s+(?:public\.)?([a-z_][a-z0-9_]*)", re.I)
 CTE_DEF = re.compile(r"(?:^|,|\bWITH)\s*([a-z_][a-z0-9_]*)\s*(?:\([^)]*\))?\s+AS\s+(?:MATERIALIZED\s+)?\(", re.I | re.M)
 NOT_TABLES = {"unnest", "generate_series", "set", "input_items"}
 DECLARED = re.compile(r"^\s+(v_\w+)\s", re.M)  # plpgsql locals in place_order
@@ -126,10 +125,6 @@ REFERENCE_CONFIG = {
 FOREIGN_CONFIG = {"a": (), "b": ("xcnf[0-2,4,5]", "alice_and_bob", 'WORKLOAD="${WORKLOAD:-A}"')}[SIDE]
 MODES = {mode: m for m, (mode, _) in enumerate(g.T1_MODES)}
 EXPLAIN_RE = re.compile(r"EXPLAIN\s*\([^)]*\)\s*(.*?);\s*$", re.S | re.M)
-# fn_rc's explain plans the function body's locking stock check with psql
-# variables in place of the plpgsql parameters, so the statement is not in the
-# transaction file verbatim; its FOR UPDATE clause is checked instead.
-RC_LOCK_EXPLAIN = "SELECT i.quantity, p.price FROM inventory i JOIN products p"
 
 
 def strip_comments(text):
@@ -146,8 +141,8 @@ def expected_sources(m, on):
     lvl = {(0, 0): "none", (1, 0): "map", (0, 1): "rollup", (1, 1): "both"}[
         (int("t5_routing" in on), int("t6_rollup" in on))]
     removed = {"none": (6, 7), "map": (6,), "rollup": (7,), "both": ()}[lvl]
-    t1_tx = [f"set_{lvl}.sql", "fn_both.sql", "fn_both_rc.sql"][m]
-    t1_ex = [f"set_{lvl}.sql", "fn.sql", "fn_rc.sql"][m]
+    t1_tx = [f"set_{lvl}.sql", "fn_both.sql"][m]
+    t1_ex = [f"set_{lvl}.sql", "fn.sql"][m]
     want = {("transactions", "T1_place_order"): (f"transactions/T1_place_order/{t1_tx}",
                                                  removed if m else ()),
             ("explain", "T1_place_order"): (f"explain/T1_place_order/{t1_ex}", ())}
@@ -169,11 +164,11 @@ if [list(rows[0])] != [["experiment", *g.BIT_NAMES, "t1_mode", "source"]]:
 names = [r["experiment"] for r in rows]
 WANT_REPLICATES = {"a": ["expt_a300_1", "expt_a331_1"],
                    "b": ["expt_b300_1", "expt_b300_2", "expt_b323_1", "expt_b331_1"]}[SIDE]
-want_names = [f"expt_{SIDE}{i}" for i in range(300, 348)] + WANT_REPLICATES
+want_names = [f"expt_{SIDE}{i}" for i in range(300, 332)] + WANT_REPLICATES
 if names != want_names:
-    bad(f"manifest rows {names} != expt_{SIDE}300..{SIDE}347, {', '.join(WANT_REPLICATES)}")
-WANT_COUNTS = {"a": {"generated": 45, "existing": 3, "replicate": 2},
-               "b": {"generated": 32, "renamed": 16, "replicate": 4}}[SIDE]
+    bad(f"manifest rows {names} != expt_{SIDE}300..{SIDE}331, {', '.join(WANT_REPLICATES)}")
+WANT_COUNTS = {"a": {"generated": 30, "existing": 2, "replicate": 2},
+               "b": {"generated": 16, "renamed": 16, "replicate": 4}}[SIDE]
 counts = {k: sum(r["source"].startswith(k) for r in rows) for k in WANT_COUNTS}
 print(f"  manifest: {len(rows)} rows: {counts}")
 if counts != WANT_COUNTS:
@@ -285,10 +280,9 @@ for row in rows:
     if shard_lines != (want_shard if "shards8" in on else []):
         bad(f"{name}: shard-count lines {shard_lines} wrong for shards8={'shards8' in on}")
 
-    # isolation, rc lock
+    # isolation
     iso = re.findall(r"^PG_ISOLATION_LEVEL=.*:-.*$", run, re.M)
-    want_iso = ('PG_ISOLATION_LEVEL="${PG_ISOLATION_LEVEL:-read committed}"' if m == 2
-                else "PG_ISOLATION_LEVEL=${PG_ISOLATION_LEVEL:-serializable}")
+    want_iso = "PG_ISOLATION_LEVEL=${PG_ISOLATION_LEVEL:-serializable}"
     if iso != [want_iso]:
         bad(f"{name}: isolation default {iso} != [{want_iso}]")
 
@@ -311,16 +305,13 @@ for row in rows:
         bad(f"{name}: T1 map insert != t5_routing")
     if bool(re.search(r"INSERT INTO (public\.)?merchant_daily_sales", t1)) != ("t6_rollup" in on):
         bad(f"{name}: T1 rollup upsert != t6_rollup")
-    delegated = m >= 1
+    delegated = m == 1
     fn_block = "t1_function=$(sed -n" in run
     fn_def = "create_distributed_function" in t1 and "\\if 0" in t1
     if fn_block != delegated or fn_def != delegated:
-        bad(f"{name}: function block {fn_block}/definition {fn_def} != m>=1")
+        bad(f"{name}: function block {fn_block}/definition {fn_def} != m==1")
     if ("\nBEGIN;" in t1) == delegated:
         bad(f"{name}: T1 transaction block presence wrong for m={m}")
-    if ("FOR UPDATE OF i;" in t1) != (m == 2) or \
-            ("SET plan_cache_mode = force_custom_plan" in t1) != (m == 2):
-        bad(f"{name}: T1 stock lock / plan_cache_mode presence wrong for m={m}")
     for rel, t, f in (("transactions/T5_update_order_status.sql", "order_merchant_map", "t5_routing"),
                       ("transactions/T6_global_sales.sql", "merchant_daily_sales", "t6_rollup"),
                       ("transactions/T7_inventory_transfer.sql", "product_merchant_map", "t7_routing")):
@@ -336,10 +327,6 @@ for row in rows:
         for stmt in EXPLAIN_RE.findall(strip_comments(text)):
             s = norm(stmt)
             n_explained += 1
-            if m == 2 and rel == "explain/T1_place_order.sql" and s.startswith(RC_LOCK_EXPLAIN):
-                if not s.endswith("FOR UPDATE OF i") or "FOR UPDATE OF i;" not in tx:
-                    bad(f"{name}/{rel}: rc lock-check explain does not match T1")
-                continue
             pos = tx.find(s)
             nxt = tx[pos + len(s):].lstrip()[:5] if pos >= 0 else ""
             if not (nxt.startswith(";") or nxt.startswith("\\gset")):
@@ -376,7 +363,6 @@ OWNED_FILES = {
     "t7_routing": {"T7_inventory_transfer"},
     "shards8": set(),
     "t1_delegation": {"T1_place_order"},
-    "rc_lock": {"T1_place_order"},
 }
 
 
@@ -395,8 +381,8 @@ for m, mask in g.all_cells():
     for value, f, _ in g.BITS:
         if not mask & value:
             pairs.append(((m, mask), (m, mask | value), f))
-    if m + 1 < len(g.T1_MODES):
-        pairs.append(((m, mask), (m + 1, mask), ["t1_delegation", "rc_lock"][m]))
+    if m == 0:
+        pairs.append(((0, mask), (1, mask), "t1_delegation"))
 per_factor = {}
 for a, b, f in pairs:
     na, nb = g.cell_name(*a, SIDE), g.cell_name(*b, SIDE)
@@ -429,7 +415,7 @@ outs = g.outputs(SIDE)
 n_cells = len([o for o in outs if o not in REPLICATES])
 print(f"  generator outputs: {len(outs)} "
       f"({n_cells} cells + {len(outs) - n_cells} replicates)")
-want_cells, want_reps = {"a": (45, 2), "b": (32, 2)}[SIDE]
+want_cells, want_reps = {"a": (30, 2), "b": (16, 2)}[SIDE]
 if len(outs) != want_cells + want_reps or len(set(outs)) != want_cells + want_reps \
         or n_cells != want_cells:
     bad(f"expected {want_cells} generated cells + {want_reps} replicates, got {len(outs)}")
