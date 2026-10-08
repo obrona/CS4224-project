@@ -67,7 +67,7 @@ PG_SHARED_BUFFERS="${PG_SHARED_BUFFERS:-1GB}"
 PG_WORK_MEM="${PG_WORK_MEM:-32MB}"
 PG_MAINTENANCE_WORK_MEM="${PG_MAINTENANCE_WORK_MEM:-256MB}"
 PG_MAX_CONNECTIONS="${PG_MAX_CONNECTIONS:-1000}"
-PG_ISOLATION_LEVEL="${PG_ISOLATION_LEVEL:-repeatable read}"
+PG_ISOLATION_LEVEL=${PG_ISOLATION_LEVEL:-serializable}
 
 PG_MAX_WAL_SIZE="${PG_MAX_WAL_SIZE:-16GB}"
 PG_MIN_WAL_SIZE="${PG_MIN_WAL_SIZE:-2GB}"
@@ -80,8 +80,8 @@ CITUS_MAX_SHARED_POOL_SIZE="${CITUS_MAX_SHARED_POOL_SIZE:-300}"
 CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE="${CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE:-4}"
 CITUS_LOCAL_SHARED_POOL_SIZE="${CITUS_LOCAL_SHARED_POOL_SIZE:-150}"
 # Shards per distributed table. Citus's default is 32, i.e. 8 per worker with
-# 4 workers; 4 gives 1 per worker.
-CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT:-4}"
+# 4 workers; 8 gives 2 per worker.
+CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT:-8}"
 
 ################# Data generation configuration
 SCALE="${SCALE:-1}"          # scaling factor
@@ -410,11 +410,6 @@ for n in "${NODES[@]}"; do
 	${PSQL} -X -v ON_ERROR_STOP=1 -h "$n" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "CREATE EXTENSION IF NOT EXISTS citus;"
 done
 
-# Register the coordinator in Citus's metadata, so it holds its own copy of
-# reference table and reads product_merchant_map locally. It gets no
-# shards of distributed tables as shouldhaveshards defaults to false.
-${PSQL} -X -v ON_ERROR_STOP=1 -h "$COORDINATOR" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "SELECT citus_set_coordinator_host('$COORDINATOR', $PGPORT);"
-
 # register each worker node at coordinator
 for w in "${WORKERS[@]}"; do
 	${PSQL} -X -v ON_ERROR_STOP=1 -h "$COORDINATOR" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "SELECT * FROM citus_add_node('$w',$PGPORT);"
@@ -500,8 +495,8 @@ CREATE TABLE IF NOT EXISTS order_items (
 	PRIMARY KEY (merchant_id, order_item_id)
 );
 
--- Routing table for T7, which is given only product ids. A reference table
--- so every node holds a full copy, and a lookup by product_id is read locally.
+-- Routing table for T7, which is given only product ids. Sharded by
+-- product_id, so a lookup by product_id is routed to a single shard.
 CREATE TABLE IF NOT EXISTS product_merchant_map (
 	product_id BIGINT NOT NULL,
 	merchant_id BIGINT NOT NULL,
@@ -574,7 +569,7 @@ BEGIN
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'product_merchant_map'::regclass) THEN
-			PERFORM create_reference_table('product_merchant_map');
+			PERFORM create_distributed_table('product_merchant_map', 'product_id', colocate_with => 'none');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_merchant_map'::regclass) THEN

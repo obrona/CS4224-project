@@ -1,165 +1,159 @@
 ### Prev: expt_b9
 
-This experiment runs T7 (Inventory Transfer)'s routed path as one distributed
-function, delegated to the worker that holds the source merchant's shard, in
-the same way `expt_b7` did for T1. The two product-to-merchant lookups stay as
-they were. There is no change to the schema, data distribution (4 shards, as
-in `expt_b9`), indexes, the other transactions, or server parameters.
+This experiment routes T7 (Inventory Transfer) to the shards that hold its two
+inventory rows, using a new lookup table `product_merchant_map`. There is no
+other change to the schema, data distribution, indexes, the other transactions,
+or server parameters carried over from `expt_b9`.
 
-### Motivation
+Each transaction's share of total measured latency in `expt_b9`
+(`avg_latency_ms` x `successful_transactions`, over the workload total):
 
-`expt_b9` (job-883179) reached 3897.1 TPS at 64 clients, 3.1 times `expt_b7`.
-T6 dropped from the largest share of latency to the third, and T7 is now the
-largest at every client count:
+| Transaction            | Share at 1 client | Share at 64 clients |
+| ---------------------- | ----------------- | ------------------- |
+| T7 Inventory Transfer  | 57.1%             | 96.7%               |
+| T6 Global Sales        | 25.2%             | 2.1%                |
+| T1 Place Order         | 11.3%             | 0.7%                |
+| T5 Update Order Status | 3.9%              | 0.3%                |
 
-| Transaction           | Share at 1 client | Share at 8 clients | Share at 64 clients |
-| --------------------- | ----------------- | ------------------ | ------------------- |
-| T7 Inventory Transfer | 36.2%             | 37.0%              | 45.6%               |
-| T1 Place Order        | 26.7%             | 28.4%              | 19.2%               |
-| T6 Global Sales       | 22.1%             | 20.4%              | 17.1%               |
-
-Throughput has levelled off: from 32 to 64 clients it rose only 2.8% while
-average latency doubled. Every transaction slowed 4 to 8 times between 8 and
-64 clients, including the read-only T4, which cannot be waiting on row locks
-or commit flushes. That points to CPU contention somewhere, and the
-transactions that do almost nothing on the workers (T2, T4, T8, T9) slowed
-the most. The coordinator node, which runs pgbench and every coordinator
-backend on 4 CPUs, is the likely candidate. This was not measured.
+At 64 clients T7 runs at 73.0 TPS with an average latency of 848 ms, so by
+Little's law about 62 of the 64 clients are inside T7 at any moment. T7 is 30%
+of workload B, and 73.0 / 0.30 = 243 TPS, which is the observed overall
+throughput (243.2). The same calculation gives `expt_b8`'s 117.0 TPS from its
+T7 rate (35.0 / 0.30 = 116.8). Overall throughput is set entirely by how fast
+T7 can run, so T7 is the only transaction worth changing next.
 
 ### Why T7 is slow
 
-T7 takes 4.6 ms at 1 client, unchanged since `expt_b7`, although its work on
-the shards is tiny. In `expt_b9`'s `explain.log`, each of its statements
-executes in 0.09 to 0.20 ms on the shard but takes 1.1 to 1.7 ms end to end.
-Its routed path sends 6 statements through the coordinator, one after
-another: the two map lookups, `BEGIN`, the debit, the credit, and `COMMIT`,
-which is a two-phase commit when the two merchants are on different workers.
+T7 receives only `source_product_id`, `dest_product_id` and `transfer_qty`.
+Since `expt_b7`, `inventory` is distributed by `merchant_id`, and none of T7's
+six statements names it:
 
-T7 is also most of the coordinator's traffic. Counting the statements each
-transaction sends to the coordinator (T7: 6; T1, T5: 2; the rest: 1) and
-weighting by workload B's mix gives 2.7 statements per transaction, of which
-T7 sends two-thirds (180 of 270 per 100 transactions).
+- two `EXISTS` probes and two `SELECT inventory_id` lookups by `product_id`
+- a debit and a credit `UPDATE` by `inventory_id`
 
-### Optimisation: T7 as a distributed function
+Citus cannot prune any of them, so each is sent to all 32 `inventory` shards
+across all 4 workers: about 192 shard queries per transfer. None of the
+`inventory` indexes leads with `product_id` or `inventory_id` alone
+(`PRIMARY KEY (merchant_id, inventory_id)`, `UNIQUE (merchant_id, product_id)`),
+so no shard can answer with a single index probe either. And because both
+`UPDATE`s touch every shard, every worker takes part in every T7 write and in
+its two-phase commit, whichever two rows actually change.
 
-`public.transfer_inventory` is defined at the end of
-`transactions/T7_inventory_transfer.sql`, inside a `\if 0 ... \endif` block
-that pgbench never runs, as `place_order` is in T1's file. `run.sh` now
-extracts and runs both files' blocks in `create_schema`:
+### Optimisation 1: product_merchant_map
 
-```sql
-SELECT create_distributed_function(
-  'public.transfer_inventory(bigint, bigint, bigint, bigint, integer)',
-  'p_src_merchant_id',
-  colocate_with => 'merchants'
-);
-```
-
-T7's routed path becomes the two unchanged lookups, then one call with no
-transaction block around it:
+Added a two-column table that maps each product to the merchant that owns it:
 
 ```sql
-SELECT public.transfer_inventory(
-  (:t7_source_merchant_id)::bigint, (:source_product_id)::bigint,
-  (:t7_dest_merchant_id)::bigint,   (:dest_product_id)::bigint,
-  (:transfer_qty)::integer
+CREATE TABLE product_merchant_map (
+  product_id BIGINT NOT NULL,
+  merchant_id BIGINT NOT NULL,
+  PRIMARY KEY (product_id)
 );
+SELECT create_distributed_table('product_merchant_map', 'product_id', colocate_with => 'none');
 ```
 
-The function debits the source row with the `quantity >= qty` guard and
-returns `false` if that updates nothing. Otherwise it credits the destination
-row and returns `true`. The debit is always local to the worker the call is
-delegated to. The credit is local when the destination merchant's shard is on
-the same worker, about 1 time in 4 with one shard per worker, since source and
-destination products are drawn independently. Otherwise that worker sends the
-credit to the destination's worker and coordinates the two-phase commit
-itself.
+It is distributed by `product_id`, so a lookup by `product_id` is routed to one
+shard. It is filled in `generate_data` straight after `products` is loaded:
 
-What crosses the network per transfer:
+```sql
+INSERT INTO product_merchant_map (product_id, merchant_id)
+SELECT product_id, merchant_id FROM products;
+```
 
-| Case                         | `expt_b9` statements to coordinator | `expt_b9` network hops                           | This experiment: statements | This experiment: network hops                  |
-| ---------------------------- | ----------------------------------- | ------------------------------------------------ | --------------------------- | ---------------------------------------------- |
-| Different workers (~3 in 4)  | 6                                   | 6: 2 lookups, debit, credit, prepare, commit     | 3                           | 6: 2 lookups, call, credit, prepare, commit    |
-| Same worker (~1 in 4)        | 6                                   | 5: 2 lookups, debit, credit, commit              | 3                           | 3: 2 lookups, call; everything else local      |
+It is added to the `TRUNCATE` in `generate_data`, so every database reset
+rebuilds it along with the tables it is derived from, and the whole-database
+`ANALYZE` at the end of `generate_data` covers it.
 
-So in the common case the number of network hops does not change. What
-changes is that the coordinator handles 3 statements per T7 instead of 6,
-which takes the workload from 2.7 to 1.8 statements per transaction. This
-experiment is therefore mainly a test of whether coordinator load limits
-throughput. Only the same-worker case gets clearly faster on its own.
+This is the same pattern as the `order_merchant_map` used for T5 on the
+earlier, discarded branch.
 
-The lookups are deliberately left as two statements. They are routed
-single-shard queries today, and the next change planned for them (making
-`product_merchant_map` a reference table) replaces them anyway, so changing
-them here would mix two effects.
+#### Keeping the map correct
 
-The conditions for delegation are the ones in `expt_b7/optimisations.md`:
-the call is a bare `SELECT f(...)` outside a transaction block, and the
-distribution argument is a constant in simple query mode.
+No transaction in the workload inserts a product or changes a product's
+merchant (T9 changes only `price`), so a map built at load time stays exact for
+the whole run. That is a property of this workload, not something the schema
+enforces, so T7 does not depend on it: a miss returns `merchant_id = 0` and T7
+falls back to `expt_b9`'s un-routed statements. Under this workload the
+fallback should never run.
 
-### Why T7 still behaves like expt_b0
+### Optimisation 2: Routed T7
 
-`expt_b0`'s T7 ends in one of four ways, and each is preserved:
+T7 now runs:
 
-| `expt_b0` outcome                          | This experiment                                                           |
-| ------------------------------------------ | ------------------------------------------------------------------------- |
-| Same product, `ROLLBACK`                   | Checked in pgbench before the call, which is skipped. Nothing is written. |
-| A product is not found, `ROLLBACK`         | The fallback path, unchanged from `expt_b9`, taken before any call.       |
-| Not enough stock (debit guard), `ROLLBACK` | The function returns `false` before writing anything.                     |
-| Debit and credit succeed, `COMMIT`         | The function returns `true` and commits both as one transaction.          |
+1. Two lookups, one per product, each routed to one `product_merchant_map`
+   shard:
 
-- **Atomicity.** The call is one statement, so one transaction. When the
-  credit is on another worker, the delegated worker commits both sides with a
-  two-phase commit, so a transfer is never half-applied.
-- **The credit cannot miss.** `expt_b0` could `ROLLBACK` if the credit found
-  no row. Here that would need a `RAISE`, which pgbench does not retry and
-  which by default stops the client. It cannot happen: `generate_data` copies
-  `product_merchant_map` from `products` and gives every product exactly one
-  inventory row under its own merchant, and nothing deletes inventory. The
-  `RAISE` is only a guard, like the one in T1's function. `expt_b0` itself
-  checks `dest_exists` earlier in the transaction, so its `ROLLBACK` on a
-  failed credit is equally unreachable.
-- **Isolation.** The delegated call runs at the worker's
-  `default_transaction_isolation`, `SERIALIZABLE` as on every node, and Citus
-  opens the remote credit with the same level. The debit's guard is part of
-  the `UPDATE`, as in `expt_b9`.
-- **Deadlocks.** Two opposite transfers between the same two products can
-  still deadlock, exactly as before. `expt_b9` had none.
+   ```sql
+   SELECT COALESCE(MAX(merchant_id), 0) AS source_merchant_id
+   FROM product_merchant_map
+   WHERE product_id = (:source_product_id)::bigint
+   \gset t7_
+   ```
 
-### Recording plans
+   `COALESCE(MAX(...), 0)` always returns exactly one row, as `\gset` requires,
+   and turns a miss into `0`. This is the same form as the discarded branch's
+   T5 lookup.
 
-`explain/T7_inventory_transfer.sql` keeps the lookup with `ANALYZE` and shows
-the call with `EXPLAIN (VERBOSE)` only, outside a transaction block, as for
-T1: inside one Citus would not delegate it, and running it would commit a
-transfer. The debit and credit run inside the function on the worker and no
-longer appear in the plan.
+2. `BEGIN`, then the same debit and credit as before, with `merchant_id` added
+   to each `WHERE` and the row identified by `product_id` instead of a
+   previously fetched `inventory_id`:
 
-### What could get worse
+   ```sql
+   UPDATE inventory
+   SET quantity = quantity - (:transfer_qty)::integer,
+       updated_at = CURRENT_TIMESTAMP
+   WHERE merchant_id = (:t7_source_merchant_id)::bigint
+     AND product_id = (:source_product_id)::bigint
+     AND quantity >= (:transfer_qty)::integer
+   ```
 
-- **Two-phase commits run by workers.** About 3 in 4 transfers now have a
-  worker coordinate the commit instead of the coordinator. T1's latency
-  distribution in `expt_b7` suggested that this is not cheap, but that was
-  never isolated.
-- **Connections between workers.** Each worker backend running a delegated
-  call opens and caches a connection to the destination's worker. T1 already
-  does the same for `order_merchant_map`.
+   Each `UPDATE` is routed to one shard and uses the
+   `UNIQUE (merchant_id, product_id)` index.
+
+3. `COMMIT` if both `UPDATE`s changed a row, otherwise `ROLLBACK`, exactly as
+   before.
+
+The four probes are removed. They existed only to find `inventory_id` and to
+roll back when a product has no inventory row. The routed `UPDATE`s find the
+row themselves, and a missing row makes its `UPDATE` affect zero rows, which
+already triggers the rollback.
+
+The lookups run before `BEGIN`. No transaction writes the map, so reading it
+outside the transfer cannot see a different answer than reading it inside. It
+also keeps the lookup's workers out of T7's distributed transaction, so only
+the one or two workers holding the changed rows take part in the commit. If the
+map were ever wrong, the routed `UPDATE` would match no row and the transfer
+would roll back. A stale map can make a transfer fail, but it cannot make one
+change the wrong row.
+
+Per transfer, this goes from 6 statements x 32 shards with all 4 workers in the
+commit, to 2 single-shard lookups plus 2 single-shard `UPDATE`s with 1 or 2
+workers in the commit.
+
+### What this cannot remove
+
+The source and destination products are independent random draws, so under
+any single-column hash distribution their rows are on different workers most
+of the time (3 in 4 with 4 workers). Those transfers still commit with
+two-phase commit across two workers. Routing removes the fan-out, not the
+cross-node commit. `expt_b11` tests a layout that removes the cross-node commit
+as well.
 
 ### What to look at when this is run
 
-- **`schema-create.log`.** Both `create_distributed_function` calls succeed.
-- **`explain.log`.** The call's plan is one `Task` on a worker whose query is
-  the call itself.
-- **T7 latency at 1 client**, 4.6 ms in `expt_b9`. Expect only a small drop
-  on average. The same-worker transfers (about a quarter) should form a clearly
-  faster group.
-- **Throughput at 32 and 64 clients**, 3792.3 and 3897.1 TPS in `expt_b9`. A
-  clear rise supports the coordinator-load explanation. No change suggests
-  the limit is elsewhere, most likely worker CPU.
-- **Failures.** `failed_log_records` should stay 0. A non-zero count with a
-  `transfer_inventory` error in `benchmark.log` would mean the credit guard
-  fired.
-- **`serialization_failures` and `deadlock_failures`**, 83 and 0 at 64
-  clients in `expt_b9`.
-- **Comparability.** Run on the same nodes as `expt_b9` (`xcnf[17-21]`).
-
-### Note: this experiment has not been run yet
+- **Comparability.** Run on the same nodes as `expt_b9` (`xcnf[16-20]`). At 1
+  client the unchanged transactions (T2, T3, T4, T5, T6, T8, T9) should be
+  within a few percent of `expt_b9`.
+- **T7 latency.** `expt_b9` had 32.4 ms at 1 client. The discarded
+  formula-routed T7 measured 5.1 ms at 1 client on `xcnf[17-21]`, with the same
+  shape of two routed `UPDATE`s. This version adds two routed lookups, so it
+  should land slightly above that. A T7 p99 anywhere near `expt_b9`'s p50 would
+  mean the fallback is firing.
+- **Overall throughput and the next bottleneck.** The discarded formula-routed
+  T7 reached 369 TPS at 64 clients. Once T7 stops limiting throughput, expect
+  T6 (Global Sales, un-routable and 10% of the workload) to take over, at about
+  (T6 TPS) / 0.10.
+- **`deadlock_failures`.** Like `expt_b9`, T7 debits before it credits, so two
+  opposite transfers between the same pair of products can deadlock across
+  workers. With 500,000 products this should stay near zero, but T7 now runs
+  several times more often.

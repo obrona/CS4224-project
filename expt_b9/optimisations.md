@@ -1,62 +1,106 @@
 ### Prev: expt_b8
 
-This experiment sets `CITUS_SHARD_COUNT` to 4, one shard per worker, instead of
-`expt_b8`'s 8. Nothing else changes: `run.sh` differs from `expt_b8`'s only in
-that default, and `transactions/` and `explain/` are identical.
+This experiment rewrites T1 (Place Order) as a single set-based statement.
+There is no other change to the schema, data distribution, indexes, the other
+transactions, or server parameters carried over from `expt_b8`, apart from the
+`-D DEBUG_*` defaults that `run.sh` now passes to pgbench (Optimisation 2).
 
-`expt_b7` (32 shards), `expt_b8` (8) and `expt_b9` (4) form a sweep of
-throughput against shard count. The reasoning for reducing the shard count is
-in `expt_b8/optimisations.md`. In short, T6 is the largest latency share and
-the only transaction that still runs on every shard. Its work per shard is
-under a millisecond, so its cost is mostly per-task overhead, paid once per
-shard.
+Computing each transaction's share of total measured latency
+(`avg_latency_ms` x `successful_transactions`, over the workload total) for
+`expt_b8` gives:
 
-### Why go to one shard per worker
+| Transaction            | Share at 1 client | Share at 64 clients |
+| ---------------------- | ----------------- | ------------------- |
+| T7 Inventory Transfer  | 65.9%             | 96.8%               |
+| T5 Update Order Status | 18.5%             | 0.5%                |
+| T6 Global Sales        | 5.1%              | 2.3%                |
+| T1 Place Order         | 4.2%              | 0.3%                |
+| T2 Update Inventory    | 2.4%              | 0.1%                |
 
-- **T6 runs one task per worker.** With `citus.max_adaptive_executor_pool_size = 4`,
-  each worker handles its part of T6 in a single task on a single connection.
-- **Local evidence favours it.** On a Citus 14.1.0 docker cluster (coordinator
-  and 2 workers on one machine, full-scale data), T6 alone at 8 clients ran at
-  129 TPS with 16 shards per worker, 606 with 4, and 978 with 2. The full B
-  mix at 2 per worker was 9% to 23% above 16 per worker. One shard per worker
-  was not run as a full mix. See `expt_b8/optimisations.md` for the
-  limitations of that setup.
-- **Load balance is the best of the three.** Citus's hash placement puts the
-  100 hot merchants (50% of order activity) onto workers as follows,
-  computed from `worker_hash` and checked against real placements for 32 and
-  8 shards on a 4-worker cluster:
+T1 is not the dominant cost at either client count. T7 is, and this experiment
+does not touch it. T1 is targeted for a different reason: it sends by far the
+most statements per execution. The original script sends up to 26 statements
+inside one `BEGIN`/`COMMIT` — a customer check, an order-id `nextval`, the
+`orders` insert, then for each of up to five items a product lookup, a guarded
+inventory `UPDATE`, an order-item-id `nextval` and an `order_items` `INSERT`,
+and finally `UPDATE orders SET total_amount` (about 18 on average at 1–5
+items). Each is a separate coordinator round trip, and the nested pgbench `\if`
+blocks needed to skip absent items make the script 438 lines long for what is
+logically one order.
 
-  | Shards | Hot merchants per worker | Share of orders per worker     |
-  | ------ | ------------------------ | ------------------------------ |
-  | 32     | 34 / 21 / 20 / 25        | 28.9% / 22.6% / 22.0% / 26.4%  |
-  | 8      | 24 / 23 / 20 / 33        | 23.9% / 23.9% / 22.4% / 29.8%  |
-  | 4      | 24 / 25 / 23 / 28        | 24.4% / 25.7% / 23.4% / 26.4%  |
+### Optimisation 1: Set-based T1
 
-  An even split would be 25% each.
+Rewrote the transaction body as one statement built from chained CTEs:
 
-### What could get worse
+```sql
+WITH
+input_items(item_no, product_id, quantity) AS ( VALUES (1, ...), (2, ...), ... (5, ...) ),
+requested_items AS MATERIALIZED (
+  SELECT item_no, product_id, quantity FROM input_items WHERE item_no <= (:item_count)::integer
+),
+requirements AS MATERIALIZED (
+  SELECT product_id, SUM(quantity)::integer AS quantity FROM requested_items GROUP BY product_id
+),
+eligible AS MATERIALIZED ( ... EXISTS customer ... AND NOT EXISTS (missing product / missing inventory / insufficient stock) ... ),
+reserved AS ( UPDATE inventory ... FROM requirements r, eligible e WHERE e.ok ... RETURNING i.product_id ),
+reservation_ok AS MATERIALIZED ( SELECT e.ok AND (SELECT COUNT(*) FROM reserved) = (SELECT COUNT(*) FROM requirements) AS ok FROM eligible e ),
+inserted_order AS ( INSERT INTO orders(...) SELECT ..., SUM(ri.quantity * p.price), ... FROM requested_items ri JOIN products p ... CROSS JOIN reservation_ok ro WHERE ro.ok HAVING COUNT(*) = (:item_count)::integer RETURNING order_id ),
+inserted_items AS ( INSERT INTO order_items(...) SELECT ... FROM requested_items ri JOIN products p ... CROSS JOIN inserted_order o RETURNING 1 )
+SELECT EXISTS (SELECT 1 FROM inserted_order), (SELECT COUNT(*) FROM inserted_items);
+```
 
-- **T6's parallelism within a worker.** One T6 now uses one CPU per worker
-  instead of up to 4. This matters only at low client counts, where other
-  clients do not fill the idle CPUs. Watch T6 at c1 against `expt_b8`.
-- **All of a worker's writes go to one table per relation.** Every T1 appends
-  to the end of the same `created_at` index on the worker's single `orders`
-  shard, and extends the same heap files. At about 124 orders/s cluster-wide
-  in `expt_b7` this should be far from contended, but it is the most
-  concentrated layout. Watch T1 and T5 latency at c32 and c64.
-- **Scaling.** With 4 shards the colocation group cannot use more than 4
-  workers without resharding. It is irrelevant here, but it is the cost of
-  this layout on a growing cluster.
+All five item slots are still generated up front by pgbench; the
+`requested_items` CTE trims the `VALUES` list to `item_count` rows inside SQL
+instead of pgbench skipping whole blocks with `\if :item_count >= N`. Because
+every requested product is now reserved by one `UPDATE ... FROM requirements`
+rather than one `UPDATE` per item slot in sequence, a product picked in two
+slots must have its combined quantity reserved in a single pass. The original
+sequential design reached the same net reservation across two statements,
+since each saw the previous one's write inside the same transaction. The
+`requirements` CTE therefore groups by `product_id` and sums the quantities.
+
+Customer existence, product existence and sufficient stock for every requested
+product are checked together in the `eligible` CTE, and the order and its items
+are inserted only when that check and the reservation both succeed. The
+order's `total_amount` is computed inline with `SUM(quantity * price)`, which
+removes the closing `UPDATE orders SET total_amount` that every earlier
+experiment needed.
+
+### Optimisation 2: CASE-based DEBUG_MODE handling
+
+Replaced every `\if :DEBUG_MODE ... \else ... \endif` block that chose between
+fixed debug values and random generation with a single `\set` using a SQL
+`CASE WHEN :DEBUG_MODE = 1 THEN ... ELSE ... END` expression. `run.sh` now
+passes harmless defaults for the `DEBUG_*` variables (`-D DEBUG_MERCHANT_ID=1`,
+`-D DEBUG_QTY_5=1`, and so on) so those expressions can replace the meta-command
+blocks. `DEBUG_MODE` is 0 in every benchmark run, so behaviour is unchanged. It
+is what shrinks the script from 438 to 128 lines and lets the CTE statement
+read as one block instead of being split across nested `\if` branches.
+
+### Caveat: the stock check now depends on the isolation level
+
+In the original T1 each per-item `UPDATE` carried its own guard,
+`AND quantity >= qty`. In the rewrite the sufficiency check lives in the
+separate `eligible` CTE, which reads the statement's snapshot, and the
+`reserved` `UPDATE` has no such guard. Under `SERIALIZABLE` (the setting used
+here) a concurrent decrement of the same inventory row is detected, one of the
+two transactions fails with a retriable serialization error, and stock cannot
+be over-reserved. Under `READ COMMITTED` two concurrent orders could both pass
+the check and both decrement, and the `CHECK (quantity >= 0)` constraint would
+then reject the second with an error pgbench does not retry. This form should
+not be run at a weaker isolation level without restoring the guard in the
+`UPDATE` and rolling back when no order is created, since T1 always commits.
 
 ### What to look at when this is run
 
-- **Comparability.** Run on the same nodes as `expt_b7` and `expt_b8`
-  (`xcnf[17-21]`), and not at the same time as `expt_b8`: both are pinned to
-  those nodes and neither job is exclusive.
-- **`explain.log`.** T6 shows `Task Count: 4`, one task on each worker.
-- **The sweep.** Plot overall TPS against shard count (32, 8, 4) at each
-  client count, and T6 latency beside it. If 4 is below 8 at low client
-  counts but above it at high ones, lost intra-worker parallelism is the
-  likely reason.
-- **`serialization_failures` and `deadlock_failures`**, compared with
-  `expt_b7` and `expt_b8`.
+The trade is fewer round trips against one heavier plan (several materialized
+CTEs, joins against `products`, an anti-join-style `NOT EXISTS` and an
+aggregating `INSERT ... SELECT`), and which side wins is what this experiment
+measures. T1 was only 0.3% of latency at 64 clients in `expt_b8`, so any effect
+should show in T1's own latency, most cleanly at 1 client where there is no
+contention, rather than in overall throughput, which T7 still dominates.
+
+Also check `pgbench_exit_code` and the number of clients still running at the
+end of each measured run. A client that dies on a non-retriable error stops
+issuing transactions, so that run's numbers are not for the client count they
+are labelled with.

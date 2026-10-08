@@ -16,7 +16,7 @@
 # the two series can run concurrently without sharing hardware. The compute
 # nodes are shared and this job does not request --exclusive, so an unpinned
 # run measures whoever else is on the node as much as the design change.
-#SBATCH --nodelist=xcnf[17-21]
+#SBATCH --nodelist=xcnf[16-20]
 
 # IMPORTANT - replace this with your email
 #SBATCH --mail-user=e1334269@u.nus.edu
@@ -49,7 +49,6 @@ LOG_DIR="${RUN_DIR}/logs"
 
 SCRIPT_DIR="${SCRIPT_DIR:-${SLURM_SUBMIT_DIR}}"
 TX_DIR="${SCRIPT_DIR}/transactions"
-EXPLAIN_DIR="${SCRIPT_DIR}/explain"
 
 ################# Files
 BENCHMARK_LOG_FILE="${JOB_RESULT_DIR}/benchmark.log"
@@ -79,9 +78,6 @@ CITUS_ENABLE_REPARTITION_JOINS="${CITUS_ENABLE_REPARTITION_JOINS:-on}"
 CITUS_MAX_SHARED_POOL_SIZE="${CITUS_MAX_SHARED_POOL_SIZE:-300}"
 CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE="${CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE:-4}"
 CITUS_LOCAL_SHARED_POOL_SIZE="${CITUS_LOCAL_SHARED_POOL_SIZE:-150}"
-# Shards per distributed table. Citus's default is 32, i.e. 8 per worker with
-# 4 workers; 4 gives 1 per worker.
-CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT:-4}"
 
 ################# Data generation configuration
 SCALE="${SCALE:-1}"          # scaling factor
@@ -410,11 +406,6 @@ for n in "${NODES[@]}"; do
 	${PSQL} -X -v ON_ERROR_STOP=1 -h "$n" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "CREATE EXTENSION IF NOT EXISTS citus;"
 done
 
-# Register the coordinator in Citus's metadata, so it holds its own copy of
-# reference table and reads product_merchant_map locally. It gets no
-# shards of distributed tables as shouldhaveshards defaults to false.
-${PSQL} -X -v ON_ERROR_STOP=1 -h "$COORDINATOR" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "SELECT citus_set_coordinator_host('$COORDINATOR', $PGPORT);"
-
 # register each worker node at coordinator
 for w in "${WORKERS[@]}"; do
 	${PSQL} -X -v ON_ERROR_STOP=1 -h "$COORDINATOR" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "SELECT * FROM citus_add_node('$w',$PGPORT);"
@@ -433,7 +424,6 @@ create_schema() {
 
 	if [[ "$DROP_EXISTING" == "1" ]]; then
 		psqlx <<'SQL'
-DROP TABLE IF EXISTS merchant_daily_sales CASCADE;
 DROP TABLE IF EXISTS product_merchant_map CASCADE;
 DROP TABLE IF EXISTS order_merchant_map CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
@@ -500,8 +490,8 @@ CREATE TABLE IF NOT EXISTS order_items (
 	PRIMARY KEY (merchant_id, order_item_id)
 );
 
--- Routing table for T7, which is given only product ids. A reference table
--- so every node holds a full copy, and a lookup by product_id is read locally.
+-- Routing table for T7, which is given only product ids. Sharded by
+-- product_id, so a lookup by product_id is routed to a single shard.
 CREATE TABLE IF NOT EXISTS product_merchant_map (
 	product_id BIGINT NOT NULL,
 	merchant_id BIGINT NOT NULL,
@@ -516,16 +506,6 @@ CREATE TABLE IF NOT EXISTS order_merchant_map (
 	PRIMARY KEY (order_id)
 );
 
--- Per-merchant, per-day revenue rollup for T6. Distributed by merchant_id and
--- colocated with orders.
-CREATE TABLE IF NOT EXISTS merchant_daily_sales (
-	merchant_id BIGINT NOT NULL,
-	sales_date DATE NOT NULL,
-	order_count BIGINT NOT NULL,
-	revenue NUMERIC(14, 2) NOT NULL,
-	PRIMARY KEY (merchant_id, sales_date)
-);
-
 CREATE INDEX IF NOT EXISTS idx_orders_customer_recent
 	ON orders (merchant_id, customer_id, created_at DESC, order_id);
 
@@ -535,17 +515,9 @@ CREATE INDEX IF NOT EXISTS idx_order_items_order
 CREATE INDEX IF NOT EXISTS idx_orders_sales_period
 	ON orders (created_at)
 	INCLUDE (merchant_id, total_amount);
-
-CREATE INDEX IF NOT EXISTS idx_mds_period
-	ON merchant_daily_sales (sales_date)
-	INCLUDE (merchant_id, order_count, revenue);
 SQL
 
-	# psql does not substitute variables inside the $$ body, so the shard
-	# count is set for the session, where every create_distributed_table
-	# below reads it.
-	psqlx -v shard_count="$CITUS_SHARD_COUNT" <<'SQL'
-SET citus.shard_count = :shard_count;
+	psqlx <<'SQL'
 DO $$
 BEGIN
 	IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'citus') THEN
@@ -574,28 +546,16 @@ BEGIN
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'product_merchant_map'::regclass) THEN
-			PERFORM create_reference_table('product_merchant_map');
+			PERFORM create_distributed_table('product_merchant_map', 'product_id', colocate_with => 'none');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_merchant_map'::regclass) THEN
 			PERFORM create_distributed_table('order_merchant_map', 'order_id', colocate_with => 'none');
 		END IF;
-
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'merchant_daily_sales'::regclass) THEN
-			PERFORM create_distributed_table('merchant_daily_sales', 'merchant_id', colocate_with => 'merchants');
-		END IF;
 	END IF;
 END
 $$;
 SQL
-
-	# T1 runs as one distributed function, delegated to its merchant's worker.
-	# Its definition is the \if 0 ... \endif block in T1_place_order.sql, which
-	# pgbench skips; only the lines between the two markers go to psql.
-	local t1_function
-	t1_function=$(sed -n '/^\\if 0/,/^\\endif/p' "$TX_DIR/T1_place_order.sql" | sed '1d;$d')
-	[[ -n "$t1_function" ]] || fail "No \\if 0 block with place_order in $TX_DIR/T1_place_order.sql"
-	psqlx <<<"$t1_function"
 }
 
 ############### create database schema
@@ -614,7 +574,7 @@ generate_data() {
 	COLD_MERCHANTS=$((NUM_MERCHANTS - HOT_MERCHANTS))
 	((COLD_MERCHANTS >= 1)) || COLD_MERCHANTS=1
 
-	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE merchant_daily_sales,product_merchant_map,order_merchant_map,order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
+	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE product_merchant_map,order_merchant_map,order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
 
 	psqlx <<SQL
 INSERT INTO merchants SELECT i,'Merchant-'||i,(ARRAY['North','South','East','West','Central'])[1+(i%5)] FROM generate_series(1::bigint, $NUM_MERCHANTS::bigint) g(i);
@@ -672,14 +632,6 @@ FROM (
 WHERE o.merchant_id=x.merchant_id
   AND o.order_id=x.order_id;
 SQL
-
-	psqlx <<'SQL'
-INSERT INTO merchant_daily_sales (merchant_id, sales_date, order_count, revenue)
-SELECT merchant_id, created_at::date, COUNT(*), SUM(total_amount)
-FROM orders
-GROUP BY merchant_id, created_at::date;
-SQL
-
 	[[ "$RUN_ANALYZE" == "1" ]] && psqlx -c "ANALYZE;"
 	echo "Synthetic data generation complete. Default scale creates about $((NUM_ORDER_ITEMS / NUM_ORDERS)) historical items/order."
 }
@@ -1404,7 +1356,6 @@ CITUS_ENABLE_REPARTITION_JOINS="${CITUS_ENABLE_REPARTITION_JOINS}"
 CITUS_MAX_SHARED_POOL_SIZE="${CITUS_MAX_SHARED_POOL_SIZE}"
 CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE="${CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE}"
 CITUS_LOCAL_SHARED_POOL_SIZE="${CITUS_LOCAL_SHARED_POOL_SIZE}"
-CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT}"
 
 DATA_SEED="${DATA_SEED}"
 HOT_MERCHANT_PERCENT="${HOT_MERCHANT_PERCENT}"
@@ -1557,30 +1508,6 @@ EOF
 	echo "Overall metrics: $SUMMARY_FILE"
 	echo "Per-transaction metrics: $TX_METRICS_FILE"
 }
-
-#####################  Explain transactions
-# Record the plan of every statement T1-T9 runs, once, on the freshly loaded
-# data and outside the timed benchmark.
-explain_transactions() {
-	local f
-	reset_benchmark_sequences # T1 draws from benchmark_order_id_seq
-	for f in "$EXPLAIN_DIR"/T*.sql; do
-		echo "==================== $(basename "$f")"
-		if ! psqlx -v REPORT_DAYS="$REPORT_DAYS" -f "$f" >/dev/null ||
-			! psqlx -v REPORT_DAYS="$REPORT_DAYS" --echo-queries --no-align --tuples-only -f "$f"; then
-			echo "FAILED: $(basename "$f")"
-			wait_for_coordinator 120 || return 1
-		fi
-	done
-}
-wait_for_coordinator() {
-	local timeout="$1" waited=0
-	until "${PG_BIN_DIR}/pg_isready" -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d postgres >/dev/null 2>&1; do
-		((waited++ < timeout)) || { echo "Coordinator not ready after ${timeout}s"; return 1; }
-		sleep 1
-	done
-}
-explain_transactions &>"$JOB_RESULT_DIR/explain.log" || echo "EXPLAIN step failed; see $JOB_RESULT_DIR/explain.log"
 
 #####################  perform benchmarking
 run_benchmark &>"${BENCHMARK_LOG_FILE}"
