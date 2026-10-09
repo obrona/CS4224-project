@@ -16,7 +16,7 @@
 # Submit from the repo root, one job per series, pinned like the benchmarks:
 #
 #   source .env && sbatch --nodelist='xcnf[1,3-6]' --mail-user="$NOTIFY_EMAIL" \
-#     explain_plans/run.sh expt_a0 expt_a1 ... expt_a7
+#     explain_plans/run.sh expt_a0 expt_a7 ... expt_a13
 #
 # Each experiment's run.sh is used unmodified except that its final benchmark
 # invocation is replaced by expt_b7's explain_transactions step. It sets up the

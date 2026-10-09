@@ -1,81 +1,59 @@
-### Prev: expt_a6
+### Optimisation 1
+Removed `BEGIN` and `COMMIT` from transactions that consist of a single SQL statement.
 
-This experiment runs T1 (Place Order) as one distributed function, which Citus
-delegates whole to the worker that holds the merchant's shards. The new order
-and item ids are still drawn first, in a separate coordinator-only statement.
-It is a port of `expt_b7`: `T1_place_order.sql` is identical to `expt_b7`'s,
-because `expt_a6`'s T1 is identical to `expt_b6`'s. There is no change to the
-schema, data distribution, indexes, the other transactions, or server
-parameters carried over from `expt_a6`.
+### Optimisation 2
 
-### Motivation
+Changed the distribution column of all tenant-owned tables to `merchant_id`.
+The `merchants`, `customers`, `products`, `inventory`, `orders`, and
+`order_items` tables are placed in the same explicit Citus colocation group.
+Consequently, all rows belonging to one merchant are stored on corresponding
+shards on the same worker. Merchant-scoped operations such as placing an order,
+updating inventory, reading a customer's order history, and looking up a
+product can therefore be routed to one worker instead of coordinating work
+across unrelated shards.
 
-T1 is 36% of workload A and already the largest share of latency at 1 and 8
-clients in `expt_a3` (54% and 47%). `expt_a3`'s set-based rewrite made T1
-slower, not faster: 9.5 ms in `expt_a2` against 17.2 ms in `expt_a3` at
-1 client. `expt_a4` and `expt_a5` each add a write to it.
+The primary keys were changed to composite keys beginning with `merchant_id`,
+for example `(merchant_id, customer_id)` and `(merchant_id, order_id)`. The
+inventory table additionally has a unique constraint on
+`(merchant_id, product_id)`, ensuring that a merchant has at most one inventory
+record per product. Including the distribution column in every primary and
+unique key is required because Citus cannot enforce uniqueness across
+independent shards otherwise. The original entity-ID columns were retained so
+that the existing data generator and transaction scripts remain compatible.
 
-### Why T1 is slow
+### Optimisation 3
 
-`expt_b6`'s `explain.log` shows T1's main statement is not routed. Citus plans
-it recursively: every CTE becomes its own distributed subplan, executed one
-after another, each passing its rows to the next as an intermediate result.
-`inserted_order` and `inserted_items` both show
-`INSERT/SELECT method: pull to coordinator`. With the `order_merchant_map`
-insert, the rollup upsert and the two-phase commit, T1 is roughly a dozen
-sequential coordinator round trips. `expt_a3` onwards run the same statement,
-so the same plan applies here (assumed from `expt_b6`; not re-recorded on the
-A side).
+Replaced the baseline single-column `merchant_id` indexes with indexes matched
+to the actual filter, join, and ordering patterns of the workload:
 
-### Optimisation: T1 as a distributed function
+- `orders (merchant_id, customer_id, created_at DESC, order_id)` supports T3 by
+  finding a customer's newest orders in index order, avoiding a scan and sort
+  of all orders belonging to that merchant.
+- `order_items (merchant_id, order_id)` supports retrieving the items belonging
+  to the selected orders. T3 must include `merchant_id` in the join predicate to
+  make full use of this colocated index; that transaction rewrite is left for a
+  later optimisation.
+- `orders (created_at) INCLUDE (merchant_id, total_amount)` supports T6's date
+  range filter and contains the columns required for its merchant revenue
+  aggregation. When PostgreSQL can use an index-only scan, fewer heap pages need
+  to be read.
 
-`public.place_order` is defined at the end of `transactions/T1_place_order.sql`
-inside a `\if 0 ... \endif` block, which pgbench always skips. `run.sh`
-extracts the lines between the two markers in `create_schema` and runs them
-once with psql after the tables are distributed. They create the function and
-distribute it by `p_merchant_id`, colocated with `merchants`:
+Separate indexes containing only `merchant_id` were removed because the new
+composite primary keys and workload-specific indexes already begin with that
+column. Keeping the old indexes would consume storage and add index-maintenance
+work without adding a distinct access path.
 
-```sql
-SELECT create_distributed_function(
-  'public.place_order(bigint, bigint, bigint, integer, bigint[], integer[], bigint[])',
-  'p_merchant_id',
-  colocate_with => 'merchants'
-);
-```
+### Optimisation 4
 
-T1 is now two statements with no transaction block:
+Set the table fill factor to 80 for `inventory` and 85 for `orders`. This leaves
+approximately 20% and 15% of each heap page free when the initial data is
+loaded. These two tables receive frequent updates: T1, T2, and T7 change
+inventory quantities, while T5 changes order status.
 
-```sql
-SELECT nextval('benchmark_order_id_seq') AS order_id, ... \gset t1_
-
-SELECT public.place_order(
-  (:merchant_id)::bigint, (:customer_id)::bigint, (:t1_order_id)::bigint,
-  (:item_count)::integer,
-  ARRAY[...product ids...], ARRAY[...quantities...], ARRAY[...item ids...]
-);
-```
-
-The function checks the customer, checks every distinct product's existence
-and combined stock, and returns `false` before writing anything if a check
-fails. Otherwise it decrements inventory in `product_id` order, inserts the
-order and its items, upserts `merchant_daily_sales`, and inserts the
-`order_merchant_map` row. Everything but the map row is on the merchant's
-worker; the worker coordinates the two-phase commit for the map row itself.
-
-The conditions Citus requires for delegation (no transaction block, a bare
-`SELECT f(...)`, a constant distribution argument, metadata on the workers,
-schema-qualified names) and the argument that T1 still produces the
-baseline's rows under `SERIALIZABLE` are in `expt_b7/optimisations.md` and
-apply unchanged.
-
-### What to look at when this is run
-
-- **`schema-create.log`.** `create_distributed_function` succeeds, and every
-  worker shows `hasmetadata` and `metadatasynced` as `t`.
-- **T1 latency at 1 client** against `expt_a6`. If it stays close to
-  `expt_a6`'s, delegation is not happening; unlike `expt_b7`, this experiment
-  does not record plans, so that would need checking separately.
-- **`serialization_failures` and `deadlock_failures`.** A faster T1 means more
-  overlap on hot merchants' inventory and rollup rows.
-- **Comparability.** Pinned to `xcnf[1,3-6]`, the same nodes as `expt_a0` to
-  `expt_a6`.
+PostgreSQL implements an update by creating a new row version. Reserved space
+makes it more likely that the new version can remain on the same heap page. As
+the frequently changed columns (`quantity`, `updated_at`, and `order_status`)
+are not part of secondary indexes, PostgreSQL may then perform a HOT update and
+avoid creating new entries in every index. This trades somewhat larger tables
+and more heap pages for potentially lower update, index-maintenance, and vacuum
+costs under the write-heavy workload.

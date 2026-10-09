@@ -26,117 +26,246 @@ FROM (
 ) AS ids
 \gset
 
+-- The success path for item_count = 3, one statement at a time. A statement
+-- whose result a later one needs is explained, then run again with \gset.
+-- The stock reservations are not run again: EXPLAIN ANALYZE already applied
+-- them once, as the transaction does, and they only choose the branch.
 BEGIN;
 
--- EXPLAIN without ANALYZE, as in expt_b6: EXPLAIN ANALYZE of this multi-CTE
--- statement crashed the coordinator with signal 11 in expt_b6 job 876233.
-EXPLAIN (VERBOSE)
-WITH
-input_items(item_no, product_id, quantity) AS (
-  VALUES
-    (1, (:product_id_1)::bigint, (:qty_1)::integer),
-    (2, (:product_id_2)::bigint, (:qty_2)::integer),
-    (3, (:product_id_3)::bigint, (:qty_3)::integer),
-    (4, (:product_id_4)::bigint, (:qty_4)::integer),
-    (5, (:product_id_5)::bigint, (:qty_5)::integer)
-),
-requested_items AS MATERIALIZED (
-  SELECT item_no, product_id, quantity
-  FROM input_items
-  WHERE item_no <= (:item_count)::integer
-),
-requirements AS MATERIALIZED (
-  SELECT product_id, SUM(quantity)::integer AS quantity
-  FROM requested_items
-  GROUP BY product_id
-),
-eligible AS MATERIALIZED (
-  SELECT
-    EXISTS (
-      SELECT 1
-      FROM customers c
-      WHERE c.merchant_id = (:merchant_id)::bigint
-        AND c.customer_id = (:customer_id)::bigint
-    )
-    AND NOT EXISTS (
-      SELECT 1
-      FROM requirements r
-      LEFT JOIN products p
-        ON p.merchant_id = (:merchant_id)::bigint
-       AND p.product_id = r.product_id
-      LEFT JOIN inventory i
-        ON i.merchant_id = (:merchant_id)::bigint
-       AND i.product_id = r.product_id
-      WHERE p.product_id IS NULL
-         OR i.product_id IS NULL
-         OR i.quantity < r.quantity
-    ) AS ok
-),
-reserved AS (
-  UPDATE inventory i
-  SET quantity = i.quantity - r.quantity,
-      updated_at = CURRENT_TIMESTAMP
-  FROM requirements r, eligible e
-  WHERE e.ok
-    AND i.merchant_id = (:merchant_id)::bigint
-    AND i.product_id = r.product_id
-  RETURNING i.product_id
-),
-reservation_ok AS MATERIALIZED (
-  SELECT e.ok
-     AND (SELECT COUNT(*) FROM reserved)
-       = (SELECT COUNT(*) FROM requirements) AS ok
-  FROM eligible e
-),
-inserted_order AS (
-  INSERT INTO orders(
-    order_id, merchant_id, customer_id, order_status, total_amount, created_at
-  )
-  SELECT
-    nextval('benchmark_order_id_seq'),
-    (:merchant_id)::bigint,
-    (:customer_id)::bigint,
-    'PENDING'::text,
-    SUM(ri.quantity * p.price)::numeric(12,2),
-    CURRENT_TIMESTAMP
-  FROM requested_items ri
-  JOIN products p
-    ON p.merchant_id = (:merchant_id)::bigint
-   AND p.product_id = ri.product_id
-  CROSS JOIN reservation_ok ro
-  WHERE ro.ok
-  HAVING COUNT(*) = (:item_count)::integer
-  RETURNING order_id
-),
-inserted_items AS (
-  INSERT INTO order_items(
-    order_item_id, merchant_id, order_id, product_id, quantity, unit_price
-  )
-  SELECT
-    nextval('benchmark_order_item_id_seq'),
-    (:merchant_id)::bigint,
-    o.order_id,
-    ri.product_id,
-    ri.quantity,
-    p.price
-  FROM requested_items ri
-  JOIN products p
-    ON p.merchant_id = (:merchant_id)::bigint
-   AND p.product_id = ri.product_id
-  CROSS JOIN inserted_order o
-  RETURNING 1
-)
-SELECT
-  EXISTS (SELECT 1 FROM inserted_order) AS order_created,
-  (SELECT COUNT(*) FROM inserted_items) AS items_created,
-  COALESCE((SELECT order_id FROM inserted_order), 0) AS new_order_id;
-
--- EXPLAIN does not return the new order's id, so the follow-up write uses a
--- stand-in; the plan does not depend on the value.
-SELECT nextval('benchmark_order_id_seq') AS t1_new_order_id \gset
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT CASE WHEN EXISTS (
+  SELECT customer_name, email
+  FROM customers
+  WHERE merchant_id = (:merchant_id)::bigint
+    AND customer_id = (:customer_id)::bigint
+) THEN 1 ELSE 0 END AS customer_ok;
 
 EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
-INSERT INTO order_merchant_map (order_id, merchant_id)
-VALUES ((:t1_new_order_id)::bigint, (:merchant_id)::bigint);
+SELECT nextval('benchmark_order_id_seq') AS new_order_id;
+
+SELECT nextval('benchmark_order_id_seq') AS new_order_id
+\gset
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+INSERT INTO orders(
+  order_id, merchant_id, customer_id, order_status, total_amount, created_at
+)
+VALUES(
+  (:new_order_id)::bigint,
+  (:merchant_id)::bigint,
+  (:customer_id)::bigint,
+  'PENDING'::text,
+  0.00,
+  CURRENT_TIMESTAMP
+);
+
+-- item 1
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_1)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_1)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price;
+
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_1)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_1)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price
+\gset item1_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+WITH reserved AS (
+  UPDATE inventory
+  SET quantity = quantity - (:qty_1)::integer,
+      updated_at = CURRENT_TIMESTAMP
+  WHERE inventory_id = (:product_id_1)::bigint
+    AND merchant_id = (:merchant_id)::bigint
+    AND product_id = (:product_id_1)::bigint
+    AND quantity >= (:qty_1)::integer
+  RETURNING 1
+)
+SELECT CASE WHEN EXISTS (SELECT 1 FROM reserved)
+            THEN 1 ELSE 0 END AS stock_ok;
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id;
+
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id
+\gset item1_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+INSERT INTO order_items(
+  order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+)
+VALUES(
+  (:item1_order_item_id)::bigint,
+  (:merchant_id)::bigint,
+  (:new_order_id)::bigint,
+  (:product_id_1)::bigint,
+  (:qty_1)::integer,
+  :item1_price
+);
+
+-- item 2
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_2)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_2)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price;
+
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_2)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_2)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price
+\gset item2_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+WITH reserved AS (
+  UPDATE inventory
+  SET quantity = quantity - (:qty_2)::integer,
+      updated_at = CURRENT_TIMESTAMP
+  WHERE inventory_id = (:product_id_2)::bigint
+    AND merchant_id = (:merchant_id)::bigint
+    AND product_id = (:product_id_2)::bigint
+    AND quantity >= (:qty_2)::integer
+  RETURNING 1
+)
+SELECT CASE WHEN EXISTS (SELECT 1 FROM reserved)
+            THEN 1 ELSE 0 END AS stock_ok;
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id;
+
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id
+\gset item2_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+INSERT INTO order_items(
+  order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+)
+VALUES(
+  (:item2_order_item_id)::bigint,
+  (:merchant_id)::bigint,
+  (:new_order_id)::bigint,
+  (:product_id_2)::bigint,
+  (:qty_2)::integer,
+  :item2_price
+);
+
+-- item 3
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_3)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_3)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price;
+
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_3)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_3)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price
+\gset item3_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+WITH reserved AS (
+  UPDATE inventory
+  SET quantity = quantity - (:qty_3)::integer,
+      updated_at = CURRENT_TIMESTAMP
+  WHERE inventory_id = (:product_id_3)::bigint
+    AND merchant_id = (:merchant_id)::bigint
+    AND product_id = (:product_id_3)::bigint
+    AND quantity >= (:qty_3)::integer
+  RETURNING 1
+)
+SELECT CASE WHEN EXISTS (SELECT 1 FROM reserved)
+            THEN 1 ELSE 0 END AS stock_ok;
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id;
+
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id
+\gset item3_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+INSERT INTO order_items(
+  order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+)
+VALUES(
+  (:item3_order_item_id)::bigint,
+  (:merchant_id)::bigint,
+  (:new_order_id)::bigint,
+  (:product_id_3)::bigint,
+  (:qty_3)::integer,
+  :item3_price
+);
+
+-- pgbench sums order_total with \set; psql's \set cannot do arithmetic.
+SELECT (:qty_1) * (:item1_price) + (:qty_2) * (:item2_price)
+     + (:qty_3) * (:item3_price) AS order_total
+\gset
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+UPDATE orders
+SET total_amount = (:order_total)::numeric(12,2)
+WHERE merchant_id = (:merchant_id)::bigint
+  AND order_id = (:new_order_id)::bigint;
 
 ROLLBACK;

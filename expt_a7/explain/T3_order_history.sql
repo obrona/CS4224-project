@@ -20,7 +20,6 @@ SELECT
 FROM orders AS o
 JOIN order_items AS oi
   ON oi.order_id = o.order_id
- AND oi.merchant_id = o.merchant_id
 WHERE o.merchant_id = (:merchant_id)::bigint
   AND o.customer_id = (:customer_id)::bigint
 ORDER BY o.created_at DESC

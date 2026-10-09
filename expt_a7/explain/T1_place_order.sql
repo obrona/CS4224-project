@@ -26,38 +26,245 @@ FROM (
 ) AS ids
 \gset
 
--- No BEGIN / ROLLBACK here as T1 runs without a transaction block, and inside
--- one Citus would not delegate the call.
+-- The success path for item_count = 3, one statement at a time. A statement
+-- whose result a later one needs is explained, then run again with \gset.
+-- The stock reservations are not run again: EXPLAIN ANALYZE already applied
+-- them once, as the transaction does, and they only choose the branch.
+BEGIN;
 
--- The id draw should run on the coordinator alone, with no Task.
 EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
-SELECT
-  nextval('benchmark_order_id_seq') AS order_id,
-  CASE WHEN (:item_count)::integer >= 1 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_1,
-  CASE WHEN (:item_count)::integer >= 2 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_2,
-  CASE WHEN (:item_count)::integer >= 3 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_3,
-  CASE WHEN (:item_count)::integer >= 4 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_4,
-  CASE WHEN (:item_count)::integer >= 5 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_5;
+SELECT CASE WHEN EXISTS (
+  SELECT customer_name, email
+  FROM customers
+  WHERE merchant_id = (:merchant_id)::bigint
+    AND customer_id = (:customer_id)::bigint
+) THEN 1 ELSE 0 END AS customer_ok;
 
-SELECT
-  nextval('benchmark_order_id_seq') AS order_id,
-  CASE WHEN (:item_count)::integer >= 1 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_1,
-  CASE WHEN (:item_count)::integer >= 2 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_2,
-  CASE WHEN (:item_count)::integer >= 3 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_3,
-  CASE WHEN (:item_count)::integer >= 4 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_4,
-  CASE WHEN (:item_count)::integer >= 5 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_5
-\gset t1_
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT nextval('benchmark_order_id_seq') AS new_order_id;
 
-EXPLAIN (VERBOSE)
-SELECT public.place_order(
+SELECT nextval('benchmark_order_id_seq') AS new_order_id
+\gset
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+INSERT INTO orders(
+  order_id, merchant_id, customer_id, order_status, total_amount, created_at
+)
+VALUES(
+  (:new_order_id)::bigint,
   (:merchant_id)::bigint,
   (:customer_id)::bigint,
-  (:t1_order_id)::bigint,
-  (:item_count)::integer,
-  ARRAY[(:product_id_1)::bigint, (:product_id_2)::bigint, (:product_id_3)::bigint,
-        (:product_id_4)::bigint, (:product_id_5)::bigint],
-  ARRAY[(:qty_1)::integer, (:qty_2)::integer, (:qty_3)::integer,
-        (:qty_4)::integer, (:qty_5)::integer],
-  ARRAY[(:t1_item_id_1)::bigint, (:t1_item_id_2)::bigint, (:t1_item_id_3)::bigint,
-        (:t1_item_id_4)::bigint, (:t1_item_id_5)::bigint]
+  'PENDING'::text,
+  0.00,
+  CURRENT_TIMESTAMP
 );
+
+-- item 1
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_1)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_1)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price;
+
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_1)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_1)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price
+\gset item1_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+WITH reserved AS (
+  UPDATE inventory
+  SET quantity = quantity - (:qty_1)::integer,
+      updated_at = CURRENT_TIMESTAMP
+  WHERE inventory_id = (:product_id_1)::bigint
+    AND merchant_id = (:merchant_id)::bigint
+    AND product_id = (:product_id_1)::bigint
+    AND quantity >= (:qty_1)::integer
+  RETURNING 1
+)
+SELECT CASE WHEN EXISTS (SELECT 1 FROM reserved)
+            THEN 1 ELSE 0 END AS stock_ok;
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id;
+
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id
+\gset item1_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+INSERT INTO order_items(
+  order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+)
+VALUES(
+  (:item1_order_item_id)::bigint,
+  (:merchant_id)::bigint,
+  (:new_order_id)::bigint,
+  (:product_id_1)::bigint,
+  (:qty_1)::integer,
+  :item1_price
+);
+
+-- item 2
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_2)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_2)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price;
+
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_2)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_2)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price
+\gset item2_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+WITH reserved AS (
+  UPDATE inventory
+  SET quantity = quantity - (:qty_2)::integer,
+      updated_at = CURRENT_TIMESTAMP
+  WHERE inventory_id = (:product_id_2)::bigint
+    AND merchant_id = (:merchant_id)::bigint
+    AND product_id = (:product_id_2)::bigint
+    AND quantity >= (:qty_2)::integer
+  RETURNING 1
+)
+SELECT CASE WHEN EXISTS (SELECT 1 FROM reserved)
+            THEN 1 ELSE 0 END AS stock_ok;
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id;
+
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id
+\gset item2_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+INSERT INTO order_items(
+  order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+)
+VALUES(
+  (:item2_order_item_id)::bigint,
+  (:merchant_id)::bigint,
+  (:new_order_id)::bigint,
+  (:product_id_2)::bigint,
+  (:qty_2)::integer,
+  :item2_price
+);
+
+-- item 3
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_3)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_3)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price;
+
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_3)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+      AND product_id = (:product_id_3)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price
+\gset item3_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+WITH reserved AS (
+  UPDATE inventory
+  SET quantity = quantity - (:qty_3)::integer,
+      updated_at = CURRENT_TIMESTAMP
+  WHERE inventory_id = (:product_id_3)::bigint
+    AND merchant_id = (:merchant_id)::bigint
+    AND product_id = (:product_id_3)::bigint
+    AND quantity >= (:qty_3)::integer
+  RETURNING 1
+)
+SELECT CASE WHEN EXISTS (SELECT 1 FROM reserved)
+            THEN 1 ELSE 0 END AS stock_ok;
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id;
+
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id
+\gset item3_
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+INSERT INTO order_items(
+  order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+)
+VALUES(
+  (:item3_order_item_id)::bigint,
+  (:merchant_id)::bigint,
+  (:new_order_id)::bigint,
+  (:product_id_3)::bigint,
+  (:qty_3)::integer,
+  :item3_price
+);
+
+-- pgbench sums order_total with \set; psql's \set cannot do arithmetic.
+SELECT (:qty_1) * (:item1_price) + (:qty_2) * (:item2_price)
+     + (:qty_3) * (:item3_price) AS order_total
+\gset
+
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+UPDATE orders
+SET total_amount = (:order_total)::numeric(12,2)
+WHERE order_id = (:new_order_id)::bigint;
+
+ROLLBACK;

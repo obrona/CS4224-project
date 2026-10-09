@@ -19,7 +19,7 @@
 # from these same five nodes.
 # xcnf2 is deliberately not in the list - it has no /home mount, so initdb is
 # not visible there and the job dies at startup with exit 127.
-#SBATCH --nodelist=xcnf[1,3-6]
+#SBATCH --nodelist=xcnf[1-21]
 
 # IMPORTANT - replace this with your email
 #SBATCH --mail-user=alice_and_bob@u.nus.edu
@@ -30,10 +30,7 @@ set -euo pipefail
 TEAM_ID=${TEAM_ID:-99}
 
 ################# PostgreSQL environment variables
-# PGPORT may be overridden so several experiments can share the pinned node set
-# concurrently; each needs its own port because they run on the same hosts.
-# Unset, it is exactly the per-team port the project spec assigns.
-PGPORT="${PGPORT:-$((10#${TEAM_ID} + 5432))}"
+PGPORT=20002
 PGUSER="${SLURM_JOB_USER:-${USER}}"
 
 DATA_ROOT=/tmp/${PGUSER}/citus-${SLURM_JOB_ID}
@@ -86,7 +83,7 @@ CITUS_LOCAL_SHARED_POOL_SIZE="${CITUS_LOCAL_SHARED_POOL_SIZE:-150}"
 SCALE="${SCALE:-1}"          # scaling factor
 DATA_SEED="${DATA_SEED:-42}" # seed for data generation
 HOT_MERCHANT_PERCENT="${HOT_MERCHANT_PERCENT:-10}"
-HOT_ORDER_PERCENT="${HOT_ORDER_PERCENT:-50}"
+HOT_ORDER_PERCENT="${HOT_ORDER_PERCENT:-80}"
 
 ################# Benchmarking configuration
 PGBENCH_SEED="${PGBENCH_SEED:-42}"
@@ -427,111 +424,34 @@ create_schema() {
 
 	if [[ "$DROP_EXISTING" == "1" ]]; then
 		psqlx <<'SQL'
-DROP TABLE IF EXISTS order_items CASCADE;
-DROP TABLE IF EXISTS orders CASCADE;
-DROP TABLE IF EXISTS inventory CASCADE;
-DROP TABLE IF EXISTS products CASCADE;
-DROP TABLE IF EXISTS customers CASCADE;
-DROP TABLE IF EXISTS merchants CASCADE;
+DROP TABLE IF EXISTS order_items CASCADE; DROP TABLE IF EXISTS orders CASCADE; DROP TABLE IF EXISTS inventory CASCADE;
+DROP TABLE IF EXISTS products CASCADE; DROP TABLE IF EXISTS customers CASCADE; DROP TABLE IF EXISTS merchants CASCADE;
 SQL
 	fi
 
 	psqlx <<'SQL'
-CREATE TABLE IF NOT EXISTS merchants (
-	merchant_id BIGINT PRIMARY KEY,
-	merchant_name TEXT NOT NULL,
-	region TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS customers (
-	customer_id BIGINT NOT NULL,
-	merchant_id BIGINT NOT NULL,
-	customer_name TEXT NOT NULL,
-	email TEXT NOT NULL,
-	created_at TIMESTAMP NOT NULL,
-	PRIMARY KEY (merchant_id, customer_id)
-);
-
-CREATE TABLE IF NOT EXISTS products (
-	product_id BIGINT NOT NULL,
-	merchant_id BIGINT NOT NULL,
-	product_name TEXT NOT NULL,
-	category TEXT,
-	price NUMERIC(12, 2) NOT NULL CHECK (price >= 0),
-	PRIMARY KEY (merchant_id, product_id)
-);
-
-CREATE TABLE IF NOT EXISTS inventory (
-	inventory_id BIGINT NOT NULL,
-	merchant_id BIGINT NOT NULL,
-	product_id BIGINT NOT NULL,
-	quantity INTEGER NOT NULL CHECK (quantity >= 0),
-	updated_at TIMESTAMP NOT NULL,
-	PRIMARY KEY (merchant_id, inventory_id),
-	UNIQUE (merchant_id, product_id)
-) WITH (fillfactor = 80);
-
-CREATE TABLE IF NOT EXISTS orders (
-	order_id BIGINT NOT NULL,
-	merchant_id BIGINT NOT NULL,
-	customer_id BIGINT NOT NULL,
-	order_status TEXT NOT NULL,
-	total_amount NUMERIC(12, 2) NOT NULL CHECK (total_amount >= 0),
-	created_at TIMESTAMP NOT NULL,
-	PRIMARY KEY (merchant_id, order_id)
-) WITH (fillfactor = 85);
-
-CREATE TABLE IF NOT EXISTS order_items (
-	order_item_id BIGINT NOT NULL,
-	merchant_id BIGINT NOT NULL,
-	order_id BIGINT NOT NULL,
-	product_id BIGINT NOT NULL,
-	quantity INTEGER NOT NULL CHECK (quantity > 0),
-	unit_price NUMERIC(12, 2) NOT NULL CHECK (unit_price >= 0),
-	PRIMARY KEY (merchant_id, order_item_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_orders_customer_recent
-	ON orders (merchant_id, customer_id, created_at DESC, order_id);
-
-CREATE INDEX IF NOT EXISTS idx_order_items_order
-	ON order_items (merchant_id, order_id);
-
-CREATE INDEX IF NOT EXISTS idx_orders_sales_period
-	ON orders (created_at)
-	INCLUDE (merchant_id, total_amount);
+CREATE TABLE IF NOT EXISTS merchants(merchant_id BIGINT PRIMARY KEY, merchant_name TEXT NOT NULL, region TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS customers(customer_id BIGINT PRIMARY KEY, merchant_id BIGINT NOT NULL, customer_name TEXT NOT NULL, email TEXT NOT NULL, created_at TIMESTAMP NOT NULL);
+CREATE TABLE IF NOT EXISTS products(product_id BIGINT PRIMARY KEY, merchant_id BIGINT NOT NULL, product_name TEXT NOT NULL, category TEXT, price NUMERIC(12,2) NOT NULL);
+CREATE TABLE IF NOT EXISTS inventory(inventory_id BIGINT PRIMARY KEY, merchant_id BIGINT NOT NULL, product_id BIGINT NOT NULL, quantity INTEGER NOT NULL CHECK(quantity>=0), updated_at TIMESTAMP NOT NULL);
+CREATE TABLE IF NOT EXISTS orders(order_id BIGINT PRIMARY KEY, merchant_id BIGINT NOT NULL, customer_id BIGINT NOT NULL, order_status TEXT NOT NULL, total_amount NUMERIC(12,2) NOT NULL CHECK(total_amount>=0), created_at TIMESTAMP NOT NULL);
+CREATE TABLE IF NOT EXISTS order_items(order_item_id BIGINT PRIMARY KEY, merchant_id BIGINT NOT NULL, order_id BIGINT NOT NULL, product_id BIGINT NOT NULL, quantity INTEGER NOT NULL CHECK(quantity>0), unit_price NUMERIC(12,2) NOT NULL CHECK(unit_price>=0));
+CREATE INDEX IF NOT EXISTS idx_customers_merchant_id ON customers(merchant_id);
+CREATE INDEX IF NOT EXISTS idx_products_merchant_id ON products(merchant_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_merchant_id ON inventory(merchant_id);
+CREATE INDEX IF NOT EXISTS idx_orders_merchant_id ON orders(merchant_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_merchant_id ON order_items(merchant_id);
 SQL
 
 	psqlx <<'SQL'
-DO $$
-BEGIN
-	IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'citus') THEN
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'merchants'::regclass) THEN
-			PERFORM create_distributed_table('merchants', 'merchant_id');
-		END IF;
-
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'customers'::regclass) THEN
-			PERFORM create_distributed_table('customers', 'merchant_id', colocate_with => 'merchants');
-		END IF;
-
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'products'::regclass) THEN
-			PERFORM create_distributed_table('products', 'merchant_id', colocate_with => 'merchants');
-		END IF;
-
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'inventory'::regclass) THEN
-			PERFORM create_distributed_table('inventory', 'merchant_id', colocate_with => 'merchants');
-		END IF;
-
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'orders'::regclass) THEN
-			PERFORM create_distributed_table('orders', 'merchant_id', colocate_with => 'merchants');
-		END IF;
-
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_items'::regclass) THEN
-			PERFORM create_distributed_table('order_items', 'merchant_id', colocate_with => 'merchants');
-		END IF;
-	END IF;
-END
-$$;
+DO $$ BEGIN
+IF EXISTS(SELECT 1 FROM pg_extension WHERE extname='citus') THEN
+IF NOT EXISTS(SELECT 1 FROM pg_dist_partition WHERE logicalrelid='customers'::regclass) THEN PERFORM create_distributed_table('customers','customer_id'); END IF;
+IF NOT EXISTS(SELECT 1 FROM pg_dist_partition WHERE logicalrelid='products'::regclass) THEN PERFORM create_distributed_table('products','product_id'); END IF;
+IF NOT EXISTS(SELECT 1 FROM pg_dist_partition WHERE logicalrelid='inventory'::regclass) THEN PERFORM create_distributed_table('inventory','inventory_id'); END IF;
+IF NOT EXISTS(SELECT 1 FROM pg_dist_partition WHERE logicalrelid='orders'::regclass) THEN PERFORM create_distributed_table('orders','order_id'); END IF;
+IF NOT EXISTS(SELECT 1 FROM pg_dist_partition WHERE logicalrelid='order_items'::regclass) THEN PERFORM create_distributed_table('order_items','order_item_id'); END IF;
+END IF; END $$;
 SQL
 }
 
@@ -580,22 +500,8 @@ WITH g AS (
         1+((hashint8extended(i,$((DATA_SEED + 11)))&9223372036854775807)%5)::int qty FROM generate_series(1::bigint, $NUM_ORDER_ITEMS::bigint) g(i)
 ), x AS (SELECT g.*,o.merchant_id FROM g JOIN orders o USING(order_id)),
 y AS (SELECT *,merchant_id+$NUM_MERCHANTS*(ph%((($NUM_PRODUCTS-merchant_id)/$NUM_MERCHANTS)+1)) product_id FROM x)
-INSERT INTO order_items
-SELECT y.order_item_id,y.merchant_id,y.order_id,y.product_id,y.qty,p.price
-FROM y
-JOIN products p
-  ON p.merchant_id=y.merchant_id
- AND p.product_id=y.product_id;
-
-UPDATE orders o
-SET total_amount=x.total
-FROM (
-  SELECT merchant_id,order_id,SUM(quantity*unit_price)::numeric(12,2) total
-  FROM order_items
-  GROUP BY merchant_id,order_id
-) x
-WHERE o.merchant_id=x.merchant_id
-  AND o.order_id=x.order_id;
+INSERT INTO order_items SELECT y.order_item_id,y.merchant_id,y.order_id,y.product_id,y.qty,p.price FROM y JOIN products p USING(product_id);
+UPDATE orders o SET total_amount=x.total FROM (SELECT order_id,SUM(quantity*unit_price)::numeric(12,2) total FROM order_items GROUP BY order_id) x WHERE o.order_id=x.order_id;
 SQL
 	[[ "$RUN_ANALYZE" == "1" ]] && psqlx -c "ANALYZE;"
 	echo "Synthetic data generation complete. Default scale creates about $((NUM_ORDER_ITEMS / NUM_ORDERS)) historical items/order."
@@ -1259,19 +1165,6 @@ EOF
 	# arguments for pgbench
 	common_defs=(
 		-D DEBUG_MODE=0
-		-D DEBUG_MERCHANT_ID=1
-		-D DEBUG_CUSTOMER_ID=1
-		-D DEBUG_ITEM_COUNT=1
-		-D DEBUG_PRODUCT_ID_1=1
-		-D DEBUG_QTY_1=1
-		-D DEBUG_PRODUCT_ID_2=1
-		-D DEBUG_QTY_2=1
-		-D DEBUG_PRODUCT_ID_3=1
-		-D DEBUG_QTY_3=1
-		-D DEBUG_PRODUCT_ID_4=1
-		-D DEBUG_QTY_4=1
-		-D DEBUG_PRODUCT_ID_5=1
-		-D DEBUG_QTY_5=1
 		-D NUM_MERCHANTS="$NUM_MERCHANTS"
 		-D NUM_CUSTOMERS="$NUM_CUSTOMERS"
 		-D NUM_PRODUCTS="$NUM_PRODUCTS"
