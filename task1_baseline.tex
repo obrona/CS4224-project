@@ -1,0 +1,272 @@
+% Overleaf: upload this file and figures/a/throughput.pdf and
+% figures/a/a0_latency_share.pdf, preserving the figures/a/ folder structure.
+% Prefer PDF: these charts are vector graphics and stay sharp when scaled.
+% PNG is also supported, but is a raster fallback.
+% This section uses the existing report macros \code, \expt, \experiment,
+% and \resultfigure, and requires the booktabs and graphicx packages.
+
+\section{Task 1: Baseline Design, Workload A}\label{sec:task1}
+
+\subsection{Experimental Setup}\label{sec:setup}
+
+The experiments run \code{run.sh} under Slurm on the SoC compute cluster,
+using Citus 14.1.0 on PostgreSQL 18.6 with 4 CPUs allocated per node.
+One node acts as coordinator and runs \code{pgbench}; four nodes act as
+workers, except in \expt{a0\_1}, which uses two workers.
+The recorded \code{topology.txt} files identify \code{xcnf1} as coordinator
+and \code{xcnf3}--\code{xcnf6} as workers for \expt{a0};
+\expt{a0\_1} uses coordinator \code{xcnf9} and workers
+\code{xcnf10}--\code{xcnf11}; and \expt{a0\_2} and \expt{a0\_3}
+use coordinator \code{xcnf9} and workers \code{xcnf10}--\code{xcnf13}.
+Consequently, every comparison with \expt{a0} also changes physical nodes.
+Furthermore, the three parameter experiments have overlapping execution
+times on shared nodes. Their results describe the observed sensitivity
+of the baseline, but do not isolate the causal effect of each parameter.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}p{0.30\linewidth}p{0.65\linewidth}@{}}
+    \toprule
+    Parameter & Value \\
+    \midrule
+    Client counts & 1, 4, 8, 16, 32, 64 \\
+    Configured measured run / warm-up & 600\,s / 60\,s per client count \\
+    Isolation level & \code{SERIALIZABLE} \\
+    Retries & \code{pgbench -{}-max-tries=3} \\
+    Baseline dataset (\code{SCALE=1}) &
+      1,000 merchants, 5,000,000 orders, approximately 15,000,000 order items \\
+    Baseline skew & 10\% of merchants receive about 50\% of order activity \\
+    \bottomrule
+  \end{tabular}
+  \caption{Benchmark configuration. Worker count, skew, and scale vary in
+  \expt{a0\_1}, \expt{a0\_2}, and \expt{a0\_3}, respectively.}
+  \label{tab:setup}
+\end{table}
+
+Average throughput is the main comparison metric, accompanied by the
+p50, p95, and p99 latencies of successful transactions.
+All tables reproduce \code{summary.csv}, whose TPS is the number of
+successful logged transactions divided by the configured 600\,s.
+This convention includes transactions that finish while the run drains
+after the configured duration, and therefore exceeds elapsed-time TPS
+when draining is substantial. For example, at 64 clients the reported
+TPS is 3.203 for \expt{a0} and 2.083 for \expt{a0\_3}, whereas
+\code{pgbench} reports elapsed-time TPS of 2.951 and 1.768, respectively.
+A client count is invalid whenever \code{pgbench} exits non-zero;
+such results are retained as diagnostics but excluded from performance
+conclusions. Invalid counts are 16 and 32 in \expt{a0}, and 32 in
+\expt{a0\_2}, all with exit code 2.
+A successful process exit does not imply that every transaction succeeded:
+serialization failures after retries are reported separately.
+Each configuration has one recorded run per client count, so the
+comparisons do not establish statistical significance.
+
+\experiment{a0}{Baseline Design}
+
+The schema comprises merchants, customers, products, inventory, orders,
+and order items: merchants remain local to the coordinator, while the
+other five tables are distributed by their respective primary IDs
+(\code{customer\_id}, \code{product\_id}, \code{inventory\_id},
+\code{order\_id}, and \code{order\_item\_id}).
+In addition to primary-key indexes, the design creates five single-column
+\code{merchant\_id} indexes, one on each distributed table, without
+aligning distribution keys with the merchant predicates or join keys.
+
+\resultfigure{figures/a/throughput.pdf}{Workload A throughput for the baseline
+and its parameter experiments. Hollow markers denote invalid runs:
+\expt{a0} at 16 and 32 clients, and \expt{a0\_2} at 32 clients.
+Lines connect all measurements, including invalid runs. TPS uses the configured
+600\,s denominator; hardware and execution overlap limit causal comparisons.}{fig:a0-throughput}
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}rrrrrl@{}}
+    \toprule
+    Clients & TPS & p50 (ms) & p95 (ms) & p99 (ms) & Validity \\
+    \midrule
+     1 & 3.225 & 11.232 &   2639.466 &   2687.850 & Valid \\
+     4 & 3.573 & 26.328 &   9837.977 &  10314.475 & Valid \\
+     8 & 3.532 & 40.429 &  19512.201 &  21173.629 & Valid \\
+    16 & 3.242 & 52.678 &  33081.735 &  36601.314 & Invalid \\
+    32 & 3.640 & 51.937 &  65001.448 &  68832.439 & Invalid \\
+    64 & 3.203 & 71.790 & 128909.918 & 135395.836 & Valid \\
+    \bottomrule
+  \end{tabular}
+  \caption{Baseline results from \expt{a0}. Invalid rows contain incomplete
+  results and are excluded from comparisons.}
+  \label{tab:a0-results}
+\end{table}
+
+The baseline gains little throughput from additional clients.
+The highest valid measurement is 3.573 TPS at four clients, only
+10.8\% above the single-client result; at 64 clients, throughput is
+3.203 TPS. Meanwhile, p99 increases from 2.688\,s to 135.396\,s,
+although p50 remains below 72\,ms. This separation indicates that
+the aggregate median conceals a small set of very expensive transactions.
+
+To quantify their contribution, the share of summed successful-transaction
+latency attributable to transaction type \(i\) is
+\[
+  s_i =
+  \frac{n_i\overline{\ell}_i}
+       {\sum_j n_j\overline{\ell}_j},
+\]
+where \(n_i\) is its successful transaction count and
+\(\overline{\ell}_i\) its average latency.
+This measures accumulated client latency, including waiting and
+communication, rather than CPU time.
+At one client, T3 (Customer Order History) accounts for 76.6\% of
+summed latency despite representing only 9.0\% of successful transactions;
+T4 (Product Lookup) contributes another 16.9\%.
+At 64 clients, their shares are 66.7\% and 30.8\%, respectively,
+together accounting for 97.5\%.
+T3's average latency rises from 2.637\,s to 124.031\,s, and T4's
+from 0.479\,s to 55.135\,s.
+
+\resultfigure{figures/a/a0_latency_share.pdf}{Shares of summed
+successful-transaction latency in \expt{a0} at one and 64 clients.
+T3 and T4 dominate both measurements.}{fig:a0-latency-share}
+
+The transaction SQL explains why these reads are costly:
+T3 joins orders to order items on \code{order\_id}, although order items
+are distributed by \code{order\_item\_id}; T4 joins products to inventory
+on \code{product\_id}, although inventory is distributed by
+\code{inventory\_id}.
+The joins therefore cannot rely on aligned distribution keys.
+A separate baseline \code{EXPLAIN ANALYZE} run corroborates this
+interpretation: T3 uses two map/merge stages, each with 32 map tasks and
+16 merge tasks, while T4 includes a 32-map-task stage despite selecting
+a single product. Their measured execution times in that diagnostic run
+are approximately 2.748\,s and 0.446\,s.
+The latency shares and plans support distributed join processing as
+the principal baseline limitation; increasing concurrency mainly
+increases latency without providing sustained throughput growth.
+Serialization failures are an additional constraint at higher concurrency:
+the valid 64-client run records 62 such failures, while the aborted
+16- and 32-client runs cannot establish performance at those counts.
+
+\experiment{a0\_1}{Baseline with Two Workers}
+
+This experiment reduces the worker count from four to two, keeping
+\code{SCALE=1}, the 50\% hot-order share, the baseline schema, and the
+transaction mix unchanged. The recorded topology is
+\code{xcnf9}--\code{xcnf11}, so comparison with \expt{a0} also changes
+hardware and is affected by overlapping jobs on shared nodes.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}rrrrr@{}}
+    \toprule
+    Clients & TPS & p50 (ms) & p95 (ms) & p99 (ms) \\
+    \midrule
+     1 & 2.190 &   9.855 &   4355.126 &   4442.821 \\
+     4 & 2.158 &  29.394 &  17024.607 &  17907.785 \\
+     8 & 2.105 &  51.005 &  33676.193 &  37241.774 \\
+    16 & 2.098 &  90.778 &  64270.391 &  71418.325 \\
+    32 & 2.168 & 104.133 & 115890.853 & 126777.144 \\
+    64 & 2.127 & 110.731 & 217663.624 & 229562.480 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Results for \expt{a0\_1}; all client counts have exit code 0.}
+  \label{tab:a0-1-results}
+\end{table}
+
+Throughput remains between 2.098 and 2.190 TPS across client counts.
+At the jointly valid counts of 1, 4, 8, and 64, it is
+32.1--40.4\% below the baseline, while p99 is approximately
+1.65--1.76 times higher.
+T3 accounts for 82.0\% of summed latency at one client and 69.9\%
+at 64 clients, with average latencies of 4.346\,s and 208.974\,s.
+The results are consistent with reduced worker capacity making the
+expensive distributed reads slower, but hardware changes and shared-node
+contention prevent attributing the full difference to worker count.
+There are 45 serialization failures at 64 clients despite a successful
+process exit.
+
+\experiment{a0\_2}{Baseline with Stronger Merchant Skew}
+
+This experiment increases \code{HOT\_ORDER\_PERCENT} from 50 to 80.
+The hot group remains 10\% of merchants, and the change applies both
+to generated historical orders and to transactions that select a
+merchant. Scale and worker count remain at one and four, respectively;
+the run uses coordinator \code{xcnf9} and workers
+\code{xcnf10}--\code{xcnf13}.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}rrrrrl@{}}
+    \toprule
+    Clients & TPS & p50 (ms) & p95 (ms) & p99 (ms) & Validity \\
+    \midrule
+     1 & 3.127 & 11.398 &   2722.832 &   2783.007 & Valid \\
+     4 & 3.360 & 34.812 &  10190.109 &  10669.536 & Valid \\
+     8 & 3.397 & 58.757 &  19859.063 &  21515.363 & Valid \\
+    16 & 3.203 & 74.209 &  37148.299 &  40242.646 & Valid \\
+    32 & 3.497 & 66.868 &  64771.685 &  69502.688 & Invalid \\
+    64 & 3.078 & 97.803 & 133177.781 & 140907.333 & Valid \\
+    \bottomrule
+  \end{tabular}
+  \caption{Results for \expt{a0\_2}. The 32-client run exits with code 2
+  and is excluded from performance comparisons.}
+  \label{tab:a0-2-results}
+\end{table}
+
+At the jointly valid counts of 1, 4, 8, and 64, throughput is
+3.0--6.0\% below \expt{a0}, and p99 is 1.6--4.1\% higher.
+Median latency is more sensitive at concurrency: at eight clients it
+increases from 40.429\,ms to 58.757\,ms, and at 64 clients from
+71.790\,ms to 97.803\,ms.
+Nevertheless, T3 and T4 still account for 97.4\% of summed latency
+at 64 clients, indicating that the distributed read bottleneck persists.
+Because the baseline distributes by entity IDs, stronger merchant skew
+does not directly concentrate all hot-merchant data on one worker.
+The observations do not establish that skew caused the differences:
+physical nodes change relative to \expt{a0}, execution overlaps other
+jobs, and no repeated measurements quantify run-to-run variation.
+The valid 64-client run records 59 serialization failures.
+
+\experiment{a0\_3}{Baseline with Double Data Scale}
+
+This experiment increases \code{SCALE} from one to two while retaining
+four workers and the baseline skew.
+The initial dataset contains 2,000 merchants, 2,000,000 customers,
+1,000,000 products and inventory rows, 10,000,000 orders, and
+approximately 30,000,000 order items.
+It uses coordinator \code{xcnf9} and workers
+\code{xcnf10}--\code{xcnf13}, changing hardware relative to \expt{a0}
+and overlapping the other parameter experiments during part of its run.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{@{}rrrrr@{}}
+    \toprule
+    Clients & TPS & p50 (ms) & p95 (ms) & p99 (ms) \\
+    \midrule
+     1 & 2.018 &  13.388 &   4657.780 &   4862.633 \\
+     4 & 2.115 &  37.916 &  17199.926 &  18143.604 \\
+     8 & 2.090 &  61.901 &  34566.551 &  36330.284 \\
+    16 & 2.103 & 113.060 &  64815.498 &  71173.488 \\
+    32 & 2.147 & 123.960 & 115263.450 & 128941.635 \\
+    64 & 2.083 & 147.993 & 218813.640 & 228174.357 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Results for \expt{a0\_3}; all client counts have exit code 0.}
+  \label{tab:a0-3-results}
+\end{table}
+
+Throughput remains between 2.018 and 2.147 TPS.
+At the jointly valid counts of 1, 4, 8, and 64, it is
+35.0--40.8\% below \expt{a0}, while p99 is approximately
+1.69--1.81 times higher.
+At one client, T3's average latency increases from 2.637\,s in the
+baseline to 4.698\,s, and T6 (Global Sales) increases from
+0.262\,s to 0.534\,s.
+These increases are consistent with greater data-processing work,
+particularly for distributed joins and aggregation.
+At 64 clients, T3 and T4 account for 97.1\% of summed latency,
+and overall p99 reaches 228.174\,s.
+The run records 50 serialization failures at that client count.
+The measurements show that the baseline remains dominated by expensive
+reads at the larger scale, but the node change and overlapping execution
+prevent interpreting the observed throughput reduction as an isolated
+scale effect.
