@@ -1,0 +1,1239 @@
+2026-10-10 12:27:06.448 +08 [392799] LOG:  There is no designated Main database.
+2026-10-10 12:27:06.448 +08 [392799] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-10 12:27:06.448 +08 [392799] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-10 12:27:06.559 +08 [392799] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-10 12:27:06.559 +08 [392799] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-10 12:27:06.559 +08 [392799] LOG:  listening on IPv6 address "::", port 5436
+2026-10-10 12:27:06.560 +08 [392799] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-10 12:27:06.563 +08 [392806] LOG:  database system was shut down at 2026-10-10 12:27:04 +08
+2026-10-10 12:27:06.567 +08 [392799] LOG:  database system is ready to accept connections
+2026-10-10 12:27:08.690 +08 [392834] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-10 12:27:08.690 +08 [392834] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-10 12:39:57.337 +08 [392799] LOG:  received fast shutdown request
+2026-10-10 12:39:57.337 +08 [392799] LOG:  aborting any active transactions
+2026-10-10 12:39:57.341 +08 [392799] LOG:  background worker "logical replication launcher" (PID 392809) exited with exit code 1
+2026-10-10 12:39:57.342 +08 [392804] LOG:  shutting down
+2026-10-10 12:39:57.342 +08 [392804] LOG:  checkpoint starting: shutdown immediate
+2026-10-10 12:39:57.366 +08 [392804] LOG:  checkpoint complete: wrote 1759 buffers (1.3%), wrote 21 SLRU buffers; 0 WAL file(s) added, 0 removed, 3 recycled; write=0.022 s, sync=0.002 s, total=0.025 s; sync files=493, longest=0.001 s, average=0.001 s; distance=56995 kB, estimate=56995 kB; lsn=0/4F07C00, redo lsn=0/4F07C00
+2026-10-10 12:39:57.411 +08 [392799] LOG:  database system is shut down
+2026-10-10 12:40:02.296 +08 [393267] LOG:  There is no designated Main database.
+2026-10-10 12:40:02.296 +08 [393267] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-10 12:40:02.296 +08 [393267] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-10 12:40:02.420 +08 [393267] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-10 12:40:02.420 +08 [393267] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-10 12:40:02.420 +08 [393267] LOG:  listening on IPv6 address "::", port 5436
+2026-10-10 12:40:02.420 +08 [393267] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-10 12:40:02.424 +08 [393274] LOG:  database system was shut down at 2026-10-10 12:39:57 +08
+2026-10-10 12:40:02.427 +08 [393267] LOG:  database system is ready to accept connections
+2026-10-10 12:40:03.334 +08 [393298] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-10 12:40:03.334 +08 [393298] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-10 12:45:04.553 +08 [393361] ERROR:  could not serialize access due to concurrent update
+2026-10-10 12:45:04.553 +08 [393361] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 12:45:04.553 +08 [393361] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (308084)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 12:49:22.528 +08 [393362] ERROR:  could not serialize access due to concurrent update
+2026-10-10 12:49:22.528 +08 [393362] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 12:49:22.528 +08 [393362] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (64219)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 12:51:55.048 +08 [393267] LOG:  received fast shutdown request
+2026-10-10 12:51:55.049 +08 [393267] LOG:  aborting any active transactions
+2026-10-10 12:51:55.052 +08 [393267] LOG:  background worker "logical replication launcher" (PID 393277) exited with exit code 1
+2026-10-10 12:51:55.054 +08 [393272] LOG:  shutting down
+2026-10-10 12:51:55.054 +08 [393272] LOG:  checkpoint starting: shutdown immediate
+2026-10-10 12:51:55.068 +08 [393272] LOG:  checkpoint complete: wrote 1527 buffers (1.2%), wrote 47 SLRU buffers; 0 WAL file(s) added, 0 removed, 8 recycled; write=0.013 s, sync=0.001 s, total=0.015 s; sync files=47, longest=0.001 s, average=0.001 s; distance=124089 kB, estimate=124089 kB; lsn=0/C836060, redo lsn=0/C836060
+2026-10-10 12:51:55.113 +08 [393267] LOG:  database system is shut down
+2026-10-10 12:51:59.898 +08 [393634] LOG:  There is no designated Main database.
+2026-10-10 12:51:59.898 +08 [393634] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-10 12:51:59.898 +08 [393634] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-10 12:52:00.044 +08 [393634] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-10 12:52:00.044 +08 [393634] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-10 12:52:00.044 +08 [393634] LOG:  listening on IPv6 address "::", port 5436
+2026-10-10 12:52:00.044 +08 [393634] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-10 12:52:00.048 +08 [393641] LOG:  database system was shut down at 2026-10-10 12:51:55 +08
+2026-10-10 12:52:00.052 +08 [393634] LOG:  database system is ready to accept connections
+2026-10-10 12:52:00.930 +08 [393665] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-10 12:52:00.930 +08 [393665] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-10 12:57:44.042 +08 [393728] ERROR:  could not serialize access due to concurrent update
+2026-10-10 12:57:44.042 +08 [393728] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 12:57:44.042 +08 [393728] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (107199)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:03:52.808 +08 [393634] LOG:  received fast shutdown request
+2026-10-10 13:03:52.809 +08 [393634] LOG:  aborting any active transactions
+2026-10-10 13:03:52.812 +08 [393634] LOG:  background worker "logical replication launcher" (PID 393644) exited with exit code 1
+2026-10-10 13:03:52.814 +08 [393639] LOG:  shutting down
+2026-10-10 13:03:52.814 +08 [393639] LOG:  checkpoint starting: shutdown immediate
+2026-10-10 13:03:52.829 +08 [393639] LOG:  checkpoint complete: wrote 1624 buffers (1.2%), wrote 52 SLRU buffers; 0 WAL file(s) added, 0 removed, 8 recycled; write=0.013 s, sync=0.001 s, total=0.015 s; sync files=47, longest=0.001 s, average=0.001 s; distance=137634 kB, estimate=137634 kB; lsn=0/14E9EC00, redo lsn=0/14E9EC00
+2026-10-10 13:03:52.873 +08 [393634] LOG:  database system is shut down
+2026-10-10 13:03:57.657 +08 [394030] LOG:  There is no designated Main database.
+2026-10-10 13:03:57.657 +08 [394030] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-10 13:03:57.657 +08 [394030] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-10 13:03:57.805 +08 [394030] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-10 13:03:57.805 +08 [394030] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-10 13:03:57.805 +08 [394030] LOG:  listening on IPv6 address "::", port 5436
+2026-10-10 13:03:57.805 +08 [394030] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-10 13:03:57.809 +08 [394037] LOG:  database system was shut down at 2026-10-10 13:03:52 +08
+2026-10-10 13:03:57.812 +08 [394030] LOG:  database system is ready to accept connections
+2026-10-10 13:03:58.689 +08 [394061] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-10 13:03:58.689 +08 [394061] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-10 13:06:05.724 +08 [394137] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:06:05.724 +08 [394137] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:06:05.724 +08 [394137] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (101595)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:07:09.036 +08 [394136] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:07:09.036 +08 [394136] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:07:09.036 +08 [394136] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (110937)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:07:58.243 +08 [394132] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:07:58.243 +08 [394132] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:07:58.243 +08 [394132] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (467002)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:08:49.316 +08 [394138] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:08:49.316 +08 [394138] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:08:49.316 +08 [394138] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (417781)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:10:22.918 +08 [394140] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:10:22.918 +08 [394140] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:10:22.918 +08 [394140] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (56595)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:10:39.783 +08 [394139] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:10:39.783 +08 [394139] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:10:39.783 +08 [394139] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (49246)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:12:13.452 +08 [394132] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:12:13.452 +08 [394132] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:12:13.452 +08 [394132] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (19840)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:12:25.777 +08 [394135] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:12:25.777 +08 [394135] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:12:25.777 +08 [394135] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (410122)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:12:26.041 +08 [394132] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:12:26.041 +08 [394132] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:12:26.041 +08 [394132] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (39814)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:15:50.546 +08 [394030] LOG:  received fast shutdown request
+2026-10-10 13:15:50.546 +08 [394030] LOG:  aborting any active transactions
+2026-10-10 13:15:50.550 +08 [394030] LOG:  background worker "logical replication launcher" (PID 394040) exited with exit code 1
+2026-10-10 13:15:50.551 +08 [394035] LOG:  shutting down
+2026-10-10 13:15:50.552 +08 [394035] LOG:  checkpoint starting: shutdown immediate
+2026-10-10 13:15:50.567 +08 [394035] LOG:  checkpoint complete: wrote 1661 buffers (1.3%), wrote 50 SLRU buffers; 0 WAL file(s) added, 0 removed, 9 recycled; write=0.014 s, sync=0.001 s, total=0.016 s; sync files=47, longest=0.001 s, average=0.001 s; distance=132602 kB, estimate=132602 kB; lsn=0/1D01D7F0, redo lsn=0/1D01D7F0
+2026-10-10 13:15:50.611 +08 [394030] LOG:  database system is shut down
+2026-10-10 13:15:55.301 +08 [394430] LOG:  There is no designated Main database.
+2026-10-10 13:15:55.301 +08 [394430] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-10 13:15:55.301 +08 [394430] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-10 13:15:55.452 +08 [394430] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-10 13:15:55.452 +08 [394430] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-10 13:15:55.452 +08 [394430] LOG:  listening on IPv6 address "::", port 5436
+2026-10-10 13:15:55.452 +08 [394430] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-10 13:15:55.456 +08 [394437] LOG:  database system was shut down at 2026-10-10 13:15:50 +08
+2026-10-10 13:15:55.459 +08 [394430] LOG:  database system is ready to accept connections
+2026-10-10 13:15:56.331 +08 [394461] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-10 13:15:56.331 +08 [394461] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-10 13:16:51.244 +08 [394517] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:16:51.244 +08 [394517] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:16:51.244 +08 [394517] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (247794)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:17:05.549 +08 [394496] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:17:05.549 +08 [394496] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:17:05.549 +08 [394496] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (376088)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:17:10.468 +08 [394517] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:17:10.468 +08 [394517] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:17:10.468 +08 [394517] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (57329)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:17:56.412 +08 [394571] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:17:56.412 +08 [394571] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:17:56.412 +08 [394571] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (324212)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:18:26.300 +08 [394568] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:18:26.300 +08 [394568] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:18:26.300 +08 [394568] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (349509)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:18:30.829 +08 [394559] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:18:30.829 +08 [394559] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:18:30.829 +08 [394559] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (444344)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:18:36.735 +08 [394556] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:18:36.735 +08 [394556] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:18:36.735 +08 [394556] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (9048)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:18:59.731 +08 [394572] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:18:59.731 +08 [394572] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:18:59.731 +08 [394572] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (200081)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:19:02.314 +08 [394554] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:19:02.314 +08 [394554] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:19:02.314 +08 [394554] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (92405)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:19:11.950 +08 [394559] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:19:11.950 +08 [394559] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:19:11.950 +08 [394559] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (305066)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:19:28.576 +08 [394566] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:19:28.576 +08 [394566] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:19:28.576 +08 [394566] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (430036)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:19:52.826 +08 [394570] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:19:52.826 +08 [394570] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:19:52.826 +08 [394570] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (535)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:19:56.463 +08 [394579] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:19:56.463 +08 [394579] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:19:56.463 +08 [394579] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (265702)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:20:10.469 +08 [394561] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:20:10.469 +08 [394561] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:20:10.469 +08 [394561] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (444905)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:20:11.653 +08 [394573] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:20:11.653 +08 [394573] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:20:11.653 +08 [394573] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (381625)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:20:30.105 +08 [394573] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:20:30.105 +08 [394573] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:20:30.105 +08 [394573] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (391319)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:21:05.904 +08 [394557] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:21:05.904 +08 [394557] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:21:05.904 +08 [394557] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (441177)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:21:41.905 +08 [394561] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:21:41.905 +08 [394561] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:21:41.905 +08 [394561] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (379025)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:22:08.323 +08 [394563] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:22:08.323 +08 [394563] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:22:08.323 +08 [394563] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (359018)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:22:52.573 +08 [394569] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:22:52.573 +08 [394569] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:22:52.573 +08 [394569] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (198549)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:22:59.971 +08 [394565] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:22:59.971 +08 [394565] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:22:59.971 +08 [394565] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (211179)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:23:45.684 +08 [394554] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:23:45.684 +08 [394554] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:23:45.684 +08 [394554] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (160728)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:24:07.710 +08 [394578] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:24:07.710 +08 [394578] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:24:07.710 +08 [394578] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (240020)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:24:51.467 +08 [394567] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:24:51.467 +08 [394567] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:24:51.467 +08 [394567] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (362900)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:24:56.785 +08 [394568] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:24:56.785 +08 [394568] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:24:56.785 +08 [394568] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (156547)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:25:11.335 +08 [394568] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:25:11.335 +08 [394568] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:25:11.335 +08 [394568] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (41546)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:25:49.012 +08 [394573] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:25:49.012 +08 [394573] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:25:49.012 +08 [394573] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (64080)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:26:23.771 +08 [394569] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:26:23.771 +08 [394569] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:26:23.771 +08 [394569] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (257079)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:26:57.670 +08 [394575] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:26:57.670 +08 [394575] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:26:57.670 +08 [394575] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (280783)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:27:24.247 +08 [394569] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:27:24.247 +08 [394569] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:27:24.247 +08 [394569] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (355409)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:27:48.156 +08 [394430] LOG:  received fast shutdown request
+2026-10-10 13:27:48.156 +08 [394430] LOG:  aborting any active transactions
+2026-10-10 13:27:48.160 +08 [394430] LOG:  background worker "logical replication launcher" (PID 394440) exited with exit code 1
+2026-10-10 13:27:48.161 +08 [394435] LOG:  shutting down
+2026-10-10 13:27:48.162 +08 [394435] LOG:  checkpoint starting: shutdown immediate
+2026-10-10 13:27:48.177 +08 [394435] LOG:  checkpoint complete: wrote 1660 buffers (1.3%), wrote 51 SLRU buffers; 0 WAL file(s) added, 0 removed, 8 recycled; write=0.014 s, sync=0.001 s, total=0.016 s; sync files=47, longest=0.001 s, average=0.001 s; distance=132247 kB, estimate=132247 kB; lsn=0/251435F8, redo lsn=0/251435F8
+2026-10-10 13:27:48.221 +08 [394430] LOG:  database system is shut down
+2026-10-10 13:27:53.018 +08 [394865] LOG:  There is no designated Main database.
+2026-10-10 13:27:53.018 +08 [394865] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-10 13:27:53.018 +08 [394865] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-10 13:27:53.170 +08 [394865] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-10 13:27:53.170 +08 [394865] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-10 13:27:53.170 +08 [394865] LOG:  listening on IPv6 address "::", port 5436
+2026-10-10 13:27:53.170 +08 [394865] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-10 13:27:53.174 +08 [394872] LOG:  database system was shut down at 2026-10-10 13:27:48 +08
+2026-10-10 13:27:53.177 +08 [394865] LOG:  database system is ready to accept connections
+2026-10-10 13:27:54.047 +08 [394896] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-10 13:27:54.047 +08 [394896] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-10 13:28:47.036 +08 [394942] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:28:47.036 +08 [394942] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:28:47.036 +08 [394942] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (369858)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:28:48.121 +08 [394950] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:28:48.121 +08 [394950] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:28:48.121 +08 [394950] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (104322)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:28:58.845 +08 [394968] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:28:58.845 +08 [394968] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:28:58.845 +08 [394968] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (222218)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:29:40.230 +08 [394975] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:29:40.230 +08 [394975] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:29:40.230 +08 [394975] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (364519)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:30:02.884 +08 [395039] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:30:02.884 +08 [395039] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:30:02.884 +08 [395039] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (458897)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:30:10.224 +08 [395028] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:30:10.224 +08 [395028] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:30:10.224 +08 [395028] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (379130)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:30:19.879 +08 [395068] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:30:19.879 +08 [395068] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:30:19.879 +08 [395068] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (382263)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:30:36.740 +08 [395054] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:30:36.740 +08 [395054] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:30:36.740 +08 [395054] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (154359)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:30:43.220 +08 [395028] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:30:43.220 +08 [395028] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:30:43.220 +08 [395028] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (345392)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:30:43.269 +08 [395059] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:30:43.269 +08 [395059] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:30:43.269 +08 [395059] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (102823)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:30:56.335 +08 [395048] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:30:56.335 +08 [395048] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:30:56.335 +08 [395048] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (11052)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:31:09.128 +08 [395046] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:31:09.128 +08 [395046] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:31:09.128 +08 [395046] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (65009)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:31:20.667 +08 [395022] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:31:20.667 +08 [395022] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:31:20.667 +08 [395022] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (274862)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:31:24.629 +08 [395027] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:31:24.629 +08 [395027] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:31:24.629 +08 [395027] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (106143)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:31:28.388 +08 [395030] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:31:28.388 +08 [395030] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:31:28.388 +08 [395030] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (315478)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:31:32.885 +08 [395078] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:31:32.885 +08 [395078] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:31:32.885 +08 [395078] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (464491)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:31:53.789 +08 [395055] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:31:53.789 +08 [395055] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:31:53.789 +08 [395055] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (14034)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:32:03.734 +08 [395027] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:32:03.734 +08 [395027] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:32:03.734 +08 [395027] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (249079)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:32:15.013 +08 [395044] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:32:15.013 +08 [395044] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:32:15.013 +08 [395044] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (327692)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:32:48.172 +08 [395021] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:32:48.172 +08 [395021] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:32:48.172 +08 [395021] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (72029)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:33:06.129 +08 [395067] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:33:06.129 +08 [395067] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:33:06.129 +08 [395067] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (170081)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:33:25.793 +08 [395072] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:33:25.793 +08 [395072] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:33:25.793 +08 [395072] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (374190)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:33:27.693 +08 [395081] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:33:27.693 +08 [395081] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:33:27.693 +08 [395081] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (306625)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:33:29.519 +08 [395025] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:33:29.519 +08 [395025] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:33:29.519 +08 [395025] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (310753)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:33:36.847 +08 [395044] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:33:36.847 +08 [395044] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:33:36.847 +08 [395044] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (130411)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:33:38.925 +08 [395054] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:33:38.925 +08 [395054] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:33:38.925 +08 [395054] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (300614)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:33:40.459 +08 [395056] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:33:40.459 +08 [395056] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:33:40.459 +08 [395056] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (138076)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:33:49.801 +08 [395036] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:33:49.801 +08 [395036] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:33:49.801 +08 [395036] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (35768)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:33:59.907 +08 [395040] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:33:59.907 +08 [395040] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:33:59.907 +08 [395040] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (103954)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:34:05.721 +08 [395083] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:34:05.721 +08 [395083] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:34:05.721 +08 [395083] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (267157)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:34:57.973 +08 [395044] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:34:57.973 +08 [395044] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:34:57.973 +08 [395044] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (316100)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:34:59.672 +08 [395020] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:34:59.672 +08 [395020] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:34:59.672 +08 [395020] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (357198)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:35:15.709 +08 [395034] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:35:15.709 +08 [395034] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:35:15.709 +08 [395034] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (372124)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:35:26.301 +08 [395073] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:35:26.301 +08 [395073] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:35:26.301 +08 [395073] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (32001)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:35:40.203 +08 [395074] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:35:40.203 +08 [395074] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:35:40.203 +08 [395074] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (424145)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:35:43.023 +08 [395043] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:35:43.023 +08 [395043] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:35:43.023 +08 [395043] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (211371)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:35:45.273 +08 [395080] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:35:45.273 +08 [395080] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:35:45.273 +08 [395080] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (44228)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:36:08.158 +08 [395071] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:36:08.158 +08 [395071] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:36:08.158 +08 [395071] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (293913)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:36:11.793 +08 [395074] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:36:11.793 +08 [395074] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:36:11.793 +08 [395074] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (473993)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:36:46.970 +08 [395053] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:36:46.970 +08 [395053] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:36:46.970 +08 [395053] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (296333)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:36:53.618 +08 [395076] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:36:53.618 +08 [395076] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:36:53.618 +08 [395076] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (2782)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:36:56.697 +08 [395024] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:36:56.697 +08 [395024] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:36:56.697 +08 [395024] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (15052)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:37:09.640 +08 [395070] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:37:09.640 +08 [395070] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:37:09.640 +08 [395070] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (134626)::bigint
+	    AND quantity >= (2)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:37:11.376 +08 [395080] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:37:11.376 +08 [395080] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:37:11.376 +08 [395080] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (16028)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:37:43.186 +08 [395042] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:37:43.186 +08 [395042] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:37:43.186 +08 [395042] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (101911)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:37:52.456 +08 [395057] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:37:52.456 +08 [395057] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:37:52.456 +08 [395057] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (408101)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:37:52.727 +08 [395059] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:37:52.727 +08 [395059] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:37:52.727 +08 [395059] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (429167)::bigint
+	    AND quantity >= (1)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:38:06.432 +08 [395029] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:38:06.432 +08 [395029] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:38:06.432 +08 [395029] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (89238)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:38:19.787 +08 [395039] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:38:19.787 +08 [395039] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:38:19.787 +08 [395039] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (2)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (71)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:38:26.695 +08 [395051] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:38:26.695 +08 [395051] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:38:26.695 +08 [395051] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (1)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (467733)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:38:29.820 +08 [395077] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:38:29.820 +08 [395077] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:38:29.820 +08 [395077] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (333031)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:38:49.096 +08 [395074] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:38:49.096 +08 [395074] CONTEXT:  while executing command on xcnf21:5436
+2026-10-10 13:38:49.096 +08 [395074] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (478760)::bigint
+	    AND quantity >= (3)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:39:06.834 +08 [395061] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:39:06.834 +08 [395061] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:39:06.834 +08 [395061] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (5)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (103925)::bigint
+	    AND quantity >= (5)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:39:07.971 +08 [395040] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:39:07.971 +08 [395040] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:39:07.971 +08 [395040] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (234171)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:39:23.304 +08 [395031] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:39:23.304 +08 [395031] CONTEXT:  while executing command on xcnf18:5436
+2026-10-10 13:39:23.304 +08 [395031] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (124777)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:39:36.617 +08 [395057] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:39:36.617 +08 [395057] CONTEXT:  while executing command on xcnf20:5436
+2026-10-10 13:39:36.617 +08 [395057] STATEMENT:  WITH debit AS (
+	  UPDATE inventory
+	  SET quantity = quantity - (4)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (134043)::bigint
+	    AND quantity >= (4)::integer
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok
+	
+2026-10-10 13:39:38.691 +08 [395068] ERROR:  could not serialize access due to concurrent update
+2026-10-10 13:39:38.691 +08 [395068] CONTEXT:  while executing command on xcnf19:5436
+2026-10-10 13:39:38.691 +08 [395068] STATEMENT:  WITH credit AS (
+	  UPDATE inventory
+	  SET quantity = quantity + (3)::integer,
+	      updated_at = CURRENT_TIMESTAMP
+	  WHERE inventory_id = (472836)::bigint
+	  RETURNING 1
+	)
+	SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok
+	
+2026-10-10 13:39:46.364 +08 [394865] LOG:  received fast shutdown request
+2026-10-10 13:39:46.365 +08 [394865] LOG:  aborting any active transactions
+2026-10-10 13:39:46.367 +08 [394865] LOG:  background worker "logical replication launcher" (PID 394875) exited with exit code 1
+2026-10-10 13:39:46.371 +08 [394870] LOG:  shutting down
+2026-10-10 13:39:46.371 +08 [394870] LOG:  checkpoint starting: shutdown immediate
+2026-10-10 13:39:46.384 +08 [394870] LOG:  checkpoint complete: wrote 1438 buffers (1.1%), wrote 49 SLRU buffers; 0 WAL file(s) added, 0 removed, 7 recycled; write=0.012 s, sync=0.001 s, total=0.014 s; sync files=47, longest=0.001 s, average=0.001 s; distance=126916 kB, estimate=126916 kB; lsn=0/2CD34878, redo lsn=0/2CD34878
+2026-10-10 13:39:46.429 +08 [394865] LOG:  database system is shut down
