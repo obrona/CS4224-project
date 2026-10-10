@@ -1,5 +1,53 @@
 expt_a0 - performance of baseline design as a function of number of clients for workload A
 
+expt_a7 - workload A with all tenant tables colocated by merchant_id, query-matched indexes and fill factors
+
+- Problem: The baseline distributes each table by its own id, so a merchant's customers, products, inventory, orders and items sit on unrelated shards and merchant-scoped transactions span workers; at 1 client T3 averages 2.6 s and T4 479 ms, together 94% of latency.
+- Optimisation: Distribute all tenant tables by `merchant_id` in one colocation group with composite keys, replace the indexes with ones matched to the queries, set fill factors that allow HOT updates, and drop `BEGIN`/`COMMIT` around single-statement transactions.
+- Result: 4.3 TPS at 1 client, a peak of 4.8 at 32 and 4.1 at 64 with no serialization failures, but T3 still takes 2.5 s and is 95% of total latency at 1 client.
+
+expt_a8 - expt_a7 with T3 routed to one worker by adding merchant_id to its join
+
+- Problem: T3's join of `orders` and `order_items` omits `merchant_id`, so Citus cannot route it to one worker, and it takes 2,459 ms at 1 client.
+- Optimisation: Add `merchant_id` to T3's join, `IS DISTINCT FROM` guards to T5 and T8 so unchanged rows are not rewritten, and `merchant_id` to T1's final `UPDATE orders`.
+- Result: T3 falls from 2,459 ms to 1.3 ms at 1 client and throughput rises to 113.7 TPS at 1 client and 334.6 at 64 (26x and 81x `expt_a7`), but from 4 clients up most clients aborted during the run on a T1 commit error pgbench does not retry (2 of 4, 7 of 8, 15 of 16, 30 of 32 and 61 of 64), and T5 is 79% of latency at 64 clients.
+
+expt_a9 - expt_a8 with T1 rewritten as one set-based statement
+
+- Problem: T1 sends up to 26 statements per order (about 18 on average), each a separate round trip through the coordinator, and at 9.5 ms it is 39% of latency at 1 client.
+- Optimisation: Rewrite T1 as one statement of chained CTEs that checks stock, reserves it and inserts the order and its items together.
+- Result: On a different node set from `expt_a8`, T1 got slower at 1 client (9.5 to 16.8 ms) and throughput fell to 89.1 TPS at 1 client while reaching 337.2 at 64 with no aborted clients, where T5 (1,557 ms) is 82% of latency.
+
+expt_a10 - expt_a9 with T7 routed through a product-to-merchant lookup table
+
+- Problem: T7 does not name `merchant_id`, so each of its six statements goes to all 32 inventory shards, and it takes 30.4 ms at 1 client and 202 ms at 64 clients.
+- Optimisation: Add a `product_merchant_map` table, distributed by `product_id`, so T7 looks up each product's merchant and then debits and credits with single-shard `UPDATE`s.
+- Result: T7 falls from 202 to 10.2 ms at 64 clients and throughput rises to 100.1 TPS at 1 client and 379.0 at 64, where one client aborted on a T7 commit error pgbench does not retry and T5 (1,411 ms, 85% of latency) caps throughput.
+
+expt_a11 - expt_a10 with T5 routed through an order-to-merchant lookup table
+
+- Problem: T5 updates `orders` by `order_id` alone, so it goes to all 32 shards and saturates at about 38 TPS from 8 clients up, capping overall throughput near 380 TPS.
+- Optimisation: Add an `order_merchant_map` table, distributed by `order_id` and written by T1 for each new order, so T5 looks up the merchant and updates one shard.
+- Result: T5 falls from 1,411 to 21.9 ms at 64 clients and throughput rises to 106.4 TPS at 1 client, a peak of 424.6 at 16 and 412.4 at 64, where two clients aborted on a T7 commit error pgbench does not retry, with T1 (56%) and T6 (36%) now most of the latency.
+
+expt_a12 - expt_a11 with T6 answered from a per-merchant daily sales rollup
+
+- Problem: T6 re-aggregates every order in its 30-day window on every call and takes 1,113 ms at 64 clients, 36% of latency.
+- Optimisation: Add a per-merchant, per-day `merchant_daily_sales` rollup, colocated with `orders` and updated by T1 in the same transaction, so T6 reads the rollup for whole days and `orders` only for the boundary day.
+- Result: T6 falls from 1,113 to 77.8 ms at 64 clients and throughput reaches 116.4 TPS at 1 client, a peak of 655.5 at 16 and 572.1 at 64, leaving T1 as 80% of latency at 1 client and 92% at 64.
+
+expt_a13 - expt_a12 with T1 as a distributed function delegated to the merchant's worker
+
+- Problem: Citus runs T1's CTE statement as a series of separate distributed subplans through the coordinator, so T1 takes 19.2 ms at 1 client against about 1 ms for single-shard transactions.
+- Optimisation: Move T1 into a distributed function, `place_order`, which Citus delegates whole to the worker holding the merchant's shards.
+- Result: T1 falls from 19.2 to 10.4 ms at 1 client and throughput rises to 181.2 TPS at 1 client, a peak of 1,123.9 at 8 and 930.9 at 64, with T1 still the largest share of latency (62 to 68%) and T6 next (15 to 26%).
+
+expt_a14 - expt_a13 with 8 shards per table instead of 32
+
+- Problem: T6 is 15 to 26% of latency and runs as 32 shard tasks whose fixed per-task overhead outweighs the roughly 1,000 rows each one reads.
+- Optimisation: Create every distributed table with 8 shards (2 per worker) instead of Citus's default 32.
+- Result: T6 falls from 307 to 136 ms at 64 clients and throughput rises to 196.2 TPS at 1 client, a peak of 1,721.9 at 16 and 1,461.5 at 64, 1.6x `expt_a13` at 64.
+
 expt_b0 - performance of baseline design as a function of number of clients for workload B
 
 - Result: 6.7 TPS at 1 client, a peak of 7.8 at 16 and 6.4 at 64, with T3 averaging 1.9 s at 1 client and a few clients aborted at 8, 16 and 32 clients on an error pgbench does not retry.

@@ -1,6 +1,6 @@
 ### Prev: expt_b7
 
-This experiment applies the same three transaction rewrites as `expt_a2`, with
+This experiment applies the same three transaction rewrites as `expt_a8`, with
 no change to the database schema, data distribution, indexes, or server
 parameters.
 
