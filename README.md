@@ -48,6 +48,42 @@ expt_a14 - expt_a13 with 8 shards per table instead of 32
 - Optimisation: Create every distributed table with 8 shards (2 per worker) instead of Citus's default 32.
 - Result: T6 falls from 307 to 136 ms at 64 clients and throughput rises to 196.2 TPS at 1 client, a peak of 1,721.9 at 16 and 1,461.5 at 64, 1.6x `expt_a13` at 64.
 
+expt_a15 - expt_a14 with 4 shards per table, one per worker
+
+- Problem: With 8 shards, T6 still runs two tasks on every worker and takes 136 ms at 64 clients.
+- Optimisation: Use 4 shards, one per worker.
+- Result: T6 falls from 136 to 76 ms at 64 clients and throughput is 203.0 TPS at 1 client, a peak of 1,693.2 at 16 and 1,573.9 at 64: within 4% of `expt_a14` up to 16 clients and 6 to 8% above it at 32 and 64, though two clients aborted at 64 when a worker's host name failed to resolve, and T1 remains 73 to 78% of latency.
+
+expt_a16 - expt_a15 with T7's transfer as a distributed function (not carried forward)
+
+- Problem: T7 sends six statements in sequence through the coordinator and takes 5.0 ms at 1 client, against about 1 ms for single-statement transactions.
+- Optimisation: Move T7's debit and credit into a distributed function, `transfer_inventory`, delegated to the source merchant's worker.
+- Result: T7 nearly doubles (5.0 to 9.2 ms at 1 client, 29.0 to 62.5 ms at 64) and throughput is 3 to 7% below `expt_a15` at every client count (193.4 TPS at 1 client, a peak of 1,599.6 at 16 and 1,532.9 at 64), with one client aborted at 32 when a worker's host name failed to resolve.
+
+expt_a17 - expt_a15 with the product-to-merchant lookup table as a reference table
+
+- Problem: Each of T7's two lookups in `product_merchant_map` is a round trip from the coordinator to a worker.
+- Optimisation: Make `product_merchant_map` a reference table and register the coordinator in Citus's metadata, so the lookups read a local copy on the coordinator.
+- Result: T7 falls from 5.0 to 4.3 ms at 1 client and from 29.0 to 23.3 ms at 64, and throughput is 0.3 to 2.3% above `expt_a15` at every client count (203.5 TPS at 1 client, 1,610.1 at 64), so it does not fall behind at high client counts, though every difference is within run-to-run noise.
+
+expt_a18 - expt_a15 with T7's two lookups merged into one statement
+
+- Problem: T7's two lookups are independent but run one after the other.
+- Optimisation: Merge them into one statement on the still-sharded `product_merchant_map`.
+- Result: T7 is 13.5% faster at 1 client (4.3 ms) but only 2.5% at 64 (28.3 ms), and throughput is within 2% of `expt_a15` at every client count (204.2 TPS at 1 client, 1,605.7 at 64), which is no measurable change.
+
+expt_a19 - expt_a15 with the lookup table as a reference table and T7's two lookups merged into one
+
+- Problem: In `expt_a17` T7 still makes two lookups, though local, and in `expt_a18` its one merged lookup still goes to a worker.
+- Optimisation: Combine `expt_a17`'s reference table with `expt_a18`'s merged lookup, so T7 makes one local lookup on the coordinator.
+- Result: T7 falls to 3.8 ms at 1 client and 22.7 ms at 64, and throughput is 203.7 TPS at 1 client, a peak of 1,763.0 at 16 and 1,654.5 at 64: flat at 1 client and 1 to 5% above `expt_a15`, `expt_a17` and `expt_a18` from 4 clients up, a consistent but small margin. One client aborted at 32 when a worker's host name failed to resolve, and 28,722 transactions needed a retry at 64 clients, almost all T1.
+
+expt_a20 - expt_a19 with REPEATABLE READ instead of SERIALIZABLE
+
+- Problem: Retries grow with throughput (28,722 at 64 clients in `expt_a19`, almost all T1), and `SERIALIZABLE` also pays for tracking every read to detect read/write conflicts.
+- Optimisation: Lower every node's isolation level from `SERIALIZABLE` to `REPEATABLE READ`, which still detects write-write conflicts.
+- Result: Throughput rises 1.4% at 1 client (206.6 TPS), 2 to 5% from 4 to 32 clients and 7.5% at 64 (1,778.0), with a peak of 1,819.2 at 16, the highest of the chain at every client count, but retries and serialization failures at 64 clients did not fall (31,753 and 2,940, against 28,722 and 2,695).
+
 expt_b0 - performance of baseline design as a function of number of clients for workload B
 
 - Result: 6.7 TPS at 1 client, a peak of 7.8 at 16 and 6.4 at 64, with T3 averaging 1.9 s at 1 client and a few clients aborted at 8, 16 and 32 clients on an error pgbench does not retry.
