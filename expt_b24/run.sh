@@ -597,7 +597,7 @@ INSERT INTO customers SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Customer-'||i
 
 INSERT INTO products SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Product-'||i,'Category-'||(i%10),(1+(((i::bigint * 7919))%100000)/100.0)::numeric(12,2) FROM generate_series(1::bigint, $NUM_PRODUCTS::bigint) g(i);
 
-INSERT INTO inventory SELECT product_id,merchant_id,product_id,10+((hashint8extended(product_id,$DATA_SEED)&9223372036854775807)%991)::int,current_timestamp FROM products;
+INSERT INTO inventory SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),i,10+((hashint8extended(i,$DATA_SEED)&9223372036854775807)%991)::int,current_timestamp FROM generate_series(1::bigint, $NUM_PRODUCTS::bigint) g(i);
 SQL
 
 	psqlx <<SQL

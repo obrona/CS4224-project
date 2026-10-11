@@ -77,6 +77,15 @@ ITEMS_LOAD = ("SELECT y.order_item_id,y.merchant_id,y.order_id,y.product_id,y.qt
               "(1+(((y.product_id::bigint * 7919))%100000)/100.0)::numeric(12,2)\n"
               "FROM y;")
 
+INV_LOAD = ("INSERT INTO inventory SELECT product_id,merchant_id,product_id,10+((hashint8extended(product_id,$DATA_SEED)&9223372036854775807)%991)::int,current_timestamp FROM products;",
+            "-- Generated directly instead of INSERT ... SELECT FROM products: Citus 14.1.0\n"
+            "-- pushes that statement down between the two single-shard tables with an\n"
+            "-- empty distribution-column filter, WHERE ( IS NOT NULL), which the worker\n"
+            "-- rejects (job 930969). Same rows: one per product, with its merchant.\n"
+            "INSERT INTO inventory SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),i,"
+            "10+((hashint8extended(i,$DATA_SEED)&9223372036854775807)%991)::int,current_timestamp "
+            "FROM generate_series(1::bigint, $NUM_PRODUCTS::bigint) g(i);")
+
 COORD_COMMENT = ("# Register the coordinator in Citus's metadata, so it holds its own copy of\n"
                  "# reference table and reads product_merchant_map locally. It gets no\n",
                  "# Register the coordinator in Citus's metadata, so it holds its own copy of\n"
@@ -121,6 +130,7 @@ def run_sh(cell):
         t = replace_once(t, merchant_dist("products"), dist("products", None, "none"), w)
         t = replace_once(t, merchant_dist("inventory"), dist("inventory", None, "products"), w)
         t = replace_once(t, *ITEMS_LOAD, w)
+        t = replace_once(t, *INV_LOAD, w)
     elif cell == "expt_b25":
         t = remove_product_map_keep_coordinator(ab.run_sh({"DEL"}))
         t = replace_once(t, *COORD_COMMENT, w)
@@ -299,6 +309,15 @@ two keeps T4's and T1's joins of `products` and `inventory` on one node.
   it was only needed for that reference table.
 {ORIGINAL_T1}
 {ITEMS_NOTE}
+- **`inventory` is loaded from `generate_series`**, not with
+  `INSERT INTO inventory SELECT ... FROM products`. The first run of this cell
+  (job 930969) failed at that statement: Citus 14.1.0 pushes an
+  `INSERT ... SELECT` between colocated single-shard tables down to the worker
+  with a filter on the distribution column, which a single-shard table does not
+  have, and sent `... FROM public.products_102016 products WHERE ( IS NOT NULL)`,
+  a syntax error on the worker. The new statement computes the same columns
+  from the same formulas (`merchant_id = 1 + (product_id - 1) % NUM_MERCHANTS`),
+  so the rows are identical to `expt_b19`'s.
 
 {COMMON_LOOK}- **`topology` of the catalog.** `pg_dist_placement` (or `explain.log`'s
   `Node:` lines for T4) names the worker that holds both tables.
@@ -338,17 +357,20 @@ PERFORM create_reference_table('inventory');
 # ------------------------------------------------------------------- driver
 
 def write(outputs):
+    written = 0
     for d, files in outputs.items():
         target = ROOT / d
         if (target / "slurm-results").exists():
-            raise SystemExit(f"{d} already has slurm-results/; refusing to overwrite its code")
+            print(f"skipping {d}: it already has slurm-results/, so its code stays as run")
+            continue
         if target.exists():
             shutil.rmtree(target)
         for rel, text in files.items():
             p = target / rel
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(text, encoding="utf-8", newline="\n")
-    print(f"wrote {len(outputs)} cells")
+        written += 1
+    print(f"wrote {written} cells")
 
 
 def check(outputs):

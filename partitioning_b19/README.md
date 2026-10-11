@@ -55,8 +55,8 @@ bash partitioning_b19/submit.sh expt_b23 <job> # resume from expt_b23, after job
 ```
 
 `generate.py` builds on `ablation_b20/generate.py`'s helpers (pointing them at
-`expt_b19`), so it needs that folder and `expt_b19`/`expt_b8`. It refuses to
-overwrite a cell that already has `slurm-results/`. `expt_b20` and `expt_b21`
+`expt_b19`), so it needs that folder and `expt_b19`/`expt_b8`. It skips (and
+never overwrites) a cell that already has `slurm-results/`. `expt_b20` and `expt_b21`
 are plain copies of `expt_b19`'s `run.sh`, `transactions/` and `explain/`.
 
 These layouts change the schema and the data load, which no earlier run has

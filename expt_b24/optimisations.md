@@ -49,6 +49,15 @@ two keeps T4's and T1's joins of `products` and `inventory` on one node.
   generated item has exactly one product (its id is the merchant's id plus a
   multiple of `NUM_MERCHANTS`), so the loaded rows are identical to
   `expt_b19`'s.
+- **`inventory` is loaded from `generate_series`**, not with
+  `INSERT INTO inventory SELECT ... FROM products`. The first run of this cell
+  (job 930969) failed at that statement: Citus 14.1.0 pushes an
+  `INSERT ... SELECT` between colocated single-shard tables down to the worker
+  with a filter on the distribution column, which a single-shard table does not
+  have, and sent `... FROM public.products_102016 products WHERE ( IS NOT NULL)`,
+  a syntax error on the worker. The new statement computes the same columns
+  from the same formulas (`merchant_id = 1 + (product_id - 1) % NUM_MERCHANTS`),
+  so the rows are identical to `expt_b19`'s.
 
 ### What to look at when this is run
 
