@@ -67,7 +67,7 @@ PG_SHARED_BUFFERS="${PG_SHARED_BUFFERS:-1GB}"
 PG_WORK_MEM="${PG_WORK_MEM:-32MB}"
 PG_MAINTENANCE_WORK_MEM="${PG_MAINTENANCE_WORK_MEM:-256MB}"
 PG_MAX_CONNECTIONS="${PG_MAX_CONNECTIONS:-1000}"
-PG_ISOLATION_LEVEL="${PG_ISOLATION_LEVEL:-repeatable read}"
+PG_ISOLATION_LEVEL=${PG_ISOLATION_LEVEL:-serializable}
 
 PG_MAX_WAL_SIZE="${PG_MAX_WAL_SIZE:-16GB}"
 PG_MIN_WAL_SIZE="${PG_MIN_WAL_SIZE:-2GB}"
@@ -410,6 +410,11 @@ for n in "${NODES[@]}"; do
 	${PSQL} -X -v ON_ERROR_STOP=1 -h "$n" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "CREATE EXTENSION IF NOT EXISTS citus;"
 done
 
+# Register the coordinator in Citus's metadata, so it holds its own copy of
+# the reference table inventory. It gets no
+# shards of distributed tables as shouldhaveshards defaults to false.
+${PSQL} -X -v ON_ERROR_STOP=1 -h "$COORDINATOR" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "SELECT citus_set_coordinator_host('$COORDINATOR', $PGPORT);"
+
 # register each worker node at coordinator
 for w in "${WORKERS[@]}"; do
 	${PSQL} -X -v ON_ERROR_STOP=1 -h "$COORDINATOR" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "SELECT * FROM citus_add_node('$w',$PGPORT);"
@@ -470,8 +475,8 @@ CREATE TABLE IF NOT EXISTS inventory (
 	product_id BIGINT NOT NULL,
 	quantity INTEGER NOT NULL CHECK (quantity >= 0),
 	updated_at TIMESTAMP NOT NULL,
-	PRIMARY KEY (merchant_id, inventory_id),
-	UNIQUE (merchant_id, product_id)
+	PRIMARY KEY (product_id, inventory_id),
+	UNIQUE (product_id, merchant_id)
 ) WITH (fillfactor = 80);
 
 CREATE TABLE IF NOT EXISTS orders (
@@ -548,7 +553,7 @@ BEGIN
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'inventory'::regclass) THEN
-			PERFORM create_distributed_table('inventory', 'merchant_id', colocate_with => 'merchants');
+			PERFORM create_reference_table('inventory');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'orders'::regclass) THEN
@@ -570,14 +575,6 @@ BEGIN
 END
 $$;
 SQL
-
-	# T1 runs as one distributed function, delegated to its merchant's worker.
-	# Its definition is the \if 0 ... \endif block in T1_place_order.sql, which
-	# pgbench skips; only the lines between the two markers go to psql.
-	local t1_function
-	t1_function=$(sed -n '/^\\if 0/,/^\\endif/p' "$TX_DIR/T1_place_order.sql" | sed '1d;$d')
-	[[ -n "$t1_function" ]] || fail "No \\if 0 block with place_order in $TX_DIR/T1_place_order.sql"
-	psqlx <<<"$t1_function"
 }
 
 ############### create database schema

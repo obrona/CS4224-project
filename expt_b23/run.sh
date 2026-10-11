@@ -67,7 +67,7 @@ PG_SHARED_BUFFERS="${PG_SHARED_BUFFERS:-1GB}"
 PG_WORK_MEM="${PG_WORK_MEM:-32MB}"
 PG_MAINTENANCE_WORK_MEM="${PG_MAINTENANCE_WORK_MEM:-256MB}"
 PG_MAX_CONNECTIONS="${PG_MAX_CONNECTIONS:-1000}"
-PG_ISOLATION_LEVEL="${PG_ISOLATION_LEVEL:-repeatable read}"
+PG_ISOLATION_LEVEL=${PG_ISOLATION_LEVEL:-serializable}
 
 PG_MAX_WAL_SIZE="${PG_MAX_WAL_SIZE:-16GB}"
 PG_MIN_WAL_SIZE="${PG_MIN_WAL_SIZE:-2GB}"
@@ -496,7 +496,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 	product_id BIGINT NOT NULL,
 	quantity INTEGER NOT NULL CHECK (quantity > 0),
 	unit_price NUMERIC(12, 2) NOT NULL CHECK (unit_price >= 0),
-	PRIMARY KEY (merchant_id, order_item_id)
+	PRIMARY KEY (order_id, order_item_id)
 );
 
 -- Routing table for T7, which is given only product ids. A reference table
@@ -557,11 +557,11 @@ BEGIN
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'orders'::regclass) THEN
-			PERFORM create_distributed_table('orders', 'merchant_id', colocate_with => 'merchants');
+			PERFORM create_distributed_table('orders', 'order_id', colocate_with => 'none');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_items'::regclass) THEN
-			PERFORM create_distributed_table('order_items', 'merchant_id', colocate_with => 'merchants');
+			PERFORM create_distributed_table('order_items', 'order_id', colocate_with => 'orders');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'product_merchant_map'::regclass) THEN
@@ -638,11 +638,11 @@ WITH g AS (
 ), x AS (SELECT g.*,o.merchant_id FROM g JOIN orders o USING(order_id)),
 y AS (SELECT *,merchant_id+$NUM_MERCHANTS*(ph%((($NUM_PRODUCTS-merchant_id)/$NUM_MERCHANTS)+1)) product_id FROM x)
 INSERT INTO order_items
-SELECT y.order_item_id,y.merchant_id,y.order_id,y.product_id,y.qty,p.price
-FROM y
-JOIN products p
-  ON p.merchant_id=y.merchant_id
- AND p.product_id=y.product_id;
+-- unit_price is products.price as generated above, by the same formula, so
+-- this load needs no join with products, which this layout does not
+-- colocate with orders. Every y row has exactly one product.
+SELECT y.order_item_id,y.merchant_id,y.order_id,y.product_id,y.qty,(1+(((y.product_id::bigint * 7919))%100000)/100.0)::numeric(12,2)
+FROM y;
 
 UPDATE orders o
 SET total_amount=x.total

@@ -10,47 +10,22 @@
 
 \set transfer_ok 1
 
-BEGIN;
-
-SELECT EXISTS(
-  SELECT 1 FROM inventory
-  WHERE product_id = (:source_product_id)::bigint
-) AS source_exists
-\gset t7_
-
-SELECT EXISTS(
-  SELECT 1 FROM inventory
-  WHERE product_id = (:dest_product_id)::bigint
-) AS dest_exists
-\gset t7_
-
-
-\if :t7_source_exists
-SELECT inventory_id AS source_inventory_id FROM inventory WHERE product_id = (:source_product_id)::bigint
-\gset
-\else
-\set transfer_ok 0
-\endif
-
-
-\if :t7_dest_exists
-SELECT inventory_id AS dest_inventory_id FROM inventory WHERE product_id = (:dest_product_id)::bigint
-\gset
-\else
-\set transfer_ok 0
-\endif
-
-
 \if :source_product_id = :dest_product_id
 \set transfer_ok 0
 \endif
 
+BEGIN;
+
+-- In this layout inventory is placed by product (see optimisations.md), so
+-- each UPDATE is routed by product_id alone and T7 needs no lookup table. A
+-- product has one inventory row; UNIQUE (product_id, merchant_id) leads with
+-- product_id, so each UPDATE is one index probe.
 \if :transfer_ok
 WITH debit AS (
   UPDATE inventory
   SET quantity = quantity - (:transfer_qty)::integer,
       updated_at = CURRENT_TIMESTAMP
-  WHERE inventory_id = (:source_inventory_id)::bigint
+  WHERE product_id = (:source_product_id)::bigint
     AND quantity >= (:transfer_qty)::integer
   RETURNING 1
 )
@@ -62,7 +37,7 @@ WITH credit AS (
   UPDATE inventory
   SET quantity = quantity + (:transfer_qty)::integer,
       updated_at = CURRENT_TIMESTAMP
-  WHERE inventory_id = (:dest_inventory_id)::bigint
+  WHERE product_id = (:dest_product_id)::bigint
   RETURNING 1
 )
 SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok

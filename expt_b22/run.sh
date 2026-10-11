@@ -67,7 +67,7 @@ PG_SHARED_BUFFERS="${PG_SHARED_BUFFERS:-1GB}"
 PG_WORK_MEM="${PG_WORK_MEM:-32MB}"
 PG_MAINTENANCE_WORK_MEM="${PG_MAINTENANCE_WORK_MEM:-256MB}"
 PG_MAX_CONNECTIONS="${PG_MAX_CONNECTIONS:-1000}"
-PG_ISOLATION_LEVEL="${PG_ISOLATION_LEVEL:-repeatable read}"
+PG_ISOLATION_LEVEL=${PG_ISOLATION_LEVEL:-serializable}
 
 PG_MAX_WAL_SIZE="${PG_MAX_WAL_SIZE:-16GB}"
 PG_MIN_WAL_SIZE="${PG_MIN_WAL_SIZE:-2GB}"
@@ -410,11 +410,6 @@ for n in "${NODES[@]}"; do
 	${PSQL} -X -v ON_ERROR_STOP=1 -h "$n" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "CREATE EXTENSION IF NOT EXISTS citus;"
 done
 
-# Register the coordinator in Citus's metadata, so it holds its own copy of
-# reference table and reads product_merchant_map locally. It gets no
-# shards of distributed tables as shouldhaveshards defaults to false.
-${PSQL} -X -v ON_ERROR_STOP=1 -h "$COORDINATOR" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "SELECT citus_set_coordinator_host('$COORDINATOR', $PGPORT);"
-
 # register each worker node at coordinator
 for w in "${WORKERS[@]}"; do
 	${PSQL} -X -v ON_ERROR_STOP=1 -h "$COORDINATOR" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -c "SELECT * FROM citus_add_node('$w',$PGPORT);"
@@ -434,7 +429,6 @@ create_schema() {
 	if [[ "$DROP_EXISTING" == "1" ]]; then
 		psqlx <<'SQL'
 DROP TABLE IF EXISTS merchant_daily_sales CASCADE;
-DROP TABLE IF EXISTS product_merchant_map CASCADE;
 DROP TABLE IF EXISTS order_merchant_map CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
@@ -476,8 +470,8 @@ CREATE TABLE IF NOT EXISTS inventory (
 	product_id BIGINT NOT NULL,
 	quantity INTEGER NOT NULL CHECK (quantity >= 0),
 	updated_at TIMESTAMP NOT NULL,
-	PRIMARY KEY (merchant_id, inventory_id),
-	UNIQUE (merchant_id, product_id)
+	PRIMARY KEY (product_id, inventory_id),
+	UNIQUE (product_id, merchant_id)
 ) WITH (fillfactor = 80);
 
 CREATE TABLE IF NOT EXISTS orders (
@@ -498,14 +492,6 @@ CREATE TABLE IF NOT EXISTS order_items (
 	quantity INTEGER NOT NULL CHECK (quantity > 0),
 	unit_price NUMERIC(12, 2) NOT NULL CHECK (unit_price >= 0),
 	PRIMARY KEY (merchant_id, order_item_id)
-);
-
--- Routing table for T7, which is given only product ids. A reference table
--- so every node holds a full copy, and a lookup by product_id is read locally.
-CREATE TABLE IF NOT EXISTS product_merchant_map (
-	product_id BIGINT NOT NULL,
-	merchant_id BIGINT NOT NULL,
-	PRIMARY KEY (product_id)
 );
 
 -- Routing table for T5, which is given only an order id. Sharded by order_id,
@@ -558,11 +544,11 @@ BEGIN
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'products'::regclass) THEN
-			PERFORM create_distributed_table('products', 'merchant_id', colocate_with => 'merchants');
+			PERFORM create_distributed_table('products', 'product_id', colocate_with => 'none');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'inventory'::regclass) THEN
-			PERFORM create_distributed_table('inventory', 'merchant_id', colocate_with => 'merchants');
+			PERFORM create_distributed_table('inventory', 'product_id', colocate_with => 'products');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'orders'::regclass) THEN
@@ -571,10 +557,6 @@ BEGIN
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_items'::regclass) THEN
 			PERFORM create_distributed_table('order_items', 'merchant_id', colocate_with => 'merchants');
-		END IF;
-
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'product_merchant_map'::regclass) THEN
-			PERFORM create_reference_table('product_merchant_map');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_merchant_map'::regclass) THEN
@@ -588,14 +570,6 @@ BEGIN
 END
 $$;
 SQL
-
-	# T1 runs as one distributed function, delegated to its merchant's worker.
-	# Its definition is the \if 0 ... \endif block in T1_place_order.sql, which
-	# pgbench skips; only the lines between the two markers go to psql.
-	local t1_function
-	t1_function=$(sed -n '/^\\if 0/,/^\\endif/p' "$TX_DIR/T1_place_order.sql" | sed '1d;$d')
-	[[ -n "$t1_function" ]] || fail "No \\if 0 block with place_order in $TX_DIR/T1_place_order.sql"
-	psqlx <<<"$t1_function"
 }
 
 ############### create database schema
@@ -614,7 +588,7 @@ generate_data() {
 	COLD_MERCHANTS=$((NUM_MERCHANTS - HOT_MERCHANTS))
 	((COLD_MERCHANTS >= 1)) || COLD_MERCHANTS=1
 
-	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE merchant_daily_sales,product_merchant_map,order_merchant_map,order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
+	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE merchant_daily_sales,order_merchant_map,order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
 
 	psqlx <<SQL
 INSERT INTO merchants SELECT i,'Merchant-'||i,(ARRAY['North','South','East','West','Central'])[1+(i%5)] FROM generate_series(1::bigint, $NUM_MERCHANTS::bigint) g(i);
@@ -624,13 +598,6 @@ INSERT INTO customers SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Customer-'||i
 INSERT INTO products SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Product-'||i,'Category-'||(i%10),(1+(((i::bigint * 7919))%100000)/100.0)::numeric(12,2) FROM generate_series(1::bigint, $NUM_PRODUCTS::bigint) g(i);
 
 INSERT INTO inventory SELECT product_id,merchant_id,product_id,10+((hashint8extended(product_id,$DATA_SEED)&9223372036854775807)%991)::int,current_timestamp FROM products;
-SQL
-
-	# No transaction inserts products or changes a product's merchant, 
-	# so the map stays exact for the whole run.
-	psqlx <<'SQL'
-INSERT INTO product_merchant_map (product_id, merchant_id)
-SELECT product_id, merchant_id FROM products;
 SQL
 
 	psqlx <<SQL
@@ -656,11 +623,11 @@ WITH g AS (
 ), x AS (SELECT g.*,o.merchant_id FROM g JOIN orders o USING(order_id)),
 y AS (SELECT *,merchant_id+$NUM_MERCHANTS*(ph%((($NUM_PRODUCTS-merchant_id)/$NUM_MERCHANTS)+1)) product_id FROM x)
 INSERT INTO order_items
-SELECT y.order_item_id,y.merchant_id,y.order_id,y.product_id,y.qty,p.price
-FROM y
-JOIN products p
-  ON p.merchant_id=y.merchant_id
- AND p.product_id=y.product_id;
+-- unit_price is products.price as generated above, by the same formula, so
+-- this load needs no join with products, which this layout does not
+-- colocate with orders. Every y row has exactly one product.
+SELECT y.order_item_id,y.merchant_id,y.order_id,y.product_id,y.qty,(1+(((y.product_id::bigint * 7919))%100000)/100.0)::numeric(12,2)
+FROM y;
 
 UPDATE orders o
 SET total_amount=x.total

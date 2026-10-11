@@ -1,106 +1,63 @@
--- psql version of transactions/T1_place_order.sql (expt_b8's T1) for EXPLAIN only
+-- psql version of transactions/T1_place_order.sql for EXPLAIN only
 \set merchant_id 1
+\set item_count 3
 \set qty_1 1
+\set qty_2 1
+\set qty_3 1
+\set qty_4 1
+\set qty_5 1
 
 SELECT MIN(customer_id) AS customer_id
 FROM customers
 WHERE merchant_id = (:merchant_id)::bigint
 \gset
 
-SELECT MIN(product_id) AS product_id_1
-FROM products
-WHERE merchant_id = (:merchant_id)::bigint
+SELECT
+  p[1] AS product_id_1, p[2] AS product_id_2, p[3] AS product_id_3,
+  p[4] AS product_id_4, p[5] AS product_id_5
+FROM (
+  SELECT array_agg(product_id ORDER BY product_id) AS p
+  FROM (
+    SELECT product_id FROM products
+    WHERE merchant_id = (:merchant_id)::bigint
+    ORDER BY product_id
+    LIMIT 5
+  ) AS first_products
+) AS ids
 \gset
 
--- T1 runs inside BEGIN/COMMIT. Reads are planned with ANALYZE; writes without
--- it, so the plan is recorded and nothing is changed.
-BEGIN;
+-- No BEGIN / ROLLBACK here as T1 runs without a transaction block, and inside
+-- one Citus would not delegate the call.
 
-EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
-SELECT CASE WHEN EXISTS (
-  SELECT customer_name, email
-  FROM customers
-  WHERE merchant_id = (:merchant_id)::bigint
-    AND customer_id = (:customer_id)::bigint
-) THEN 1 ELSE 0 END AS customer_ok;
-
-SELECT nextval('benchmark_order_id_seq') AS new_order_id
-\gset
-
-EXPLAIN (VERBOSE)
-INSERT INTO orders(
-  order_id, merchant_id, customer_id, order_status, total_amount, created_at
-)
-VALUES(
-  (:new_order_id)::bigint,
-  (:merchant_id)::bigint,
-  (:customer_id)::bigint,
-  'PENDING'::text,
-  0.00,
-  CURRENT_TIMESTAMP
-);
-
+-- The id draw should run on the coordinator alone, with no Task.
 EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
 SELECT
-  CASE WHEN EXISTS (
-    SELECT 1
-    FROM products
-    WHERE merchant_id = (:merchant_id)::bigint
-      AND product_id = (:product_id_1)::bigint
-  ) THEN 1 ELSE 0 END AS product_ok,
-  COALESCE((
-    SELECT price
-    FROM products
-    WHERE merchant_id = (:merchant_id)::bigint
-      AND product_id = (:product_id_1)::bigint
-    LIMIT 1
-  ), 0.00)::numeric(12,2) AS price;
+  nextval('benchmark_order_id_seq') AS order_id,
+  CASE WHEN (:item_count)::integer >= 1 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_1,
+  CASE WHEN (:item_count)::integer >= 2 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_2,
+  CASE WHEN (:item_count)::integer >= 3 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_3,
+  CASE WHEN (:item_count)::integer >= 4 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_4,
+  CASE WHEN (:item_count)::integer >= 5 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_5;
+
+SELECT
+  nextval('benchmark_order_id_seq') AS order_id,
+  CASE WHEN (:item_count)::integer >= 1 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_1,
+  CASE WHEN (:item_count)::integer >= 2 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_2,
+  CASE WHEN (:item_count)::integer >= 3 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_3,
+  CASE WHEN (:item_count)::integer >= 4 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_4,
+  CASE WHEN (:item_count)::integer >= 5 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_5
+\gset t1_
 
 EXPLAIN (VERBOSE)
-WITH reserved AS (
-  UPDATE inventory
-  SET quantity = quantity - (:qty_1)::integer,
-      updated_at = CURRENT_TIMESTAMP
-  WHERE inventory_id = (:product_id_1)::bigint
-    AND merchant_id = (:merchant_id)::bigint
-    AND product_id = (:product_id_1)::bigint
-    AND quantity >= (:qty_1)::integer
-  RETURNING 1
-)
-SELECT CASE WHEN EXISTS (SELECT 1 FROM reserved)
-            THEN 1 ELSE 0 END AS stock_ok;
-
-SELECT nextval('benchmark_order_item_id_seq') AS order_item_id
-\gset
-
-EXPLAIN (VERBOSE)
-INSERT INTO order_items(
-  order_item_id, merchant_id, order_id, product_id, quantity, unit_price
-)
-VALUES(
-  (:order_item_id)::bigint,
+SELECT public.place_order(
   (:merchant_id)::bigint,
-  (:new_order_id)::bigint,
-  (:product_id_1)::bigint,
-  (:qty_1)::integer,
-  1.00
+  (:customer_id)::bigint,
+  (:t1_order_id)::bigint,
+  (:item_count)::integer,
+  ARRAY[(:product_id_1)::bigint, (:product_id_2)::bigint, (:product_id_3)::bigint,
+        (:product_id_4)::bigint, (:product_id_5)::bigint],
+  ARRAY[(:qty_1)::integer, (:qty_2)::integer, (:qty_3)::integer,
+        (:qty_4)::integer, (:qty_5)::integer],
+  ARRAY[(:t1_item_id_1)::bigint, (:t1_item_id_2)::bigint, (:t1_item_id_3)::bigint,
+        (:t1_item_id_4)::bigint, (:t1_item_id_5)::bigint]
 );
-
-EXPLAIN (VERBOSE)
-UPDATE orders
-SET total_amount = (1.00)::numeric(12,2)
-WHERE merchant_id = (:merchant_id)::bigint
-  AND order_id = (:new_order_id)::bigint;
-
-EXPLAIN (VERBOSE)
-INSERT INTO order_merchant_map (order_id, merchant_id)
-VALUES ((:new_order_id)::bigint, (:merchant_id)::bigint);
-
-EXPLAIN (VERBOSE)
-INSERT INTO merchant_daily_sales AS s (merchant_id, sales_date, order_count, revenue)
-VALUES ((:merchant_id)::bigint, CURRENT_TIMESTAMP::date, 1, (1.00)::numeric(12,2))
-ON CONFLICT (merchant_id, sales_date)
-DO UPDATE SET order_count = s.order_count + 1,
-              revenue     = s.revenue + EXCLUDED.revenue;
-
-ROLLBACK;

@@ -106,8 +106,45 @@ expt_b19 - expt_b15 with the lookup table as a reference table and T7's two look
 - Optimisation: Combine `expt_b17`'s reference table with `expt_b18`'s merged lookup, so T7 makes one local lookup on the coordinator.
 - Result: 279.5 TPS at 1 client and 4,020.7 at 64, above `expt_b15` and `expt_b18` at every client count, though 7,649 transactions needed a retry at 64 clients, mostly T1's rollup upsert.
 
-expt_b20 - expt_b19 with REPEATABLE READ instead of SERIALIZABLE
+expt_b20 - replicate of expt_b19, the final design
+
+- Problem: `expt_b19` ran once, and runs in different periods have differed by up to 5.5%, so the final design needs a measure of run-to-run variation.
+- Optimisation: None; `run.sh`, `transactions/` and `explain/` are identical to `expt_b19`'s. It runs first in the partitioning batch (`partitioning_b19/README.md`).
+- Result: Not run yet.
+
+expt_b21 - replicate of expt_b19, the final design
+
+- Problem: As `expt_b20`; a second replicate shows drift during the batch.
+- Optimisation: None; identical to `expt_b19`. It runs last in the partitioning batch.
+- Result: Not run yet.
+
+expt_b22 - expt_b19 with products and inventory distributed by product_id
+
+- Problem: T7 (30% of workload B) is given product ids only, so under `merchant_id` it needs a lookup to find each row's merchant.
+- Optimisation: Distribute `products` and `inventory` by `product_id` in their own colocation group, so T7 updates by `product_id` with no lookup; T1 then spans workers and is `expt_b8`'s non-delegated T1.
+- Result: Not run yet.
+
+expt_b23 - expt_b19 with orders and order_items distributed by order_id
+
+- Problem: T5 is given an order id only and needs `order_merchant_map`, which every T1 writes on a second worker.
+- Optimisation: Distribute `orders` and `order_items` by `order_id`, so T5 is routed directly and the map is gone; T3 now asks every shard.
+- Result: Not run yet.
+
+expt_b24 - expt_b19 with products and inventory as colocated single-shard tables
+
+- Problem: T7 needs a lookup, and its two updates commit across two workers three times in four.
+- Optimisation: Make `products` and `inventory` single-shard tables in one colocation group, so T7 needs no lookup and commits on one worker; every catalog access goes to that worker.
+- Result: Not run yet.
+
+expt_b25 - expt_b19 with inventory as a reference table
+
+- Problem: T7 needs a lookup to find each product's merchant.
+- Optimisation: Make `inventory` a reference table with a copy on every node, so T7 needs no lookup; every inventory write then goes to all 5 nodes.
+- Result: Not run yet.
+
+expt_b26 - expt_b19 with REPEATABLE READ instead of SERIALIZABLE (not carried forward)
 
 - Problem: Retries grow with throughput, and `SERIALIZABLE` also pays for tracking every read to detect read/write conflicts.
 - Optimisation: Lower every node's isolation level from `SERIALIZABLE` to `REPEATABLE READ`, which still detects write-write conflicts.
 - Result: Throughput rises 5% at 1 client (294.2 TPS) and 2% at 64 (4,098.5), the best at 64 clients, retries and serialization failures at 64 clients did not fall (7,924 and 181, against 7,649 and 141).
+- Not carried forward: the gain is within run-to-run noise, and `REPEATABLE READ` allows a read-only anomaly within a node (T4 can see T9's new price without a concurrent T1's stock change for the same product) that `SERIALIZABLE` prevents. Ran as `expt_b20` (job 887306) and was renumbered.
