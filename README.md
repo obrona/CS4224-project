@@ -109,14 +109,12 @@ expt_b19 - expt_b15 with the lookup table as a reference table and T7's two look
 expt_b20 - replicate of expt_b19, the final design
 
 - Problem: `expt_b19` ran once, and runs in different periods have differed by up to 5.5%, so the final design needs a measure of run-to-run variation.
-- Optimisation: None; `run.sh`, `transactions/` and `explain/` are identical to `expt_b19`'s. It runs first in the partitioning batch (`partitioning_b19/README.md`).
 - Result: 277.0 TPS at 1 client and 4,036.7 at 64, within 1% of `expt_b19` at every client count.
 
 expt_b21 - replicate of expt_b19, the final design
 
 - Problem: As `expt_b20`; a second replicate shows drift during the batch.
-- Optimisation: None; identical to `expt_b19`. It runs last in the partitioning batch.
-- Result: 276.0 TPS at 1 client and 4,060.1 at 64. The three runs of the final design (`expt_b19`, `expt_b20`, `expt_b21`) differ by at most 1.7% at any client count and show no drift across the batch, so differences of more than a few percent within the batch are not run-to-run noise.
+- Result: 276.0 TPS at 1 client and 4,060.1 at 64. The three runs of the final design (`expt_b19`, `expt_b20`, `expt_b21`) differ by at most 1.7% at any client count and show no drift across the batch.
 
 expt_b22 - expt_b19 with products and inventory distributed by product_id (not carried forward)
 
@@ -149,3 +147,93 @@ expt_b26 - expt_b19 with REPEATABLE READ instead of SERIALIZABLE (not carried fo
 - Optimisation: Lower every node's isolation level from `SERIALIZABLE` to `REPEATABLE READ`, which still detects write-write conflicts.
 - Result: Throughput rises 5% at 1 client (294.2 TPS) and 2% at 64 (4,098.5), the best at 64 clients, retries and serialization failures at 64 clients did not fall (7,924 and 181, against 7,649 and 141).
 - Not carried forward: the gain is within run-to-run noise, and `REPEATABLE READ` allows a read-only anomaly within a node (T4 can see T9's new price without a concurrent T1's stock change for the same product) that `SERIALIZABLE` prevents. Ran as `expt_b20` (job 887306) and was renumbered.
+
+expt_b27 .. expt_b41 - 2^4 ablation around expt_b19 (`ablation_b19/README.md`)
+
+- Problem: Each optimisation from `expt_b8` on was measured against the design before it, so its contribution to the final design, and how it interacts with the others, is unknown.
+- Optimisation: Switch T5 routing, the T6 rollup, T7 routing and T1 delegation off in every combination under `SERIALIZABLE` and 4 shards; an off factor reverts to `expt_b8`'s transaction and drops the tables it added. `expt_b19` is the all-on cell and `expt_b20`/`expt_b21` replicate it.
+
+expt_b27 - expt_b19 with T5 routing off
+
+- Result: Not run yet.
+
+expt_b28 - expt_b19 with the T6 rollup off
+
+- Result: Not run yet.
+
+expt_b29 - expt_b19 with T7 routing off
+
+- Result: Not run yet.
+
+expt_b30 - expt_b19 with T1 delegation off
+
+- Result: Not run yet.
+
+expt_b31 - expt_b19 with T5 routing and the T6 rollup off
+
+- Result: Not run yet.
+
+expt_b32 - expt_b19 with T5 routing and T7 routing off
+
+- Result: Not run yet.
+
+expt_b33 - expt_b19 with T5 routing and T1 delegation off
+
+- Result: Not run yet.
+
+expt_b34 - expt_b19 with the T6 rollup and T7 routing off
+
+- Result: Not run yet.
+
+expt_b35 - expt_b19 with the T6 rollup and T1 delegation off
+
+- Result: Not run yet.
+
+expt_b36 - expt_b19 with T7 routing and T1 delegation off
+
+- Result: Not run yet.
+
+expt_b37 - expt_b19 with T5 routing, the T6 rollup and T7 routing off
+
+- Result: Not run yet.
+
+expt_b38 - expt_b19 with T5 routing, the T6 rollup and T1 delegation off
+
+- Result: Not run yet.
+
+expt_b39 - expt_b19 with T5 routing, T7 routing and T1 delegation off
+
+- Result: Not run yet.
+
+expt_b40 - expt_b19 with the T6 rollup, T7 routing and T1 delegation off
+
+- Result: Not run yet.
+
+expt_b41 - expt_b19 with T5 routing, the T6 rollup, T7 routing and T1 delegation off
+
+- Result: Not run yet.
+
+expt_b42 .. expt_b46 - expt_b19 at 1, 2, 8, 16 and 32 shards (`ablation_b19/README.md`)
+
+- Problem: The shard count was swept (`expt_b13` 32, `expt_b14` 8, `expt_b15` 4) before T7 was routed through the reference table, and never below one shard per worker.
+- Optimisation: None; each cell changes only the `CITUS_SHARD_COUNT` default in `expt_b19`'s `run.sh`. With 1 or 2 shards the merchant-colocated tables sit on 1 or 2 of the 4 workers.
+
+expt_b42 - expt_b19 with 1 shard per table
+
+- Result: Not run yet.
+
+expt_b43 - expt_b19 with 2 shards per table
+
+- Result: Not run yet.
+
+expt_b44 - expt_b19 with 8 shards per table
+
+- Result: Not run yet.
+
+expt_b45 - expt_b19 with 16 shards per table
+
+- Result: Not run yet.
+
+expt_b46 - expt_b19 with 32 shards per table
+
+- Result: Not run yet.
