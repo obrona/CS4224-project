@@ -110,37 +110,38 @@ expt_b20 - replicate of expt_b19, the final design
 
 - Problem: `expt_b19` ran once, and runs in different periods have differed by up to 5.5%, so the final design needs a measure of run-to-run variation.
 - Optimisation: None; `run.sh`, `transactions/` and `explain/` are identical to `expt_b19`'s. It runs first in the partitioning batch (`partitioning_b19/README.md`).
-- Result: Not run yet.
+- Result: 277.0 TPS at 1 client and 4,036.7 at 64, within 1% of `expt_b19` at every client count.
 
 expt_b21 - replicate of expt_b19, the final design
 
 - Problem: As `expt_b20`; a second replicate shows drift during the batch.
 - Optimisation: None; identical to `expt_b19`. It runs last in the partitioning batch.
-- Result: Not run yet.
+- Result: 276.0 TPS at 1 client and 4,060.1 at 64. The three runs of the final design (`expt_b19`, `expt_b20`, `expt_b21`) differ by at most 1.7% at any client count and show no drift across the batch, so differences of more than a few percent within the batch are not run-to-run noise.
 
-expt_b22 - expt_b19 with products and inventory distributed by product_id
+expt_b22 - expt_b19 with products and inventory distributed by product_id (not carried forward)
 
 - Problem: T7 (30% of workload B) is given product ids only, so under `merchant_id` it needs a lookup to find each row's merchant.
 - Optimisation: Distribute `products` and `inventory` by `product_id` in their own colocation group, so T7 updates by `product_id` with no lookup; T1 then spans workers and is `expt_b8`'s non-delegated T1.
-- Result: Not run yet.
+- Result: T7 falls from 3.7 to 3.1 ms at 1 client, but the non-delegated T1 rises from 10.4 to 13.3 ms at 1 client and from 37 to 88 ms at 64, and retries at 64 clients rise from 7,649 to 12,458. Throughput is 268.0 TPS at 1 client and 3,133.9 at 64 (4% and 22% below `expt_b19`), with a peak of 3,308.6 at 32.
 
-expt_b23 - expt_b19 with orders and order_items distributed by order_id
+expt_b23 - expt_b19 with orders and order_items distributed by order_id (not carried forward)
 
 - Problem: T5 is given an order id only and needs `order_merchant_map`, which every T1 writes on a second worker.
 - Optimisation: Distribute `orders` and `order_items` by `order_id`, so T5 is routed directly and the map is gone; T3 now asks every shard.
-- Result: Not run yet.
+- Result: Throughput falls to 198.2 TPS at 1 client and 2,043.9 at 64 (29% and 49% below `expt_b19`). With `orders` no longer colocated with `merchant_daily_sales`, Citus runs T6 as two distributed subplans through the coordinator, and T6 rises from 8.6 to 21.2 ms at 1 client and from 32 to 224 ms at 64 (71% of latency). T5 also gets slower (1.7 to 3.7 ms at 1 client), because `orders`' primary key still leads with `merchant_id` and finding an order by `order_id` takes one index search per merchant (1,001 in `explain.log`). T3 rises only from 1.4 to 1.8 ms.
 
-expt_b24 - expt_b19 with products and inventory as colocated single-shard tables
+expt_b24 - expt_b19 with products and inventory as colocated single-shard tables (not carried forward)
 
 - Problem: T7 needs a lookup, and its two updates commit across two workers three times in four.
 - Optimisation: Make `products` and `inventory` single-shard tables in one colocation group, so T7 needs no lookup and commits on one worker; every catalog access goes to that worker.
-- Result: Not run yet.
+- Result: T7 falls from 3.7 to 2.4 ms at 1 client, and throughput is 287.6 TPS at 1 client, 3% above `expt_b19` and the best 1-client result under `SERIALIZABLE`. From 16 clients up it is 13 to 17% below (3,348.2 at 64), because the non-delegated T1 rises from 37 to 85 ms at 64 clients and retries from 7,649 to 13,873. T2, T4 and T9, which now all go to one worker, are at most 1.7 ms slower at 64 clients, so most of the loss comes from T1.
+- The first run (job 930969) failed loading `inventory` because of a Citus 14.1.0 bug with `INSERT ... SELECT` between single-shard tables. `inventory` is now loaded from `generate_series`, which gives the same rows, and the results are from job 933678.
 
-expt_b25 - expt_b19 with inventory as a reference table
+expt_b25 - expt_b19 with inventory as a reference table (not carried forward)
 
 - Problem: T7 needs a lookup to find each product's merchant.
 - Optimisation: Make `inventory` a reference table with a copy on every node, so T7 needs no lookup; every inventory write then goes to all 5 nodes.
-- Result: Not run yet.
+- Result: Throughput falls to 210.8 TPS at 1 client (25% below `expt_b19`), peaks at 351.7 at 4 clients and falls to 302.3 at 64 (93% below). At 64 clients, T1, T2 and T7, the three transactions that write `inventory`, take 413 to 444 ms each, against 5 to 37 ms in `expt_b19`. This is consistent with writes to the replicated table running one at a time across the cluster.
 
 expt_b26 - expt_b19 with REPEATABLE READ instead of SERIALIZABLE (not carried forward)
 
