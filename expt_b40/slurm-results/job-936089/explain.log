@@ -1,0 +1,842 @@
+DO
+==================== T1_place_order.sql
+SELECT MIN(customer_id) AS customer_id
+FROM customers
+WHERE merchant_id = (1)::bigint
+SELECT MIN(product_id) AS product_id_1
+FROM products
+WHERE merchant_id = (1)::bigint
+BEGIN;
+BEGIN
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT CASE WHEN EXISTS (
+  SELECT customer_name, email
+  FROM customers
+  WHERE merchant_id = (1)::bigint
+    AND customer_id = (1)::bigint
+) THEN 1 ELSE 0 END AS customer_ok;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=0.909..0.909 rows=1.00 loops=1)
+  Output: remote_scan.customer_ok
+  Task Count: 1
+  Tuple data received from nodes: 4 bytes
+  Tasks Shown: All
+  ->  Task
+        Query: SELECT CASE WHEN (EXISTS (SELECT customers.customer_name, customers.email FROM public.customers_102012 customers WHERE ((customers.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (customers.customer_id OPERATOR(pg_catalog.=) (1)::bigint)))) THEN 1 ELSE 0 END AS customer_ok
+        Tuple data received from node: 4 bytes
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Result  (cost=8.44..8.45 rows=1 width=4) (actual time=0.020..0.020 rows=1.00 loops=1)
+              Output: CASE WHEN (InitPlan 1).col1 THEN 1 ELSE 0 END
+              Buffers: shared hit=4
+              InitPlan 1
+                ->  Index Only Scan using customers_pkey_102012 on public.customers_102012 customers  (cost=0.42..8.44 rows=1 width=0) (actual time=0.019..0.019 rows=1.00 loops=1)
+                      Index Cond: ((customers.merchant_id = '1'::bigint) AND (customers.customer_id = '1'::bigint))
+                      Heap Fetches: 1
+                      Index Searches: 1
+                      Buffers: shared hit=4
+            Planning Time: 0.043 ms
+            Execution Time: 0.034 ms
+  Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=1
+Planning Time: 0.062 ms
+Execution Time: 0.915 ms
+SELECT nextval('benchmark_order_id_seq') AS new_order_id
+EXPLAIN (VERBOSE)
+INSERT INTO orders(
+  order_id, merchant_id, customer_id, order_status, total_amount, created_at
+)
+VALUES(
+  (5000002)::bigint,
+  (1)::bigint,
+  (1)::bigint,
+  'PENDING'::text,
+  0.00,
+  CURRENT_TIMESTAMP
+);
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
+  Task Count: 1
+  Tasks Shown: All
+  ->  Task
+        Query: INSERT INTO public.orders_102024 (order_id, merchant_id, customer_id, order_status, total_amount, created_at) VALUES ('5000002'::bigint, '1'::bigint, '1'::bigint, 'PENDING'::text, 0.00::numeric(12,2), '2026-10-13 08:36:43.08784'::timestamp without time zone)
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Insert on public.orders_102024  (cost=0.00..0.01 rows=0 width=0)
+              ->  Result  (cost=0.00..0.01 rows=1 width=80)
+                    Output: '5000002'::bigint, '1'::bigint, '1'::bigint, 'PENDING'::text, 0.00::numeric(12,2), '2026-10-13 08:36:43.08784'::timestamp without time zone
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM products
+    WHERE merchant_id = (1)::bigint
+      AND product_id = (1)::bigint
+  ) THEN 1 ELSE 0 END AS product_ok,
+  COALESCE((
+    SELECT price
+    FROM products
+    WHERE merchant_id = (1)::bigint
+      AND product_id = (1)::bigint
+    LIMIT 1
+  ), 0.00)::numeric(12,2) AS price;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=0.557..0.557 rows=1.00 loops=1)
+  Output: remote_scan.product_ok, remote_scan.price
+  Task Count: 1
+  Tuple data received from nodes: 16 bytes
+  Tasks Shown: All
+  ->  Task
+        Query: SELECT CASE WHEN (EXISTS (SELECT 1 AS "?column?" FROM public.products_102016 products WHERE ((products.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (products.product_id OPERATOR(pg_catalog.=) (1)::bigint)))) THEN 1 ELSE 0 END AS product_ok, (COALESCE((SELECT products.price FROM public.products_102016 products WHERE ((products.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (products.product_id OPERATOR(pg_catalog.=) (1)::bigint)) LIMIT 1), 0.00))::numeric(12,2) AS price
+        Tuple data received from node: 16 bytes
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Result  (cost=16.88..16.89 rows=1 width=20) (actual time=0.024..0.024 rows=1.00 loops=1)
+              Output: CASE WHEN (InitPlan 1).col1 THEN 1 ELSE 0 END, (COALESCE((InitPlan 2).col1, 0.00))::numeric(12,2)
+              Buffers: shared hit=8
+              InitPlan 1
+                ->  Index Only Scan using products_pkey_102016 on public.products_102016 products  (cost=0.42..8.44 rows=1 width=0) (actual time=0.014..0.014 rows=1.00 loops=1)
+                      Index Cond: ((products.merchant_id = '1'::bigint) AND (products.product_id = '1'::bigint))
+                      Heap Fetches: 1
+                      Index Searches: 1
+                      Buffers: shared hit=4
+              InitPlan 2
+                ->  Limit  (cost=0.42..8.44 rows=1 width=6) (actual time=0.008..0.009 rows=1.00 loops=1)
+                      Output: products_1.price
+                      Buffers: shared hit=4
+                      ->  Index Scan using products_pkey_102016 on public.products_102016 products_1  (cost=0.42..8.44 rows=1 width=6) (actual time=0.008..0.008 rows=1.00 loops=1)
+                            Output: products_1.price
+                            Index Cond: ((products_1.merchant_id = '1'::bigint) AND (products_1.product_id = '1'::bigint))
+                            Index Searches: 1
+                            Buffers: shared hit=4
+            Planning:
+              Buffers: shared hit=3
+            Planning Time: 0.081 ms
+            Execution Time: 0.040 ms
+Planning:
+  Buffers: shared hit=4
+Planning Time: 0.115 ms
+Execution Time: 0.563 ms
+EXPLAIN (VERBOSE)
+WITH reserved AS (
+  UPDATE inventory
+  SET quantity = quantity - (1)::integer,
+      updated_at = CURRENT_TIMESTAMP
+  WHERE inventory_id = (1)::bigint
+    AND merchant_id = (1)::bigint
+    AND product_id = (1)::bigint
+    AND quantity >= (1)::integer
+  RETURNING 1
+)
+SELECT CASE WHEN EXISTS (SELECT 1 FROM reserved)
+            THEN 1 ELSE 0 END AS stock_ok;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
+  Output: remote_scan.stock_ok
+  Task Count: 1
+  Tasks Shown: All
+  ->  Task
+        Query: WITH reserved AS (UPDATE public.inventory_102020 inventory SET quantity = (inventory.quantity OPERATOR(pg_catalog.-) 1), updated_at = '2026-10-13 08:36:43.08784'::timestamp without time zone WHERE ((inventory.inventory_id OPERATOR(pg_catalog.=) '1'::bigint) AND (inventory.merchant_id OPERATOR(pg_catalog.=) '1'::bigint) AND (inventory.product_id OPERATOR(pg_catalog.=) '1'::bigint) AND (inventory.quantity OPERATOR(pg_catalog.>=) 1)) RETURNING 1 AS "?column?") SELECT CASE WHEN (EXISTS (SELECT 1 AS "?column?" FROM reserved reserved("?column?"))) THEN 1 ELSE 0 END AS stock_ok
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Result  (cost=8.46..8.47 rows=1 width=4)
+              Output: CASE WHEN (InitPlan 2).col1 THEN 1 ELSE 0 END
+              CTE reserved
+                ->  Update on public.inventory_102020 inventory  (cost=0.42..8.45 rows=1 width=18)
+                      Output: 1
+                      ->  Index Scan using inventory_merchant_id_product_id_key_102020 on public.inventory_102020 inventory  (cost=0.42..8.45 rows=1 width=18)
+                            Output: (inventory.quantity - 1), '2026-10-13 08:36:43.08784'::timestamp without time zone, inventory.ctid
+                            Index Cond: ((inventory.merchant_id = '1'::bigint) AND (inventory.product_id = '1'::bigint))
+                            Filter: ((inventory.quantity >= 1) AND (inventory.inventory_id = '1'::bigint))
+              InitPlan 2
+                ->  CTE Scan on reserved  (cost=0.00..0.02 rows=1 width=0)
+SELECT nextval('benchmark_order_item_id_seq') AS order_item_id
+EXPLAIN (VERBOSE)
+INSERT INTO order_items(
+  order_item_id, merchant_id, order_id, product_id, quantity, unit_price
+)
+VALUES(
+  (15000002)::bigint,
+  (1)::bigint,
+  (5000002)::bigint,
+  (1)::bigint,
+  (1)::integer,
+  1.00
+);
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
+  Task Count: 1
+  Tasks Shown: All
+  ->  Task
+        Query: INSERT INTO public.order_items_102028 (order_item_id, merchant_id, order_id, product_id, quantity, unit_price) VALUES ('15000002'::bigint, '1'::bigint, '5000002'::bigint, '1'::bigint, 1, 1.00::numeric(12,2))
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Insert on public.order_items_102028  (cost=0.00..0.01 rows=0 width=0)
+              ->  Result  (cost=0.00..0.01 rows=1 width=52)
+                    Output: '15000002'::bigint, '1'::bigint, '5000002'::bigint, '1'::bigint, 1, 1.00::numeric(12,2)
+EXPLAIN (VERBOSE)
+UPDATE orders
+SET total_amount = (1.00)::numeric(12,2)
+WHERE merchant_id = (1)::bigint
+  AND order_id = (5000002)::bigint;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
+  Task Count: 1
+  Tasks Shown: All
+  ->  Task
+        Query: UPDATE public.orders_102024 orders SET total_amount = 1.00::numeric(12,2) WHERE ((merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (order_id OPERATOR(pg_catalog.=) (5000002)::bigint))
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Update on public.orders_102024 orders  (cost=0.43..8.45 rows=0 width=0)
+              ->  Index Scan using orders_pkey_102024 on public.orders_102024 orders  (cost=0.43..8.45 rows=1 width=22)
+                    Output: 1.00::numeric(12,2), ctid
+                    Index Cond: ((orders.merchant_id = '1'::bigint) AND (orders.order_id = '5000002'::bigint))
+EXPLAIN (VERBOSE)
+INSERT INTO order_merchant_map (order_id, merchant_id)
+VALUES ((5000002)::bigint, (1)::bigint);
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0)
+  Task Count: 1
+  Tasks Shown: All
+  ->  Task
+        Query: INSERT INTO public.order_merchant_map_102034 (order_id, merchant_id) VALUES ('5000002'::bigint, '1'::bigint)
+        Node: host=xcnf20 port=5436 dbname=project-936089
+        ->  Insert on public.order_merchant_map_102034  (cost=0.00..0.01 rows=0 width=0)
+              ->  Result  (cost=0.00..0.01 rows=1 width=16)
+                    Output: '5000002'::bigint, '1'::bigint
+ROLLBACK;
+ROLLBACK
+==================== T2_update_inventory.sql
+SELECT MIN(product_id) AS product_id
+FROM inventory
+WHERE merchant_id = (1)::bigint
+BEGIN;
+BEGIN
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+UPDATE inventory
+SET quantity = quantity + (5)::integer,
+    updated_at = CURRENT_TIMESTAMP
+WHERE inventory_id = (1)::bigint
+  AND merchant_id = (1)::bigint
+  AND product_id = (1)::bigint
+  AND quantity + (5)::integer >= 0;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=1.157..1.157 rows=0.00 loops=1)
+  Task Count: 1
+  Tasks Shown: All
+  ->  Task
+        Query: UPDATE public.inventory_102020 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-13 08:36:43.131422'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '1'::bigint) AND (merchant_id OPERATOR(pg_catalog.=) '1'::bigint) AND (product_id OPERATOR(pg_catalog.=) '1'::bigint) AND ((quantity OPERATOR(pg_catalog.+) 5) OPERATOR(pg_catalog.>=) 0))
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Update on public.inventory_102020 inventory  (cost=0.42..8.45 rows=0 width=0) (actual time=0.058..0.058 rows=0.00 loops=1)
+              Buffers: shared hit=6
+              ->  Index Scan using inventory_merchant_id_product_id_key_102020 on public.inventory_102020 inventory  (cost=0.42..8.45 rows=1 width=18) (actual time=0.011..0.012 rows=1.00 loops=1)
+                    Output: (quantity + 5), '2026-10-13 08:36:43.131422'::timestamp without time zone, ctid
+                    Index Cond: ((inventory.merchant_id = '1'::bigint) AND (inventory.product_id = '1'::bigint))
+                    Filter: ((inventory.inventory_id = '1'::bigint) AND ((inventory.quantity + 5) >= 0))
+                    Index Searches: 1
+                    Buffers: shared hit=4
+            Planning:
+              Buffers: shared hit=9
+            Planning Time: 0.053 ms
+            Execution Time: 0.092 ms
+  Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=28
+Planning Time: 0.115 ms
+Execution Time: 1.201 ms
+ROLLBACK;
+ROLLBACK
+==================== T3_order_history.sql
+SELECT customer_id
+FROM orders
+WHERE merchant_id = (1)::bigint
+ORDER BY order_id
+LIMIT 1
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT
+  o.order_id,
+  o.order_status,
+  o.total_amount,
+  o.created_at,
+  oi.product_id,
+  oi.quantity,
+  oi.unit_price
+FROM orders AS o
+JOIN order_items AS oi
+  ON oi.order_id = o.order_id
+ AND oi.merchant_id = o.merchant_id
+WHERE o.merchant_id = (1)::bigint
+  AND o.customer_id = (740001)::bigint
+ORDER BY o.created_at DESC
+LIMIT 20;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=1.769..1.770 rows=20.00 loops=1)
+  Output: remote_scan.order_id, remote_scan.order_status, remote_scan.total_amount, remote_scan.created_at, remote_scan.product_id, remote_scan.quantity, remote_scan.unit_price
+  Task Count: 1
+  Tuple data received from nodes: 1220 bytes
+  Tasks Shown: All
+  ->  Task
+        Query: SELECT o.order_id, o.order_status, o.total_amount, o.created_at, oi.product_id, oi.quantity, oi.unit_price FROM (public.orders_102024 o JOIN public.order_items_102028 oi ON (((oi.order_id OPERATOR(pg_catalog.=) o.order_id) AND (oi.merchant_id OPERATOR(pg_catalog.=) o.merchant_id)))) WHERE ((o.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (o.customer_id OPERATOR(pg_catalog.=) (740001)::bigint)) ORDER BY o.created_at DESC LIMIT 20
+        Tuple data received from node: 1220 bytes
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Limit  (cost=0.86..16.91 rows=1 width=50) (actual time=0.095..0.446 rows=20.00 loops=1)
+              Output: o.order_id, o.order_status, o.total_amount, o.created_at, oi.product_id, oi.quantity, oi.unit_price
+              Buffers: shared hit=45
+              ->  Nested Loop  (cost=0.86..16.91 rows=1 width=50) (actual time=0.094..0.443 rows=20.00 loops=1)
+                    Output: o.order_id, o.order_status, o.total_amount, o.created_at, oi.product_id, oi.quantity, oi.unit_price
+                    Buffers: shared hit=45
+                    ->  Index Scan using idx_orders_customer_recent_102024 on public.orders_102024 o  (cost=0.43..8.45 rows=1 width=40) (actual time=0.052..0.153 rows=7.00 loops=1)
+                          Output: o.order_id, o.merchant_id, o.customer_id, o.order_status, o.total_amount, o.created_at
+                          Index Cond: ((o.merchant_id = '1'::bigint) AND (o.customer_id = '740001'::bigint))
+                          Index Searches: 1
+                          Buffers: shared hit=17
+                    ->  Index Scan using idx_order_items_order_102028 on public.order_items_102028 oi  (cost=0.43..8.45 rows=1 width=34) (actual time=0.026..0.041 rows=2.86 loops=7)
+                          Output: oi.order_item_id, oi.merchant_id, oi.order_id, oi.product_id, oi.quantity, oi.unit_price
+                          Index Cond: ((oi.merchant_id = '1'::bigint) AND (oi.order_id = o.order_id))
+                          Index Searches: 7
+                          Buffers: shared hit=28
+            Planning:
+              Buffers: shared hit=82
+            Planning Time: 0.253 ms
+            Execution Time: 0.476 ms
+  Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=115
+Planning Time: 0.344 ms
+Execution Time: 1.793 ms
+==================== T4_product_lookup.sql
+SELECT MIN(product_id) AS product_id
+FROM products
+WHERE merchant_id = (1)::bigint
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT
+  p.product_id,
+  p.product_name,
+  p.category,
+  p.price,
+  i.quantity
+FROM products AS p
+JOIN inventory AS i
+  ON i.product_id = p.product_id
+ AND i.merchant_id = p.merchant_id
+WHERE p.merchant_id = (1)::bigint
+  AND p.product_id = (1)::bigint;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=1.271..1.272 rows=1.00 loops=1)
+  Output: remote_scan.product_id, remote_scan.product_name, remote_scan.category, remote_scan.price, remote_scan.quantity
+  Task Count: 1
+  Tuple data received from nodes: 43 bytes
+  Tasks Shown: All
+  ->  Task
+        Query: SELECT p.product_id, p.product_name, p.category, p.price, i.quantity FROM (public.products_102016 p JOIN public.inventory_102020 i ON (((i.product_id OPERATOR(pg_catalog.=) p.product_id) AND (i.merchant_id OPERATOR(pg_catalog.=) p.merchant_id)))) WHERE ((p.merchant_id OPERATOR(pg_catalog.=) (1)::bigint) AND (p.product_id OPERATOR(pg_catalog.=) (1)::bigint))
+        Tuple data received from node: 43 bytes
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Nested Loop  (cost=0.83..16.89 rows=1 width=43) (actual time=0.031..0.032 rows=1.00 loops=1)
+              Output: p.product_id, p.product_name, p.category, p.price, i.quantity
+              Buffers: shared hit=8
+              ->  Index Scan using products_pkey_102016 on public.products_102016 p  (cost=0.42..8.44 rows=1 width=47) (actual time=0.007..0.007 rows=1.00 loops=1)
+                    Output: p.product_id, p.merchant_id, p.product_name, p.category, p.price
+                    Index Cond: ((p.merchant_id = '1'::bigint) AND (p.product_id = '1'::bigint))
+                    Index Searches: 1
+                    Buffers: shared hit=4
+              ->  Index Scan using inventory_merchant_id_product_id_key_102020 on public.inventory_102020 i  (cost=0.42..8.44 rows=1 width=20) (actual time=0.023..0.023 rows=1.00 loops=1)
+                    Output: i.inventory_id, i.merchant_id, i.product_id, i.quantity, i.updated_at
+                    Index Cond: ((i.merchant_id = '1'::bigint) AND (i.product_id = '1'::bigint))
+                    Index Searches: 1
+                    Buffers: shared hit=4
+            Planning:
+              Buffers: shared hit=64
+            Planning Time: 0.149 ms
+            Execution Time: 0.059 ms
+  Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=105
+Planning Time: 0.273 ms
+Execution Time: 1.278 ms
+==================== T5_update_order_status.sql
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT COALESCE(MAX(merchant_id), 0) AS merchant_id
+FROM order_merchant_map
+WHERE order_id = (1)::bigint;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=5.747..5.747 rows=1.00 loops=1)
+  Output: remote_scan.merchant_id
+  Task Count: 1
+  Tuple data received from nodes: 8 bytes
+  Tasks Shown: All
+  ->  Task
+        Query: SELECT COALESCE(max(merchant_id), (0)::bigint) AS merchant_id FROM public.order_merchant_map_102032 order_merchant_map WHERE (order_id OPERATOR(pg_catalog.=) (1)::bigint)
+        Tuple data received from node: 8 bytes
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Aggregate  (cost=8.45..8.46 rows=1 width=8) (actual time=0.028..0.028 rows=1.00 loops=1)
+              Output: COALESCE(max(merchant_id), '0'::bigint)
+              Buffers: shared hit=4
+              ->  Index Scan using order_merchant_map_pkey_102032 on public.order_merchant_map_102032 order_merchant_map  (cost=0.43..8.45 rows=1 width=8) (actual time=0.025..0.026 rows=1.00 loops=1)
+                    Output: order_id, merchant_id
+                    Index Cond: (order_merchant_map.order_id = '1'::bigint)
+                    Index Searches: 1
+                    Buffers: shared hit=4
+            Planning:
+              Buffers: shared hit=135
+            Planning Time: 0.310 ms
+            Execution Time: 0.048 ms
+  Buffers: shared hit=73
+Planning:
+  Buffers: shared hit=338
+Planning Time: 1.315 ms
+Execution Time: 5.760 ms
+SELECT COALESCE(MAX(merchant_id), 0) AS merchant_id
+FROM order_merchant_map
+WHERE order_id = (1)::bigint
+BEGIN;
+BEGIN
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+UPDATE orders
+SET order_status = 'SHIPPED'::text
+WHERE merchant_id = (41)::bigint
+  AND order_id = (1)::bigint
+  AND order_status IS DISTINCT FROM 'SHIPPED'::text;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=6.364..6.364 rows=0.00 loops=1)
+  Task Count: 1
+  Tasks Shown: All
+  ->  Task
+        Query: UPDATE public.orders_102027 orders SET order_status = 'SHIPPED'::text WHERE ((merchant_id OPERATOR(pg_catalog.=) (41)::bigint) AND (order_id OPERATOR(pg_catalog.=) (1)::bigint) AND (order_status IS DISTINCT FROM 'SHIPPED'::text))
+        Node: host=xcnf21 port=5436 dbname=project-936089
+        ->  Update on public.orders_102027 orders  (cost=0.43..8.45 rows=0 width=0) (actual time=0.183..0.184 rows=0.00 loops=1)
+              Buffers: shared hit=15
+              ->  Index Scan using orders_pkey_102027 on public.orders_102027 orders  (cost=0.43..8.45 rows=1 width=38) (actual time=0.101..0.101 rows=1.00 loops=1)
+                    Output: 'SHIPPED'::text, ctid
+                    Index Cond: ((orders.merchant_id = '41'::bigint) AND (orders.order_id = '1'::bigint))
+                    Filter: (orders.order_status IS DISTINCT FROM 'SHIPPED'::text)
+                    Index Searches: 1
+                    Buffers: shared hit=4
+            Planning:
+              Buffers: shared hit=178
+            Planning Time: 0.321 ms
+            Execution Time: 0.219 ms
+  Buffers: shared hit=6
+Planning:
+  Buffers: shared hit=130
+Planning Time: 0.273 ms
+Execution Time: 6.389 ms
+ROLLBACK;
+ROLLBACK
+==================== T6_global_sales.sql
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT
+  merchant_id,
+  COUNT(*) AS order_count,
+  SUM(total_amount) AS revenue
+FROM orders
+WHERE created_at >= CURRENT_TIMESTAMP - (30)::integer * INTERVAL '1 day'
+  AND created_at < CURRENT_TIMESTAMP
+GROUP BY merchant_id
+ORDER BY revenue DESC
+LIMIT 20;
+Limit  (cost=2660.96..2661.01 rows=20 width=48) (actual time=94.081..94.087 rows=20.00 loops=1)
+  Output: remote_scan.merchant_id, remote_scan.order_count, remote_scan.revenue
+  Buffers: shared hit=91
+  ->  Sort  (cost=2660.96..2910.96 rows=100000 width=48) (actual time=94.080..94.082 rows=20.00 loops=1)
+        Output: remote_scan.merchant_id, remote_scan.order_count, remote_scan.revenue
+        Sort Key: remote_scan.revenue DESC
+        Sort Method: top-N heapsort  Memory: 27kB
+        Buffers: shared hit=91
+        ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=100000 width=48) (actual time=93.994..94.002 rows=80.00 loops=1)
+              Output: remote_scan.merchant_id, remote_scan.order_count, remote_scan.revenue
+              Task Count: 4
+              Tuple data received from nodes: 2394 bytes
+              Tasks Shown: One of 4
+              ->  Task
+                    Query: SELECT merchant_id, count(*) AS order_count, sum(total_amount) AS revenue FROM public.orders_102025 orders WHERE ((created_at OPERATOR(pg_catalog.>=) (CURRENT_TIMESTAMP OPERATOR(pg_catalog.-) '30 days'::interval)) AND (created_at OPERATOR(pg_catalog.<) CURRENT_TIMESTAMP)) GROUP BY merchant_id ORDER BY (sum(total_amount)) DESC LIMIT '20'::bigint
+                    Tuple data received from node: 600 bytes
+                    Node: host=xcnf19 port=5436 dbname=project-936089
+                    ->  Limit  (cost=36390.89..36390.94 rows=20 width=48) (actual time=73.537..83.776 rows=20.00 loops=1)
+                          Output: merchant_id, (count(*)), (sum(total_amount))
+                          Buffers: shared hit=28705
+                          ->  Sort  (cost=36390.89..36391.54 rows=263 width=48) (actual time=73.536..83.773 rows=20.00 loops=1)
+                                Output: merchant_id, (count(*)), (sum(total_amount))
+                                Sort Key: (sum(orders.total_amount)) DESC
+                                Sort Method: top-N heapsort  Memory: 26kB
+                                Buffers: shared hit=28705
+                                ->  Finalize GroupAggregate  (cost=36300.80..36383.89 rows=263 width=48) (actual time=73.082..83.693 rows=263.00 loops=1)
+                                      Output: merchant_id, count(*), sum(total_amount)
+                                      Group Key: orders.merchant_id
+                                      Buffers: shared hit=28702
+                                      ->  Gather Merge  (cost=36300.80..36374.29 rows=631 width=48) (actual time=73.072..83.397 rows=789.00 loops=1)
+                                            Output: merchant_id, (PARTIAL count(*)), (PARTIAL sum(total_amount))
+                                            Workers Planned: 2
+                                            Workers Launched: 2
+                                            Buffers: shared hit=28702
+                                            ->  Sort  (cost=35300.78..35301.43 rows=263 width=48) (actual time=69.483..69.498 rows=263.00 loops=3)
+                                                  Output: merchant_id, (PARTIAL count(*)), (PARTIAL sum(total_amount))
+                                                  Sort Key: orders.merchant_id
+                                                  Sort Method: quicksort  Memory: 51kB
+                                                  Buffers: shared hit=28702
+                                                  Worker 0:  actual time=67.978..67.993 rows=263.00 loops=1
+                                                    Sort Method: quicksort  Memory: 51kB
+                                                    Buffers: shared hit=7846
+                                                  Worker 1:  actual time=68.228..68.243 rows=263.00 loops=1
+                                                    Sort Method: quicksort  Memory: 51kB
+                                                    Buffers: shared hit=7871
+                                                  ->  Partial HashAggregate  (cost=35286.92..35290.20 rows=263 width=48) (actual time=69.303..69.389 rows=263.00 loops=3)
+                                                        Output: merchant_id, PARTIAL count(*), PARTIAL sum(total_amount)
+                                                        Group Key: orders.merchant_id
+                                                        Batches: 1  Memory Usage: 176kB
+                                                        Buffers: shared hit=28686
+                                                        Worker 0:  actual time=67.778..67.877 rows=263.00 loops=1
+                                                          Batches: 1  Memory Usage: 176kB
+                                                          Buffers: shared hit=7838
+                                                        Worker 1:  actual time=68.018..68.119 rows=263.00 loops=1
+                                                          Batches: 1  Memory Usage: 176kB
+                                                          Buffers: shared hit=7863
+                                                        ->  Parallel Bitmap Heap Scan on public.orders_102025 orders  (cost=6723.72..34957.87 rows=43873 width=14) (actual time=23.517..59.621 rows=35232.67 loops=3)
+                                                              Output: order_id, merchant_id, customer_id, order_status, total_amount, created_at
+                                                              Recheck Cond: ((orders.created_at >= (CURRENT_TIMESTAMP - '30 days'::interval)) AND (orders.created_at < CURRENT_TIMESTAMP))
+                                                              Heap Blocks: exact=11573
+                                                              Buffers: shared hit=28686
+                                                              Worker 0:  actual time=22.051..57.674 rows=30695.00 loops=1
+                                                                Heap Blocks: exact=7818
+                                                                Buffers: shared hit=7838
+                                                              Worker 1:  actual time=22.339..57.901 rows=30555.00 loops=1
+                                                                Heap Blocks: exact=7843
+                                                                Buffers: shared hit=7863
+                                                              ->  Bitmap Index Scan on idx_orders_sales_period_102025  (cost=0.00..6697.39 rows=105296 width=0) (actual time=22.501..22.502 rows=211396.00 loops=1)
+                                                                    Index Cond: ((orders.created_at >= (CURRENT_TIMESTAMP - '30 days'::interval)) AND (orders.created_at < CURRENT_TIMESTAMP))
+                                                                    Index Searches: 1
+                                                                    Buffers: shared hit=1412
+                        Planning:
+                          Buffers: shared hit=253
+                        Planning Time: 0.546 ms
+                        Execution Time: 83.877 ms
+              Buffers: shared hit=88
+Planning:
+  Buffers: shared hit=370
+Planning Time: 1.330 ms
+Execution Time: 94.108 ms
+==================== T7_inventory_transfer.sql
+SELECT MIN(product_id) AS source_product_id FROM products WHERE merchant_id = 1
+SELECT MIN(product_id) AS dest_product_id FROM products WHERE merchant_id = 2
+BEGIN;
+BEGIN
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT EXISTS(
+  SELECT 1 FROM inventory
+  WHERE product_id = (1)::bigint
+) AS source_exists;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=5.223..5.223 rows=1.00 loops=1)
+  Output: remote_scan.source_exists
+  ->  Distributed Subplan 3_1
+        Subplan Duration: 10.04 ms
+        Intermediate Data Size: 10 bytes
+        Result destination: Write locally
+        ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=100000 width=4) (actual time=0.000..0.000 rows=1.00 loops=1)
+              Output: remote_scan."?column?"
+              Task Count: 4
+              Tuple data received from nodes: 4 bytes
+              Tasks Shown: One of 4
+              ->  Task
+                    Query: SELECT 1 AS "?column?" FROM public.inventory_102020 inventory WHERE (product_id OPERATOR(pg_catalog.=) '1'::bigint)
+                    Tuple data received from node: 4 bytes
+                    Node: host=xcnf18 port=5436 dbname=project-936089
+                    ->  Index Only Scan using inventory_merchant_id_product_id_key_102020 on public.inventory_102020 inventory  (cost=0.42..759.31 rows=1 width=4) (actual time=0.086..1.996 rows=1.00 loops=1)
+                          Output: 1
+                          Index Cond: (inventory.product_id = '1'::bigint)
+                          Heap Fetches: 1
+                          Index Searches: 166
+                          Buffers: shared hit=754
+                        Planning:
+                          Buffers: shared hit=42
+                        Planning Time: 0.144 ms
+                        Execution Time: 2.011 ms
+        Planning Time: 0.000 ms
+        Execution Time: 0.001 ms
+  Task Count: 1
+  Tuple data received from nodes: 1 bytes
+  Tasks Shown: All
+  ->  Task
+        Query: SELECT (EXISTS (SELECT intermediate_result."?column?" FROM read_intermediate_result('3_1'::text, 'binary'::citus_copy_format) intermediate_result("?column?" integer))) AS source_exists
+        Tuple data received from node: 1 bytes
+        Node: host=localhost port=5436 dbname=project-936089
+        ->  Result  (cost=0.00..0.01 rows=1 width=1) (actual time=0.051..0.052 rows=1.00 loops=1)
+              Output: (InitPlan 1).col1
+              Buffers: shared hit=3
+              InitPlan 1
+                ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result  (cost=0.00..0.01 rows=2 width=0) (actual time=0.051..0.051 rows=1.00 loops=1)
+                      Function Call: read_intermediate_result('3_1'::text, 'binary'::citus_copy_format)
+                      Buffers: shared hit=3
+            Planning:
+              Buffers: shared hit=3
+            Planning Time: 0.044 ms
+            Execution Time: 0.081 ms
+  Buffers: shared hit=9
+Planning:
+  Buffers: shared hit=116
+Planning Time: 0.760 ms
+Execution Time: 15.292 ms
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT EXISTS(
+  SELECT 1 FROM inventory
+  WHERE product_id = (2)::bigint
+) AS dest_exists;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=0.322..0.323 rows=1.00 loops=1)
+  Output: remote_scan.dest_exists
+  ->  Distributed Subplan 5_1
+        Subplan Duration: 1.99 ms
+        Intermediate Data Size: 10 bytes
+        Result destination: Write locally
+        ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=100000 width=4) (actual time=0.000..0.000 rows=1.00 loops=1)
+              Output: remote_scan."?column?"
+              Task Count: 4
+              Tuple data received from nodes: 4 bytes
+              Tasks Shown: One of 4
+              ->  Task
+                    Query: SELECT 1 AS "?column?" FROM public.inventory_102023 inventory WHERE (product_id OPERATOR(pg_catalog.=) '2'::bigint)
+                    Tuple data received from node: 4 bytes
+                    Node: host=xcnf21 port=5436 dbname=project-936089
+                    ->  Index Only Scan using inventory_merchant_id_product_id_key_102023 on public.inventory_102023 inventory  (cost=0.42..790.71 rows=1 width=4) (actual time=0.057..1.359 rows=1.00 loops=1)
+                          Output: 1
+                          Index Cond: (inventory.product_id = '2'::bigint)
+                          Heap Fetches: 1
+                          Index Searches: 189
+                          Buffers: shared hit=788
+                        Planning Time: 0.031 ms
+                        Execution Time: 1.368 ms
+        Planning Time: 0.000 ms
+        Execution Time: 0.001 ms
+  Task Count: 1
+  Tuple data received from nodes: 1 bytes
+  Tasks Shown: All
+  ->  Task
+        Query: SELECT (EXISTS (SELECT intermediate_result."?column?" FROM read_intermediate_result('5_1'::text, 'binary'::citus_copy_format) intermediate_result("?column?" integer))) AS dest_exists
+        Tuple data received from node: 1 bytes
+        Node: host=localhost port=5436 dbname=project-936089
+        ->  Result  (cost=0.00..0.01 rows=1 width=1) (actual time=0.020..0.020 rows=1.00 loops=1)
+              Output: (InitPlan 1).col1
+              InitPlan 1
+                ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result  (cost=0.00..0.01 rows=2 width=0) (actual time=0.019..0.019 rows=1.00 loops=1)
+                      Function Call: read_intermediate_result('5_1'::text, 'binary'::citus_copy_format)
+            Planning Time: 0.023 ms
+            Execution Time: 0.028 ms
+Planning:
+  Buffers: shared hit=4
+Planning Time: 0.197 ms
+Execution Time: 2.330 ms
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT inventory_id AS source_inventory_id FROM inventory WHERE product_id = (1)::bigint;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=100000 width=8) (actual time=2.279..2.280 rows=1.00 loops=1)
+  Output: remote_scan.source_inventory_id
+  Task Count: 4
+  Tuple data received from nodes: 8 bytes
+  Tasks Shown: One of 4
+  ->  Task
+        Query: SELECT inventory_id AS source_inventory_id FROM public.inventory_102020 inventory WHERE (product_id OPERATOR(pg_catalog.=) '1'::bigint)
+        Tuple data received from node: 8 bytes
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Index Scan using inventory_merchant_id_product_id_key_102020 on public.inventory_102020 inventory  (cost=0.42..759.31 rows=1 width=8) (actual time=0.007..1.627 rows=1.00 loops=1)
+              Output: inventory_id
+              Index Cond: (inventory.product_id = '1'::bigint)
+              Index Searches: 166
+              Buffers: shared hit=751
+            Planning:
+              Buffers: shared hit=3
+            Planning Time: 0.049 ms
+            Execution Time: 1.638 ms
+Planning:
+  Buffers: shared hit=4
+Planning Time: 0.118 ms
+Execution Time: 2.286 ms
+SELECT inventory_id AS source_inventory_id FROM inventory WHERE product_id = (1)::bigint
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+SELECT inventory_id AS dest_inventory_id FROM inventory WHERE product_id = (2)::bigint;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=100000 width=8) (actual time=2.222..2.222 rows=1.00 loops=1)
+  Output: remote_scan.dest_inventory_id
+  Task Count: 4
+  Tuple data received from nodes: 8 bytes
+  Tasks Shown: One of 4
+  ->  Task
+        Query: SELECT inventory_id AS dest_inventory_id FROM public.inventory_102020 inventory WHERE (product_id OPERATOR(pg_catalog.=) '2'::bigint)
+        Tuple data received from node: 0 bytes
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Index Scan using inventory_merchant_id_product_id_key_102020 on public.inventory_102020 inventory  (cost=0.42..759.31 rows=1 width=8) (actual time=1.635..1.635 rows=0.00 loops=1)
+              Output: inventory_id
+              Index Cond: (inventory.product_id = '2'::bigint)
+              Index Searches: 166
+              Buffers: shared hit=750
+            Planning Time: 0.032 ms
+            Execution Time: 1.644 ms
+Planning:
+  Buffers: shared hit=2
+Planning Time: 0.094 ms
+Execution Time: 2.229 ms
+SELECT inventory_id AS dest_inventory_id FROM inventory WHERE product_id = (2)::bigint
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+WITH debit AS (
+  UPDATE inventory
+  SET quantity = quantity - (1)::integer,
+      updated_at = CURRENT_TIMESTAMP
+  WHERE inventory_id = (1)::bigint
+    AND quantity >= (1)::integer
+  RETURNING 1
+)
+SELECT EXISTS(SELECT 1 FROM debit) AS debit_ok;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=0.474..0.474 rows=1.00 loops=1)
+  Output: remote_scan.debit_ok
+  ->  Distributed Subplan 11_1
+        Subplan Duration: 3.70 ms
+        Intermediate Data Size: 10 bytes
+        Result destination: Write locally
+        ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=0.000..0.000 rows=1.00 loops=1)
+              Output: remote_scan."?column?"
+              Task Count: 4
+              Tuple data received from nodes: 4 bytes
+              Tasks Shown: One of 4
+              ->  Task
+                    Query: UPDATE public.inventory_102020 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 1), updated_at = '2026-10-13 08:36:43.540566'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '1'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 1)) RETURNING 1 AS "?column?"
+                    Tuple data received from node: 4 bytes
+                    Node: host=xcnf18 port=5436 dbname=project-936089
+                    ->  Update on public.inventory_102020 inventory  (cost=0.42..759.32 rows=1 width=18) (actual time=0.105..2.612 rows=1.00 loops=1)
+                          Output: 1
+                          Buffers: shared hit=753
+                          ->  Index Scan using inventory_pkey_102020 on public.inventory_102020 inventory  (cost=0.42..759.32 rows=1 width=18) (actual time=0.027..2.533 rows=1.00 loops=1)
+                                Output: (quantity - 1), '2026-10-13 08:36:43.540566'::timestamp without time zone, ctid
+                                Index Cond: (inventory.inventory_id = '1'::bigint)
+                                Filter: (inventory.quantity >= 1)
+                                Index Searches: 166
+                                Buffers: shared hit=751
+                        Planning:
+                          Buffers: shared hit=13
+                        Planning Time: 0.090 ms
+                        Execution Time: 2.673 ms
+        Planning Time: 0.000 ms
+        Execution Time: 0.002 ms
+  Task Count: 1
+  Tuple data received from nodes: 1 bytes
+  Tasks Shown: All
+  ->  Task
+        Query: SELECT (EXISTS (SELECT 1 AS "?column?" FROM (SELECT intermediate_result."?column?" FROM read_intermediate_result('11_1'::text, 'binary'::citus_copy_format) intermediate_result("?column?" integer)) debit("?column?"))) AS debit_ok
+        Tuple data received from node: 1 bytes
+        Node: host=localhost port=5436 dbname=project-936089
+        ->  Result  (cost=0.00..0.01 rows=1 width=1) (actual time=0.045..0.046 rows=1.00 loops=1)
+              Output: (InitPlan 1).col1
+              InitPlan 1
+                ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result  (cost=0.00..0.01 rows=2 width=0) (actual time=0.044..0.044 rows=1.00 loops=1)
+                      Function Call: read_intermediate_result('11_1'::text, 'binary'::citus_copy_format)
+            Planning Time: 0.043 ms
+            Execution Time: 0.058 ms
+Planning:
+  Buffers: shared hit=16
+Planning Time: 0.220 ms
+Execution Time: 4.183 ms
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+WITH credit AS (
+  UPDATE inventory
+  SET quantity = quantity + (1)::integer,
+      updated_at = CURRENT_TIMESTAMP
+  WHERE inventory_id = (2)::bigint
+  RETURNING 1
+)
+SELECT EXISTS(SELECT 1 FROM credit) AS credit_ok;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=0.595..0.596 rows=1.00 loops=1)
+  Output: remote_scan.credit_ok
+  ->  Distributed Subplan 13_1
+        Subplan Duration: 2.53 ms
+        Intermediate Data Size: 10 bytes
+        Result destination: Write locally
+        ->  Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=0.000..0.000 rows=1.00 loops=1)
+              Output: remote_scan."?column?"
+              Task Count: 4
+              Tuple data received from nodes: 4 bytes
+              Tasks Shown: One of 4
+              ->  Task
+                    Query: UPDATE public.inventory_102020 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-13 08:36:43.540566'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '2'::bigint) RETURNING 1 AS "?column?"
+                    Tuple data received from node: 0 bytes
+                    Node: host=xcnf18 port=5436 dbname=project-936089
+                    ->  Update on public.inventory_102020 inventory  (cost=0.42..759.31 rows=1 width=18) (actual time=1.646..1.646 rows=0.00 loops=1)
+                          Output: 1
+                          Buffers: shared hit=750
+                          ->  Index Scan using inventory_pkey_102020 on public.inventory_102020 inventory  (cost=0.42..759.31 rows=1 width=18) (actual time=1.645..1.645 rows=0.00 loops=1)
+                                Output: (quantity + 1), '2026-10-13 08:36:43.540566'::timestamp without time zone, ctid
+                                Index Cond: (inventory.inventory_id = '2'::bigint)
+                                Index Searches: 166
+                                Buffers: shared hit=750
+                        Planning Time: 0.041 ms
+                        Execution Time: 1.661 ms
+        Planning Time: 0.000 ms
+        Execution Time: 0.003 ms
+  Task Count: 1
+  Tuple data received from nodes: 1 bytes
+  Tasks Shown: All
+  ->  Task
+        Query: SELECT (EXISTS (SELECT 1 AS "?column?" FROM (SELECT intermediate_result."?column?" FROM read_intermediate_result('13_1'::text, 'binary'::citus_copy_format) intermediate_result("?column?" integer)) credit("?column?"))) AS credit_ok
+        Tuple data received from node: 1 bytes
+        Node: host=localhost port=5436 dbname=project-936089
+        ->  Result  (cost=0.00..0.01 rows=1 width=1) (actual time=0.033..0.033 rows=1.00 loops=1)
+              Output: (InitPlan 1).col1
+              InitPlan 1
+                ->  Function Scan on pg_catalog.read_intermediate_result intermediate_result  (cost=0.00..0.01 rows=2 width=0) (actual time=0.032..0.032 rows=1.00 loops=1)
+                      Function Call: read_intermediate_result('13_1'::text, 'binary'::citus_copy_format)
+            Planning Time: 0.033 ms
+            Execution Time: 0.043 ms
+Planning:
+  Buffers: shared hit=4
+Planning Time: 0.242 ms
+Execution Time: 3.172 ms
+ROLLBACK;
+ROLLBACK
+==================== T8_update_customer.sql
+SELECT MIN(customer_id) AS customer_id
+FROM customers
+WHERE merchant_id = (1)::bigint
+BEGIN;
+BEGIN
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+UPDATE customers
+SET email = 'Customer-' || 424242 || '@acme.com'
+WHERE customer_id = (1)::bigint
+  AND merchant_id = (1)::bigint
+  AND email IS DISTINCT FROM
+      ('Customer-' || 424242 || '@acme.com');
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=1.142..1.142 rows=0.00 loops=1)
+  Task Count: 1
+  Tasks Shown: All
+  ->  Task
+        Query: UPDATE public.customers_102012 customers SET email = 'Customer-424242@acme.com'::text WHERE ((customer_id OPERATOR(pg_catalog.=) '1'::bigint) AND (merchant_id OPERATOR(pg_catalog.=) '1'::bigint) AND (email IS DISTINCT FROM 'Customer-424242@acme.com'::text))
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Update on public.customers_102012 customers  (cost=0.42..8.44 rows=0 width=0) (actual time=0.107..0.107 rows=0.00 loops=1)
+              Buffers: shared hit=16 read=1 dirtied=1
+              ->  Index Scan using customers_pkey_102012 on public.customers_102012 customers  (cost=0.42..8.44 rows=1 width=38) (actual time=0.019..0.021 rows=1.00 loops=1)
+                    Output: 'Customer-424242@acme.com'::text, ctid
+                    Index Cond: ((customers.merchant_id = '1'::bigint) AND (customers.customer_id = '1'::bigint))
+                    Filter: (customers.email IS DISTINCT FROM 'Customer-424242@acme.com'::text)
+                    Index Searches: 1
+                    Buffers: shared hit=6
+            Planning:
+              Buffers: shared hit=6
+            Planning Time: 0.042 ms
+            Execution Time: 0.138 ms
+  Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=31
+Planning Time: 0.140 ms
+Execution Time: 1.205 ms
+ROLLBACK;
+ROLLBACK
+==================== T9_update_product.sql
+SELECT MIN(product_id) AS product_id
+FROM products
+WHERE merchant_id = (1)::bigint
+BEGIN;
+BEGIN
+EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
+UPDATE products
+SET price = price + (5)::numeric(12,2)
+WHERE product_id = (1)::bigint
+  AND merchant_id = (1)::bigint;
+Custom Scan (Citus Adaptive)  (cost=0.00..0.00 rows=0 width=0) (actual time=1.094..1.095 rows=0.00 loops=1)
+  Task Count: 1
+  Tasks Shown: All
+  ->  Task
+        Query: UPDATE public.products_102016 products SET price = (price OPERATOR(pg_catalog.+) (5)::numeric(12,2)) WHERE ((product_id OPERATOR(pg_catalog.=) (1)::bigint) AND (merchant_id OPERATOR(pg_catalog.=) (1)::bigint))
+        Node: host=xcnf18 port=5436 dbname=project-936089
+        ->  Update on public.products_102016 products  (cost=0.42..8.44 rows=0 width=0) (actual time=0.121..0.121 rows=0.00 loops=1)
+              Buffers: shared hit=19 read=1 dirtied=1
+              ->  Index Scan using products_pkey_102016 on public.products_102016 products  (cost=0.42..8.44 rows=1 width=22) (actual time=0.009..0.011 rows=1.00 loops=1)
+                    Output: (price + 5.00::numeric(12,2)), ctid
+                    Index Cond: ((products.merchant_id = '1'::bigint) AND (products.product_id = '1'::bigint))
+                    Index Searches: 1
+                    Buffers: shared hit=6
+            Planning:
+              Buffers: shared hit=6
+            Planning Time: 0.046 ms
+            Execution Time: 0.157 ms
+  Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=19
+Planning Time: 0.121 ms
+Execution Time: 1.114 ms
+ROLLBACK;
+ROLLBACK
