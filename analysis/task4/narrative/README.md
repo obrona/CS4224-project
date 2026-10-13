@@ -1,5 +1,8 @@
 # Workload-B narrative data pack (Section 5, experiments onward)
 
+> **Superseded by [`pack/README.md`](../pack/README.md)** (2026-10-13), the evidence pack for Section 5,
+> which covers every run up to `expt_b46`. Kept for the analyses it describes in more detail.
+
 > **Renumbered 2026-10-11.** The `REPEATABLE READ` run described here as `expt_b20` is now
 > `expt_b26` (not carried forward); `expt_b19` is the final design. `expt_b20`/`expt_b21` are
 > new replicates of `expt_b19` and `expt_b22`..`expt_b25` the partitioning cells. The CSVs

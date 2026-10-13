@@ -132,7 +132,7 @@ expt_b24 - expt_b19 with products and inventory as colocated single-shard tables
 
 - Problem: T7 needs a lookup, and its two updates commit across two workers three times in four.
 - Optimisation: Make `products` and `inventory` single-shard tables in one colocation group, so T7 needs no lookup and commits on one worker; every catalog access goes to that worker.
-- Result: T7 falls from 3.7 to 2.4 ms at 1 client, and throughput is 287.6 TPS at 1 client, 3% above `expt_b19` and the best 1-client result under `SERIALIZABLE`. From 16 clients up it is 13 to 17% below (3,348.2 at 64), because the non-delegated T1 rises from 37 to 85 ms at 64 clients and retries from 7,649 to 13,873. T2, T4 and T9, which now all go to one worker, are at most 1.7 ms slower at 64 clients, so most of the loss comes from T1.
+- Result: T7 falls from 3.7 to 2.4 ms at 1 client, and throughput is 287.6 TPS at 1 client, 3% above `expt_b19`. From 16 clients up it is 13 to 17% below (3,348.2 at 64; the 16-client run crossed midnight for its last 464 s, which slows T6, and ran 3,259.3 TPS, 9% below, before it), because the non-delegated T1 rises from 37 to 85 ms at 64 clients and retries from 7,649 to 13,873. T2, T4 and T9, which now all go to one worker, are at most 1.7 ms slower at 64 clients, so most of the loss comes from T1.
 - The first run (job 930969) failed loading `inventory` because of a Citus 14.1.0 bug with `INSERT ... SELECT` between single-shard tables. `inventory` is now loaded from `generate_series`, which gives the same rows, and the results are from job 933678.
 
 expt_b25 - expt_b19 with inventory as a reference table (not carried forward)
@@ -152,88 +152,93 @@ expt_b27 .. expt_b41 - 2^4 ablation around expt_b19 (`ablation_b19/README.md`)
 
 - Problem: Each optimisation from `expt_b8` on was measured against the design before it, so its contribution to the final design, and how it interacts with the others, is unknown.
 - Optimisation: Switch T5 routing, the T6 rollup, T7 routing and T1 delegation off in every combination under `SERIALIZABLE` and 4 shards; an off factor reverts to `expt_b8`'s transaction and drops the tables it added. `expt_b19` is the all-on cell and `expt_b20`/`expt_b21` replicate it.
+- Result: Switched off alone, the T6 rollup costs 5.8 times in mean TPS (`expt_b28`) and T7 routing 5.1 times (`expt_b29`), 6.9 times each at 64 clients, against chain steps of 3.01 (`expt_b12`) and 1.59 (`expt_b10`). T1 delegation costs 1.22 times (`expt_b30`) and T5 routing 1.18 times (`expt_b27`), against 1.11 and 1.07. Each optimisation is worth more in the final design than its step in the chain showed, because in the chain each gain was capped by the next bottleneck.
+- The effects do not add up. With T7 routing off, T7 holds 61 to 63 of the 64 clients in every valid cell; with T7 routed and the rollup off, T6 holds 51 to 55, or T5 if its routing is also off. The rollup and T7 routing need each other: added to the cell with only T1 delegation on (`expt_b37`), T7 routing alone is worth 1.6 times and the rollup alone 1.9 times, against 5.1 and 5.8 times when switched off from the final design; together they are worth 9.6 times (`expt_b34`). T5 routing and T1 delegation help only when both are on (1.09 to 1.22 times) and otherwise change mean TPS by at most 6%.
+- Compared with the removed `REPEATABLE READ` grid, the rollup matters more under `SERIALIZABLE` (5.8 against 5.1 times), because the unrolled T6 scan is slower (33.6 against 29.3 ms at 1 client, 942 against 709 ms at 64); T7 routing is worth slightly less (5.1 against 5.5 times), and T1 delegation and T5 routing are within 0.06 of their values there.
+- Validity: clients abort only in cells with T1 delegation off. T1 then commits across workers in two phases from the coordinator, and a worker rejects its `PREPARE TRANSACTION` on a `SERIALIZABLE` read/write conflict (worker logs: `could not serialize access due to read/write dependencies among transactions`). That reaches pgbench as `could not commit transaction for shard ... on at least one active node`, which it does not retry, so the client aborts. With the rollup also off they become common, presumably because T6 then scans the `orders` rows that T1 inserts: `expt_b38` and `expt_b41` lose 62 of 64 clients at 64 and are not valid from 4 clients up, and `expt_b35` is not valid from 16. `expt_b30` (2 clients at 64) and `expt_b33` (1 at 16) lose a few. No cell with T1 delegated aborts.
 
 expt_b27 - expt_b19 with T5 routing off
 
-- Result: Not run yet.
+- Result: 310.0 TPS at 1 client and 2,970.0 at 8, 11% and 6% above `expt_b19`, because T1 no longer writes `order_merchant_map` on a second worker (4.9 against 10.4 ms at 1 client). From 16 clients up, T5, sent to every `orders` shard, queues on Citus's lock for multi-shard modifications: it takes 192 ms at 64 clients and holds 57 of the 64 clients, and throughput is 2,960.2 (26% below). Retried transactions fall from 963 to 295 at 8 clients and from 7,649 to 352 at 64.
 
 expt_b28 - expt_b19 with the T6 rollup off
 
-- Result: Not run yet.
+- Result: 173.4 TPS at 1 client and 586.2 at 64 (38% and 85% below `expt_b19`). T6 scans `orders` again and takes 33.6 ms at 1 client and 942 ms at 64, where it holds 55 of the 64 clients.
 
 expt_b29 - expt_b19 with T7 routing off
 
-- Result: Not run yet.
+- Result: 129.1 TPS at 1 client and 583.6 at 64 (54% and 85% below). T7, back to six statements sent to every `inventory` shard, takes 17.5 ms at 1 client and 358 ms at 64, where it holds 63 of the 64 clients; throughput peaks at 752.3 at 8 clients and falls 22% by 64.
 
 expt_b30 - expt_b19 with T1 delegation off
 
-- Result: Not run yet.
+- Result: 264.2 TPS at 1 client (5% below) and 2,907.5 at 64 (28% below; not valid, 2 clients aborted). The multi-statement T1 takes 12.3 ms at 1 client and 82 ms at 64 (37 ms in `expt_b19`), holds 24 of the 64 clients, and retried transactions rise from 7,649 to 10,501.
 
 expt_b31 - expt_b19 with T5 routing and the T6 rollup off
 
-- Result: Not run yet.
+- Result: 208.0 TPS at 1 client and 527.2 at 64 (26% and 87% below). T5 holds 53 of the 64 clients at 1,014 ms, and T6 takes 166 ms.
 
 expt_b32 - expt_b19 with T5 routing and T7 routing off
 
-- Result: Not run yet.
+- Result: 135.3 TPS at 1 client and 613.4 at 64 (52% and 85% below), with a peak of 776.7 at 8 clients; T7 holds 63 of the 64 clients. The last 59 s of the 64-client run fell after midnight, which slows T6 (`analysis/task4/ablation/README.md`), but T6 is not the bottleneck here.
 
 expt_b33 - expt_b19 with T5 routing and T1 delegation off
 
-- Result: Not run yet.
+- Result: 257.5 TPS at 1 client and 2,631.2 at 64 (8% and 35% below; 1 client aborted at 16). As in `expt_b27`, T5 holds 54 of the 64 clients, at 206 ms.
 
 expt_b34 - expt_b19 with the T6 rollup and T7 routing off
 
-- Result: Not run yet.
+- Result: 114.7 TPS at 1 client and 308.8 at 64 (59% and 92% below), flat from 8 clients; T7 holds 62 of the 64 clients. With both the rollup and T7 routing off, mean TPS is 9.6 times lower than `expt_b19`'s.
 
 expt_b35 - expt_b19 with the T6 rollup and T1 delegation off
 
-- Result: Not run yet.
+- Result: 164.6 TPS at 1 client and 644.9 at 64 (41% and 84% below); T6 holds 51 of the 64 clients. Not valid from 16 clients up: 4, 5 and 9 clients aborted at 16, 32 and 64 when T1's commit failed.
 
 expt_b36 - expt_b19 with T7 routing and T1 delegation off
 
-- Result: Not run yet.
+- Result: 125.0 TPS at 1 client and 605.1 at 64 (55% and 85% below), with a peak of 765.0 at 8 clients; T7 holds 63 of the 64 clients.
 
 expt_b37 - expt_b19 with T5 routing, the T6 rollup and T7 routing off
 
-- Result: Not run yet.
+- Result: 124.3 TPS at 1 client and 313.3 at 64 (56% and 92% below), with a peak of 344.6 at 8 clients; T7 holds 62 of the 64 clients.
 
 expt_b38 - expt_b19 with T5 routing, the T6 rollup and T1 delegation off
 
-- Result: Not run yet.
+- Result: 172.0 TPS at 1 client (38% below). Not valid from 4 clients up: 2, 7, 14, 30 and 62 clients aborted at 4, 8, 16, 32 and 64 clients when T1's commit failed, so only 2 clients were left by the end of the 64-client run.
 
 expt_b39 - expt_b19 with T5 routing, T7 routing and T1 delegation off
 
-- Result: Not run yet.
+- Result: 123.9 TPS at 1 client and 676.6 at 64 (56% and 83% below), with a peak of 775.0 at 8 clients; T7 holds 63 of the 64 clients.
 
 expt_b40 - expt_b19 with the T6 rollup, T7 routing and T1 delegation off
 
-- Result: Not run yet.
+- Result: 110.7 TPS at 1 client and 327.6 at 64 (60% and 92% below); T7 holds 61 of the 64 clients. Unlike `expt_b35`, `expt_b38` and `expt_b41`, no client aborts, probably because T7 holds nearly all of them.
 
 expt_b41 - expt_b19 with T5 routing, the T6 rollup, T7 routing and T1 delegation off
 
-- Result: Not run yet.
+- Result: 109.5 TPS at 1 client, 61% below `expt_b19` and 1.8 times `expt_b8`'s 61.6, which ran the same four transactions on 32 shards. Not valid from 4 clients up: 2, 6, 14, 30 and 62 clients aborted at 4, 8, 16, 32 and 64 clients when T1's commit failed.
 
 expt_b42 .. expt_b46 - expt_b19 at 1, 2, 8, 16 and 32 shards (`ablation_b19/README.md`)
 
 - Problem: The shard count was swept (`expt_b13` 32, `expt_b14` 8, `expt_b15` 4) before T7 was routed through the reference table, and never below one shard per worker.
 - Optimisation: None; each cell changes only the `CITUS_SHARD_COUNT` default in `expt_b19`'s `run.sh`. With 1 or 2 shards the merchant-colocated tables sit on 1 or 2 of the 4 workers.
+- Result: 4 shards, one per worker, gives the highest throughput from 8 clients up. Fewer shards win at low load because fewer transactions commit across workers (1 shard: 356.0 TPS at 1 client, 27% above `expt_b19`; 2 shards: 1,612.4 at 4 clients, 23% above), but they put all tenant data on 1 or 2 workers, which saturate (peaks of 1,548.2 and 2,415.9 TPS). More shards cost T6, which runs one task per shard: at 64 clients it takes 32 ms with 4 shards, 111 with 8, 173 with 16 and 272 with 32, and throughput falls to 63%, 52% and 32% of `expt_b19`'s. This matches the earlier sweep on the design before the reference table (`expt_b13` to `expt_b15`).
 
 expt_b42 - expt_b19 with 1 shard per table
 
-- Result: Not run yet.
+- Result: 356.0 TPS at 1 client, 27% above `expt_b19` and the highest of any experiment. Every distributed table, `order_merchant_map` included, sits on xcnf18, so T1 commits on one node (2.6 against 10.4 ms) and so does T7 (2.6 against 3.7 ms); T6 runs as one task and takes 13.0 against 8.6 ms. The other three workers hold nothing: throughput peaks at 1,548.2 at 8 clients and is 1,447.3 at 64 (64% below).
 
 expt_b43 - expt_b19 with 2 shards per table
 
-- Result: Not run yet.
+- Result: 1,612.4 TPS at 4 clients, 23% above `expt_b19`, but 2,361.6 at 64 (41% below), with a peak of 2,415.9 at 32: two of the four workers hold all the tenant data. 259.3 TPS at 1 client (7% below).
 
 expt_b44 - expt_b19 with 8 shards per table
 
-- Result: Not run yet.
+- Result: 5 to 8% below `expt_b19` up to 16 clients (peak 3,353.1), then 2,537.9 at 64 (37% below). T6 runs 8 tasks and takes 111 ms at 64 clients, against 32 ms.
 
 expt_b45 - expt_b19 with 16 shards per table
 
-- Result: Not run yet.
+- Result: 236.1 TPS at 1 client and 2,081.3 at 64 (16% and 48% below), with a peak of 2,783.1 at 16. T6 takes 14.6 ms at 1 client and 173 ms at 64.
 
 expt_b46 - expt_b19 with 32 shards per table
 
-- Result: Not run yet.
+- Result: 215.8 TPS at 1 client and 1,269.9 at 64 (23% and 68% below). Throughput peaks at 1,997.3 at 8 clients and dips to 1,236.2 at 16, as `expt_b13` did with 32 shards. T6 takes 19.4 ms at 1 client and 272 ms at 64.

@@ -229,7 +229,7 @@ def fig_t7_variants():
     yticklabel style={{/pgf/number format/fixed,/pgf/number format/precision=1,/pgf/number format/fixed zerofill}},
     ylabel={{Relative TPS}},
   ]
-  \fill[black!7] (axis cs:0.75,0.95) rectangle (axis cs:85,1.05);
+  \fill[black!7] (axis cs:0.75,0.98) rectangle (axis cs:85,1.02);
   \draw[black!55,line width=0.6pt] (axis cs:0.75,1) -- (axis cs:85,1);
 {chr(10).join(right)}
   \end{{axis}}
@@ -239,7 +239,9 @@ def fig_t7_variants():
                 r"The four ways of routing \txn{7} that branch from \expt{b15}, at every client count. "
                 r"Left: \txn{7}'s own mean latency. Right: total throughput; error bars are 95\% "
                 r"intervals from ten 60\,s windows of the same run (within-run noise only), and the "
-                r"shaded band is the $\pm$5\% run-to-run variation of the conditions check. Cutting "
+                r"shaded band is $\pm$2\%, the largest spread between the three runs of the final design "
+                r"(\expt{b19}--\expt{b21}). The dip of \expt{b17} at 8 clients is a run that crossed "
+                r"midnight (see the evidence pack). Cutting "
                 r"\txn{7}'s latency by a fifth (\expt{b19}) raises TPS by 6--10\% at 1--8 clients but "
                 r"only 3\% at 64.", body)
 
