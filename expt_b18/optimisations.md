@@ -91,7 +91,7 @@ it with `ANALYZE`. The debit and credit are shown as before, inside
   count (mostly within 3%), so the two runs saw the same conditions.
 - **Retries rose** at 64 clients, from 5996 to 6895 retried transactions,
   and serialization failures from 83 to 121. Almost all of them are T1's (see
-  `expt_b19/optimisations.md` and `expt_b20/optimisations.md`). They grow
+  `expt_b19/optimisations.md` and `expt_b26/optimisations.md`). They grow
   with throughput.
 
 `expt_b19` adds the reference table on top of this merged lookup and is

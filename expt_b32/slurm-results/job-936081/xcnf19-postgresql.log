@@ -1,0 +1,557 @@
+2026-10-12 22:47:51.467 +08 [3715651] LOG:  There is no designated Main database.
+2026-10-12 22:47:51.467 +08 [3715651] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-12 22:47:51.467 +08 [3715651] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-12 22:47:51.577 +08 [3715651] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-12 22:47:51.577 +08 [3715651] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-12 22:47:51.577 +08 [3715651] LOG:  listening on IPv6 address "::", port 5436
+2026-10-12 22:47:51.578 +08 [3715651] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-12 22:47:51.581 +08 [3715658] LOG:  database system was shut down at 2026-10-12 22:47:50 +08
+2026-10-12 22:47:51.585 +08 [3715651] LOG:  database system is ready to accept connections
+2026-10-12 22:47:53.807 +08 [3715666] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-12 22:47:53.807 +08 [3715666] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-12 23:00:50.934 +08 [3715651] LOG:  received fast shutdown request
+2026-10-12 23:00:50.934 +08 [3715651] LOG:  aborting any active transactions
+2026-10-12 23:00:50.934 +08 [3715824] FATAL:  terminating connection due to administrator command
+2026-10-12 23:00:50.934 +08 [3715823] FATAL:  terminating connection due to administrator command
+2026-10-12 23:00:50.934 +08 [3715841] FATAL:  terminating connection due to administrator command
+2026-10-12 23:00:50.939 +08 [3715651] LOG:  background worker "logical replication launcher" (PID 3715661) exited with exit code 1
+2026-10-12 23:00:50.962 +08 [3715870] LOG:  PID 3715823 in cancel request did not match any process
+2026-10-12 23:00:50.976 +08 [3715656] LOG:  shutting down
+2026-10-12 23:00:50.977 +08 [3715656] LOG:  checkpoint starting: shutdown immediate
+2026-10-12 23:00:51.008 +08 [3715871] LOG:  PID 3715824 in cancel request did not match any process
+2026-10-12 23:00:51.699 +08 [3715656] LOG:  checkpoint complete: wrote 98289 buffers (75.0%), wrote 26 SLRU buffers; 0 WAL file(s) added, 0 removed, 270 recycled; write=0.685 s, sync=0.003 s, total=0.723 s; sync files=538, longest=0.001 s, average=0.001 s; distance=4422407 kB, estimate=4422407 kB; lsn=1/F620DE8, redo lsn=1/F620DE8
+2026-10-12 23:00:52.005 +08 [3715651] LOG:  database system is shut down
+2026-10-12 23:00:54.356 +08 [3715889] LOG:  There is no designated Main database.
+2026-10-12 23:00:54.356 +08 [3715889] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-12 23:00:54.356 +08 [3715889] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-12 23:00:54.467 +08 [3715889] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-12 23:00:54.467 +08 [3715889] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-12 23:00:54.467 +08 [3715889] LOG:  listening on IPv6 address "::", port 5436
+2026-10-12 23:00:54.468 +08 [3715889] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-12 23:00:54.471 +08 [3715896] LOG:  database system was shut down at 2026-10-12 23:00:51 +08
+2026-10-12 23:00:54.475 +08 [3715889] LOG:  database system is ready to accept connections
+2026-10-12 23:00:55.406 +08 [3715904] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-12 23:00:55.406 +08 [3715904] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-12 23:02:27.730 +08 [3715930] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:02:27.730 +08 [3715930] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:02:27.730 +08 [3715930] HINT:  The transaction might succeed if retried.
+2026-10-12 23:02:27.730 +08 [3715930] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 4), updated_at = '2026-10-12 23:02:27.758092'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '99127'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 4)) RETURNING 1 AS "?column?"
+2026-10-12 23:02:50.026 +08 [3715944] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:02:50.026 +08 [3715944] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:02:50.026 +08 [3715944] STATEMENT:  SELECT public.place_order('64'::bigint, '130064'::bigint, '5002367'::bigint, 2, '{335064,360064,331064,330064,406064}'::bigint[], '{5,3,2,4,1}'::integer[], '{15006971,15006972,0,0,0}'::bigint[]) AS place_order
+2026-10-12 23:06:17.047 +08 [3715947] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:06:17.047 +08 [3715947] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:06:17.047 +08 [3715947] STATEMENT:  SELECT public.place_order('84'::bigint, '641084'::bigint, '5009702'::bigint, 5, '{378084,377084,349084,211084,20084}'::bigint[], '{1,5,3,4,5}'::integer[], '{15028863,15028864,15028865,15028866,15028867}'::bigint[]) AS place_order
+2026-10-12 23:12:52.214 +08 [3715889] LOG:  received fast shutdown request
+2026-10-12 23:12:52.214 +08 [3715889] LOG:  aborting any active transactions
+2026-10-12 23:12:52.214 +08 [3716023] FATAL:  terminating connection due to administrator command
+2026-10-12 23:12:52.214 +08 [3716034] FATAL:  terminating connection due to administrator command
+2026-10-12 23:12:52.214 +08 [3716025] FATAL:  terminating connection due to administrator command
+2026-10-12 23:12:52.219 +08 [3715889] LOG:  background worker "logical replication launcher" (PID 3715899) exited with exit code 1
+2026-10-12 23:12:52.254 +08 [3715894] LOG:  shutting down
+2026-10-12 23:12:52.255 +08 [3715894] LOG:  checkpoint starting: shutdown immediate
+2026-10-12 23:12:52.407 +08 [3716057] LOG:  PID 3716023 in cancel request did not match any process
+2026-10-12 23:12:52.408 +08 [3716058] LOG:  PID 3716025 in cancel request did not match any process
+2026-10-12 23:12:53.041 +08 [3715894] LOG:  checkpoint complete: wrote 111084 buffers (84.8%), wrote 65 SLRU buffers; 0 WAL file(s) added, 0 removed, 138 recycled; write=0.768 s, sync=0.001 s, total=0.787 s; sync files=54, longest=0.001 s, average=0.001 s; distance=2267991 kB, estimate=2267991 kB; lsn=1/99CF6D90, redo lsn=1/99CF6D90
+2026-10-12 23:12:53.319 +08 [3715889] LOG:  database system is shut down
+2026-10-12 23:12:55.731 +08 [3716075] LOG:  There is no designated Main database.
+2026-10-12 23:12:55.731 +08 [3716075] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-12 23:12:55.731 +08 [3716075] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-12 23:12:55.842 +08 [3716075] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-12 23:12:55.842 +08 [3716075] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-12 23:12:55.842 +08 [3716075] LOG:  listening on IPv6 address "::", port 5436
+2026-10-12 23:12:55.843 +08 [3716075] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-12 23:12:55.847 +08 [3716082] LOG:  database system was shut down at 2026-10-12 23:12:53 +08
+2026-10-12 23:12:55.850 +08 [3716075] LOG:  database system is ready to accept connections
+2026-10-12 23:12:56.789 +08 [3716090] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-12 23:12:56.789 +08 [3716090] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-12 23:14:14.884 +08 [3716127] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:14:14.884 +08 [3716127] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:14:14.884 +08 [3716127] HINT:  The transaction might succeed if retried.
+2026-10-12 23:14:14.884 +08 [3716127] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 4), updated_at = '2026-10-12 23:14:14.906796'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '280821'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 4)) RETURNING 1 AS "?column?"
+2026-10-12 23:15:28.344 +08 [3716140] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:15:28.344 +08 [3716140] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:15:28.344 +08 [3716140] STATEMENT:  SELECT public.place_order('51'::bigint, '197051'::bigint, '5007617'::bigint, 2, '{171051,237051,286051,460051,231051}'::bigint[], '{4,2,1,4,3}'::integer[], '{15022686,15022687,0,0,0}'::bigint[]) AS place_order
+2026-10-12 23:16:02.117 +08 [3716142] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:16:02.117 +08 [3716142] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:16:02.117 +08 [3716142] STATEMENT:  SELECT public.place_order('37'::bigint, '40037'::bigint, '5010254'::bigint, 1, '{149037,371037,497037,300037,64037}'::bigint[], '{4,1,4,4,1}'::integer[], '{15030710,0,0,0,0}'::bigint[]) AS place_order
+2026-10-12 23:16:33.614 +08 [3716154] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:16:33.614 +08 [3716154] CONTEXT:  SQL statement "UPDATE public.inventory i
+	    SET quantity   = i.quantity - v_prod_qtys[k],
+	        updated_at = CURRENT_TIMESTAMP
+	    WHERE i.merchant_id = p_merchant_id
+	      AND i.product_id = v_prod_ids[k]"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 54 at SQL statement
+2026-10-12 23:16:33.614 +08 [3716154] STATEMENT:  SELECT public.place_order('746'::bigint, '806746'::bigint, '5012678'::bigint, 5, '{479746,454746,208746,228746,316746}'::bigint[], '{2,5,3,3,3}'::integer[], '{15038038,15038039,15038040,15038041,15038042}'::bigint[]) AS place_order
+2026-10-12 23:16:48.721 +08 [3716139] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:16:48.721 +08 [3716139] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:16:48.721 +08 [3716139] STATEMENT:  SELECT public.place_order('45'::bigint, '900045'::bigint, '5013807'::bigint, 3, '{498045,19045,175045,29045,206045}'::bigint[], '{5,1,4,4,1}'::integer[], '{15041496,15041497,15041498,0,0}'::bigint[]) AS place_order
+2026-10-12 23:17:56.412 +08 [3716162] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:17:56.412 +08 [3716162] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-12 23:17:56.437027'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '283098'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:22:11.952 +08 [3716145] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:22:11.952 +08 [3716145] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-12 23:22:11.970232'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '28316'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:22:47.844 +08 [3716162] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:22:47.844 +08 [3716162] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:22:47.844 +08 [3716162] STATEMENT:  SELECT public.place_order('19'::bigint, '454019'::bigint, '5041744'::bigint, 3, '{442019,276019,22019,280019,272019}'::bigint[], '{5,3,5,2,5}'::integer[], '{15125372,15125373,15125374,0,0}'::bigint[]) AS place_order
+2026-10-12 23:24:53.692 +08 [3716090] WARNING:  terminating connection due to administrator command
+2026-10-12 23:24:53.692 +08 [3716090] CONTEXT:  while executing command on xcnf18:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-10-12 23:24:54.711 +08 [3716075] LOG:  received fast shutdown request
+2026-10-12 23:24:54.711 +08 [3716075] LOG:  aborting any active transactions
+2026-10-12 23:24:54.712 +08 [3716243] FATAL:  terminating connection due to administrator command
+2026-10-12 23:24:54.712 +08 [3716230] FATAL:  terminating connection due to administrator command
+2026-10-12 23:24:54.714 +08 [3716229] FATAL:  terminating connection due to administrator command
+2026-10-12 23:24:54.717 +08 [3716075] LOG:  background worker "logical replication launcher" (PID 3716085) exited with exit code 1
+2026-10-12 23:24:54.749 +08 [3716080] LOG:  shutting down
+2026-10-12 23:24:54.749 +08 [3716080] LOG:  checkpoint starting: shutdown immediate
+2026-10-12 23:24:55.548 +08 [3716080] LOG:  checkpoint complete: wrote 113790 buffers (86.8%), wrote 136 SLRU buffers; 0 WAL file(s) added, 0 removed, 144 recycled; write=0.781 s, sync=0.001 s, total=0.799 s; sync files=54, longest=0.001 s, average=0.001 s; distance=2349948 kB, estimate=2349948 kB; lsn=2/293D5E38, redo lsn=2/293D5E38
+2026-10-12 23:24:55.846 +08 [3716075] LOG:  database system is shut down
+2026-10-12 23:24:58.250 +08 [3716281] LOG:  There is no designated Main database.
+2026-10-12 23:24:58.250 +08 [3716281] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-12 23:24:58.250 +08 [3716281] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-12 23:24:58.360 +08 [3716281] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-12 23:24:58.361 +08 [3716281] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-12 23:24:58.361 +08 [3716281] LOG:  listening on IPv6 address "::", port 5436
+2026-10-12 23:24:58.361 +08 [3716281] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-12 23:24:58.365 +08 [3716288] LOG:  database system was shut down at 2026-10-12 23:24:55 +08
+2026-10-12 23:24:58.368 +08 [3716281] LOG:  database system is ready to accept connections
+2026-10-12 23:24:59.309 +08 [3716296] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-12 23:24:59.309 +08 [3716296] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-12 23:25:54.251 +08 [3716328] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:25:54.251 +08 [3716328] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:25:54.251 +08 [3716328] HINT:  The transaction might succeed if retried.
+2026-10-12 23:25:54.251 +08 [3716328] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-12 23:25:54.23813'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '354875'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-12 23:26:08.061 +08 [3716348] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:26:08.061 +08 [3716348] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:26:08.061 +08 [3716348] HINT:  The transaction might succeed if retried.
+2026-10-12 23:26:08.061 +08 [3716348] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 2), updated_at = '2026-10-12 23:26:08.048401'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '63378'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 2)) RETURNING 1 AS "?column?"
+2026-10-12 23:26:29.481 +08 [3716324] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:26:29.481 +08 [3716324] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:26:29.481 +08 [3716324] STATEMENT:  SELECT public.place_order('54'::bigint, '197054'::bigint, '5002781'::bigint, 3, '{128054,99054,37054,235054,154054}'::bigint[], '{5,2,4,4,2}'::integer[], '{15008231,15008232,15008233,0,0}'::bigint[]) AS place_order
+2026-10-12 23:26:43.409 +08 [3716337] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:26:43.409 +08 [3716337] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:26:43.409 +08 [3716337] STATEMENT:  SELECT public.place_order('84'::bigint, '76084'::bigint, '5003906'::bigint, 5, '{307084,7084,349084,341084,389084}'::bigint[], '{4,4,3,1,4}'::integer[], '{15011636,15011637,15011638,15011639,15011640}'::bigint[]) AS place_order
+2026-10-12 23:27:21.308 +08 [3716384] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:27:21.308 +08 [3716384] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:27:21.308 +08 [3716384] STATEMENT:  SELECT public.place_order('51'::bigint, '244051'::bigint, '5006823'::bigint, 5, '{317051,81051,332051,1051,441051}'::bigint[], '{2,4,5,1,2}'::integer[], '{15020435,15020436,15020437,15020438,15020439}'::bigint[]) AS place_order
+2026-10-12 23:27:26.343 +08 [3716368] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:27:26.343 +08 [3716368] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:27:26.343 +08 [3716368] STATEMENT:  SELECT public.place_order('601'::bigint, '520601'::bigint, '5007229'::bigint, 4, '{191601,81601,46601,125601,420601}'::bigint[], '{5,5,5,2,3}'::integer[], '{15021668,15021669,15021670,15021671,0}'::bigint[]) AS place_order
+2026-10-12 23:27:46.052 +08 [3716382] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:27:46.052 +08 [3716382] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-12 23:27:46.023073'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '379324'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:29:31.970 +08 [3716378] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:29:31.970 +08 [3716378] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:29:31.970 +08 [3716378] STATEMENT:  SELECT public.place_order('3'::bigint, '329003'::bigint, '5016595'::bigint, 2, '{183003,464003,213003,52003,99003}'::bigint[], '{1,3,3,1,4}'::integer[], '{15049675,15049676,0,0,0}'::bigint[]) AS place_order
+2026-10-12 23:32:51.186 +08 [3716390] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:32:51.186 +08 [3716390] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:32:51.186 +08 [3716390] STATEMENT:  SELECT public.place_order('89'::bigint, '298089'::bigint, '5031897'::bigint, 3, '{366089,443089,347089,60089,475089}'::bigint[], '{3,1,3,4,4}'::integer[], '{15095940,15095941,15095942,0,0}'::bigint[]) AS place_order
+2026-10-12 23:35:31.298 +08 [3716431] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:35:31.298 +08 [3716431] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 2), updated_at = '2026-10-12 23:35:31.281182'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '329014'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:35:47.700 +08 [3716388] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:35:47.700 +08 [3716388] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:35:47.700 +08 [3716388] STATEMENT:  SELECT public.place_order('96'::bigint, '628096'::bigint, '5045337'::bigint, 1, '{394096,485096,434096,280096,124096}'::bigint[], '{4,4,2,3,1}'::integer[], '{15136327,0,0,0,0}'::bigint[]) AS place_order
+2026-10-12 23:36:20.518 +08 [3716382] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:36:20.518 +08 [3716382] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 2), updated_at = '2026-10-12 23:36:20.499602'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '320944'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:36:56.208 +08 [3716296] WARNING:  terminating connection due to administrator command
+2026-10-12 23:36:56.208 +08 [3716296] CONTEXT:  while executing command on xcnf18:5436
+	Citus maintenance daemon for database 16384 user 10
+2026-10-12 23:36:57.366 +08 [3716281] LOG:  received fast shutdown request
+2026-10-12 23:36:57.366 +08 [3716281] LOG:  aborting any active transactions
+2026-10-12 23:36:57.366 +08 [3716457] FATAL:  terminating connection due to administrator command
+2026-10-12 23:36:57.366 +08 [3716455] FATAL:  terminating connection due to administrator command
+2026-10-12 23:36:57.366 +08 [3716474] FATAL:  terminating connection due to administrator command
+2026-10-12 23:36:57.373 +08 [3716281] LOG:  background worker "logical replication launcher" (PID 3716291) exited with exit code 1
+2026-10-12 23:36:57.404 +08 [3716286] LOG:  shutting down
+2026-10-12 23:36:57.404 +08 [3716286] LOG:  checkpoint starting: shutdown immediate
+2026-10-12 23:36:58.201 +08 [3716286] LOG:  checkpoint complete: wrote 113526 buffers (86.6%), wrote 133 SLRU buffers; 0 WAL file(s) added, 0 removed, 143 recycled; write=0.778 s, sync=0.001 s, total=0.797 s; sync files=54, longest=0.001 s, average=0.001 s; distance=2345726 kB, estimate=2345726 kB; lsn=2/B86957A8, redo lsn=2/B86957A8
+2026-10-12 23:36:58.214 +08 [3716502] LOG:  PID 3716457 in cancel request did not match any process
+2026-10-12 23:36:58.215 +08 [3716503] LOG:  PID 3716455 in cancel request did not match any process
+2026-10-12 23:36:58.486 +08 [3716281] LOG:  database system is shut down
+2026-10-12 23:37:00.904 +08 [3716520] LOG:  There is no designated Main database.
+2026-10-12 23:37:00.904 +08 [3716520] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-12 23:37:00.904 +08 [3716520] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-12 23:37:01.015 +08 [3716520] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-12 23:37:01.015 +08 [3716520] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-12 23:37:01.015 +08 [3716520] LOG:  listening on IPv6 address "::", port 5436
+2026-10-12 23:37:01.015 +08 [3716520] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-12 23:37:01.019 +08 [3716527] LOG:  database system was shut down at 2026-10-12 23:36:58 +08
+2026-10-12 23:37:01.023 +08 [3716520] LOG:  database system is ready to accept connections
+2026-10-12 23:37:01.958 +08 [3716535] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-12 23:37:01.958 +08 [3716535] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-12 23:37:57.939 +08 [3716569] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:37:57.939 +08 [3716569] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:37:57.939 +08 [3716569] HINT:  The transaction might succeed if retried.
+2026-10-12 23:37:57.939 +08 [3716569] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 4), updated_at = '2026-10-12 23:37:57.762037'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '310182'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 4)) RETURNING 1 AS "?column?"
+2026-10-12 23:37:58.830 +08 [3716573] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:37:58.830 +08 [3716573] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:37:58.830 +08 [3716573] HINT:  The transaction might succeed if retried.
+2026-10-12 23:37:58.830 +08 [3716573] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-12 23:37:58.733644'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '74625'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-12 23:37:59.425 +08 [3716574] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:37:59.425 +08 [3716574] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:37:59.425 +08 [3716574] HINT:  The transaction might succeed if retried.
+2026-10-12 23:37:59.425 +08 [3716574] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-12 23:37:59.332658'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '58120'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:38:00.279 +08 [3716576] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:38:00.279 +08 [3716576] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:38:00.279 +08 [3716576] HINT:  The transaction might succeed if retried.
+2026-10-12 23:38:00.279 +08 [3716576] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 4), updated_at = '2026-10-12 23:38:00.056969'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '44464'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 4)) RETURNING 1 AS "?column?"
+2026-10-12 23:38:02.459 +08 [3716571] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:38:02.459 +08 [3716571] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:38:02.459 +08 [3716571] HINT:  The transaction might succeed if retried.
+2026-10-12 23:38:02.459 +08 [3716571] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-12 23:38:02.350193'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '376436'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:38:06.746 +08 [3716585] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:38:06.746 +08 [3716585] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:38:06.746 +08 [3716585] HINT:  The transaction might succeed if retried.
+2026-10-12 23:38:06.746 +08 [3716585] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-12 23:38:06.658586'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '64619'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:38:13.740 +08 [3716577] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:38:13.740 +08 [3716577] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:38:13.740 +08 [3716577] HINT:  The transaction might succeed if retried.
+2026-10-12 23:38:13.740 +08 [3716577] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-12 23:38:13.655161'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '495587'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:38:14.967 +08 [3716578] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:38:14.967 +08 [3716578] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:38:14.967 +08 [3716578] HINT:  The transaction might succeed if retried.
+2026-10-12 23:38:14.967 +08 [3716578] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 2), updated_at = '2026-10-12 23:38:14.788596'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '466379'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 2)) RETURNING 1 AS "?column?"
+2026-10-12 23:38:33.934 +08 [3716610] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:38:33.934 +08 [3716610] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 5), updated_at = '2026-10-12 23:38:33.793047'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '432287'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 5)) RETURNING 1 AS "?column?"
+2026-10-12 23:38:36.628 +08 [3716578] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:38:36.628 +08 [3716578] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 5), updated_at = '2026-10-12 23:38:36.543728'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '187816'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 5)) RETURNING 1 AS "?column?"
+2026-10-12 23:38:49.788 +08 [3716600] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:38:49.788 +08 [3716600] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:38:49.788 +08 [3716600] HINT:  The transaction might succeed if retried.
+2026-10-12 23:38:49.788 +08 [3716600] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-12 23:38:49.693556'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '481212'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-12 23:39:06.948 +08 [3716648] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:39:06.948 +08 [3716648] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 2), updated_at = '2026-10-12 23:39:06.869346'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '288646'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 2)) RETURNING 1 AS "?column?"
+2026-10-12 23:39:43.255 +08 [3716638] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:39:43.255 +08 [3716638] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-12 23:39:43.070696'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '422316'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:40:00.322 +08 [3716621] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:40:00.322 +08 [3716621] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-12 23:40:00.239147'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '51065'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:40:22.864 +08 [3716638] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:40:22.864 +08 [3716638] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:40:22.864 +08 [3716638] STATEMENT:  SELECT public.place_order('37'::bigint, '509037'::bigint, '5009142'::bigint, 1, '{341037,286037,6037,139037,36037}'::bigint[], '{5,4,5,5,3}'::integer[], '{15027497,0,0,0,0}'::bigint[]) AS place_order
+2026-10-12 23:40:26.499 +08 [3716636] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:40:26.499 +08 [3716636] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-12 23:40:26.390734'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '57559'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-12 23:42:12.019 +08 [3716644] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:42:12.019 +08 [3716644] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:42:12.019 +08 [3716644] STATEMENT:  SELECT public.place_order('14'::bigint, '684014'::bigint, '5016410'::bigint, 2, '{127014,242014,212014,257014,449014}'::bigint[], '{2,5,3,2,2}'::integer[], '{15049398,15049399,0,0,0}'::bigint[]) AS place_order
+2026-10-12 23:42:43.371 +08 [3716619] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:42:43.371 +08 [3716619] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 4), updated_at = '2026-10-12 23:42:43.274966'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '294142'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:42:52.432 +08 [3716625] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:42:52.432 +08 [3716625] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 4), updated_at = '2026-10-12 23:42:52.352934'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '125147'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 4)) RETURNING 1 AS "?column?"
+2026-10-12 23:43:53.666 +08 [3716626] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:43:53.666 +08 [3716626] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-12 23:43:53.582558'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '1967'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-12 23:43:57.229 +08 [3716643] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:43:57.229 +08 [3716643] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-12 23:43:57.148609'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '285217'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:44:11.394 +08 [3716647] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:44:11.394 +08 [3716647] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-12 23:44:11.286368'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '458908'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:44:44.548 +08 [3716634] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:44:44.548 +08 [3716634] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 2), updated_at = '2026-10-12 23:44:44.458415'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '86123'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:45:12.054 +08 [3716628] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:45:12.054 +08 [3716628] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-12 23:45:11.946758'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '66442'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:45:27.959 +08 [3716675] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:45:27.959 +08 [3716675] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:45:27.959 +08 [3716675] STATEMENT:  SELECT public.place_order('85'::bigint, '860085'::bigint, '5029617'::bigint, 4, '{482085,302085,24085,317085,199085}'::bigint[], '{2,3,4,2,1}'::integer[], '{15089159,15089160,15089161,15089162,0}'::bigint[]) AS place_order
+2026-10-12 23:46:23.103 +08 [3716648] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:46:23.103 +08 [3716648] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:46:23.103 +08 [3716648] STATEMENT:  SELECT public.place_order('3'::bigint, '698003'::bigint, '5033158'::bigint, 1, '{363003,281003,52003,382003,37003}'::bigint[], '{5,2,1,1,5}'::integer[], '{15099769,0,0,0,0}'::bigint[]) AS place_order
+2026-10-12 23:47:11.067 +08 [3716622] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:47:11.067 +08 [3716622] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 2), updated_at = '2026-10-12 23:47:10.975691'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '244967'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 2)) RETURNING 1 AS "?column?"
+2026-10-12 23:47:40.062 +08 [3716646] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:47:40.062 +08 [3716646] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-12 23:47:39.959484'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '291376'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:48:21.124 +08 [3716628] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:48:21.124 +08 [3716628] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-12 23:48:21.034804'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '41014'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:49:00.115 +08 [3716520] LOG:  received fast shutdown request
+2026-10-12 23:49:00.115 +08 [3716520] LOG:  aborting any active transactions
+2026-10-12 23:49:00.115 +08 [3716758] FATAL:  terminating connection due to administrator command
+2026-10-12 23:49:00.115 +08 [3716749] FATAL:  terminating connection due to administrator command
+2026-10-12 23:49:00.115 +08 [3716747] FATAL:  terminating connection due to administrator command
+2026-10-12 23:49:00.120 +08 [3716520] LOG:  background worker "logical replication launcher" (PID 3716530) exited with exit code 1
+2026-10-12 23:49:00.156 +08 [3716525] LOG:  shutting down
+2026-10-12 23:49:00.156 +08 [3716525] LOG:  checkpoint starting: shutdown immediate
+2026-10-12 23:49:00.876 +08 [3716785] LOG:  PID 3716747 in cancel request did not match any process
+2026-10-12 23:49:00.884 +08 [3716786] LOG:  PID 3716749 in cancel request did not match any process
+2026-10-12 23:49:00.943 +08 [3716525] LOG:  checkpoint complete: wrote 113098 buffers (86.3%), wrote 118 SLRU buffers; 0 WAL file(s) added, 0 removed, 142 recycled; write=0.771 s, sync=0.001 s, total=0.788 s; sync files=54, longest=0.001 s, average=0.001 s; distance=2327506 kB, estimate=2327506 kB; lsn=3/4678A088, redo lsn=3/4678A088
+2026-10-12 23:49:01.227 +08 [3716520] LOG:  database system is shut down
+2026-10-12 23:49:03.641 +08 [3716803] LOG:  There is no designated Main database.
+2026-10-12 23:49:03.641 +08 [3716803] LOG:  number of prepared transactions has not been configured, overriding
+2026-10-12 23:49:03.641 +08 [3716803] DETAIL:  max_prepared_transactions is now set to 2000
+2026-10-12 23:49:03.752 +08 [3716803] LOG:  starting PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, 64-bit
+2026-10-12 23:49:03.753 +08 [3716803] LOG:  listening on IPv4 address "0.0.0.0", port 5436
+2026-10-12 23:49:03.753 +08 [3716803] LOG:  listening on IPv6 address "::", port 5436
+2026-10-12 23:49:03.753 +08 [3716803] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5436"
+2026-10-12 23:49:03.757 +08 [3716810] LOG:  database system was shut down at 2026-10-12 23:49:00 +08
+2026-10-12 23:49:03.761 +08 [3716803] LOG:  database system is ready to accept connections
+2026-10-12 23:49:04.697 +08 [3716819] LOG:  starting maintenance daemon on database 16384 user 10
+2026-10-12 23:49:04.697 +08 [3716819] CONTEXT:  Citus maintenance daemon for database 16384 user 10
+2026-10-12 23:49:59.335 +08 [3716864] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:49:59.335 +08 [3716864] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:49:59.335 +08 [3716864] HINT:  The transaction might succeed if retried.
+2026-10-12 23:49:59.335 +08 [3716864] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-12 23:49:59.066172'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '61781'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:49:59.964 +08 [3716876] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:49:59.964 +08 [3716876] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:49:59.964 +08 [3716876] HINT:  The transaction might succeed if retried.
+2026-10-12 23:49:59.964 +08 [3716876] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 4), updated_at = '2026-10-12 23:49:59.719216'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '466837'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:00.755 +08 [3716851] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:00.755 +08 [3716851] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:00.755 +08 [3716851] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:00.755 +08 [3716851] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-12 23:50:00.251991'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '126919'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:04.696 +08 [3716897] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:04.696 +08 [3716897] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:04.696 +08 [3716897] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:04.696 +08 [3716897] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 1), updated_at = '2026-10-12 23:50:04.468813'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '398098'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 1)) RETURNING 1 AS "?column?"
+2026-10-12 23:50:05.284 +08 [3716881] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:05.284 +08 [3716881] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:05.284 +08 [3716881] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:05.284 +08 [3716881] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-12 23:50:04.839666'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '165236'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:07.674 +08 [3716925] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:07.674 +08 [3716925] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:07.674 +08 [3716925] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:07.674 +08 [3716925] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 5), updated_at = '2026-10-12 23:50:07.442795'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '125141'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 5)) RETURNING 1 AS "?column?"
+2026-10-12 23:50:07.891 +08 [3716861] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:07.891 +08 [3716861] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:07.891 +08 [3716861] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:07.891 +08 [3716861] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-12 23:50:07.628931'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '269411'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:07.982 +08 [3716905] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:07.982 +08 [3716905] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:07.982 +08 [3716905] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:07.982 +08 [3716905] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-12 23:50:07.707459'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '119292'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-12 23:50:08.737 +08 [3716890] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:08.737 +08 [3716890] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:08.737 +08 [3716890] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:08.737 +08 [3716890] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 2), updated_at = '2026-10-12 23:50:08.497337'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '157949'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:11.849 +08 [3716898] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:11.849 +08 [3716898] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:11.849 +08 [3716898] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:11.849 +08 [3716898] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 5), updated_at = '2026-10-12 23:50:11.586183'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '219700'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 5)) RETURNING 1 AS "?column?"
+2026-10-12 23:50:13.627 +08 [3716854] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:13.627 +08 [3716854] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:13.627 +08 [3716854] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:13.627 +08 [3716854] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-12 23:50:13.404746'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '175040'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:14.128 +08 [3716856] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:14.128 +08 [3716856] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:14.128 +08 [3716856] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:14.128 +08 [3716856] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 4), updated_at = '2026-10-12 23:50:13.888149'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '6943'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:14.259 +08 [3716912] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:14.259 +08 [3716912] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:14.259 +08 [3716912] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:14.259 +08 [3716912] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 2), updated_at = '2026-10-12 23:50:14.029131'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '321592'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:15.083 +08 [3716896] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:15.083 +08 [3716896] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:15.083 +08 [3716896] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:15.083 +08 [3716896] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-12 23:50:14.814948'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '358378'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:16.363 +08 [3716853] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:16.363 +08 [3716853] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:16.363 +08 [3716853] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:16.363 +08 [3716853] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 2), updated_at = '2026-10-12 23:50:16.139054'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '57306'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:32.933 +08 [3716902] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:32.933 +08 [3716902] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:32.933 +08 [3716902] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:32.933 +08 [3716902] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-12 23:50:32.683326'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '95656'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:37.915 +08 [3716899] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:50:37.915 +08 [3716899] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-12 23:50:37.478347'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '350158'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:45.703 +08 [3716869] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-12 23:50:45.703 +08 [3716869] DETAIL:  Reason code: Canceled on identification as a pivot, during write.
+2026-10-12 23:50:45.703 +08 [3716869] HINT:  The transaction might succeed if retried.
+2026-10-12 23:50:45.703 +08 [3716869] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 2), updated_at = '2026-10-12 23:50:45.464163'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '140317'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:52.898 +08 [3716851] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:50:52.898 +08 [3716851] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-12 23:50:52.435937'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '177441'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:50:54.280 +08 [3716866] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:50:54.280 +08 [3716866] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-12 23:50:53.822779'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '354369'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-12 23:51:06.007 +08 [3716970] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:51:06.007 +08 [3716970] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-12 23:51:05.762043'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '454820'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:51:10.679 +08 [3716953] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:51:10.679 +08 [3716953] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 2), updated_at = '2026-10-12 23:51:10.389474'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '61091'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 2)) RETURNING 1 AS "?column?"
+2026-10-12 23:51:57.789 +08 [3716995] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:51:57.789 +08 [3716995] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-12 23:51:57.288336'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '124802'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-12 23:52:47.758 +08 [3716947] ERROR:  canceling statement due to user request
+2026-10-12 23:52:47.758 +08 [3716947] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-12 23:52:47.506058'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '172026'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:53:24.549 +08 [3716953] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:53:24.549 +08 [3716953] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 3), updated_at = '2026-10-12 23:53:24.312399'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '155700'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 3)) RETURNING 1 AS "?column?"
+2026-10-12 23:53:59.951 +08 [3716979] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:53:59.951 +08 [3716979] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 4), updated_at = '2026-10-12 23:53:59.696639'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '126007'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 4)) RETURNING 1 AS "?column?"
+2026-10-12 23:54:03.030 +08 [3716978] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:54:03.030 +08 [3716978] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 1), updated_at = '2026-10-12 23:54:02.729349'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '472803'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 1)) RETURNING 1 AS "?column?"
+2026-10-12 23:54:06.673 +08 [3716973] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:54:06.673 +08 [3716973] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 1), updated_at = '2026-10-12 23:54:06.425256'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '138064'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 1)) RETURNING 1 AS "?column?"
+2026-10-12 23:54:06.868 +08 [3716963] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:54:06.868 +08 [3716963] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 4), updated_at = '2026-10-12 23:54:06.591372'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '102051'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 4)) RETURNING 1 AS "?column?"
+2026-10-12 23:54:07.323 +08 [3717011] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:54:07.323 +08 [3717011] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 2), updated_at = '2026-10-12 23:54:07.059533'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '180715'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 2)) RETURNING 1 AS "?column?"
+2026-10-12 23:54:08.099 +08 [3716944] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:54:08.099 +08 [3716944] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 4), updated_at = '2026-10-12 23:54:07.816085'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '355853'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:54:47.978 +08 [3716989] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:54:47.978 +08 [3716989] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-12 23:54:47.747165'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '496016'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:55:34.814 +08 [3716993] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:55:34.814 +08 [3716993] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 5), updated_at = '2026-10-12 23:55:34.587623'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '237040'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:56:06.321 +08 [3716944] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:56:06.321 +08 [3716944] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 4), updated_at = '2026-10-12 23:56:05.920791'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '346084'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 4)) RETURNING 1 AS "?column?"
+2026-10-12 23:56:29.855 +08 [3716972] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:56:29.855 +08 [3716972] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 5), updated_at = '2026-10-12 23:56:29.609061'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '150345'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 5)) RETURNING 1 AS "?column?"
+2026-10-12 23:56:49.919 +08 [3716994] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:56:49.919 +08 [3716994] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 2), updated_at = '2026-10-12 23:56:49.662041'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '366017'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 2)) RETURNING 1 AS "?column?"
+2026-10-12 23:56:59.698 +08 [3717004] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:56:59.698 +08 [3717004] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-12 23:56:59.353228'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '368821'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:58:21.242 +08 [3716995] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:58:21.242 +08 [3716995] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 4), updated_at = '2026-10-12 23:58:20.997354'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '190629'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:59:03.497 +08 [3717103] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:59:03.497 +08 [3717103] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 1), updated_at = '2026-10-12 23:59:03.045559'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '186016'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 1)) RETURNING 1 AS "?column?"
+2026-10-12 23:59:04.261 +08 [3716999] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:59:04.261 +08 [3716999] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 1), updated_at = '2026-10-12 23:59:04.004326'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '348526'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:59:04.597 +08 [3716969] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:59:04.597 +08 [3716969] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 2), updated_at = '2026-10-12 23:59:04.286848'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '110460'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:59:12.875 +08 [3716959] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:59:12.875 +08 [3716959] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.-) 1), updated_at = '2026-10-12 23:59:12.545617'::timestamp without time zone WHERE ((inventory_id OPERATOR(pg_catalog.=) '289958'::bigint) AND (quantity OPERATOR(pg_catalog.>=) 1)) RETURNING 1 AS "?column?"
+2026-10-12 23:59:30.924 +08 [3717084] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:59:30.924 +08 [3717084] STATEMENT:  UPDATE public.inventory_102021 inventory SET quantity = (quantity OPERATOR(pg_catalog.+) 3), updated_at = '2026-10-12 23:59:30.570025'::timestamp without time zone WHERE (inventory_id OPERATOR(pg_catalog.=) '215689'::bigint) RETURNING 1 AS "?column?"
+2026-10-12 23:59:42.678 +08 [3716946] ERROR:  could not serialize access due to concurrent update
+2026-10-12 23:59:42.678 +08 [3716946] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-12 23:59:42.678 +08 [3716946] STATEMENT:  SELECT public.place_order('4'::bigint, '243004'::bigint, '5035343'::bigint, 5, '{190004,91004,362004,79004,405004}'::bigint[], '{5,2,3,3,2}'::integer[], '{15106035,15106036,15106037,15106038,15106039}'::bigint[]) AS place_order
+2026-10-13 00:00:14.786 +08 [3717056] ERROR:  could not serialize access due to concurrent update
+2026-10-13 00:00:14.786 +08 [3717056] CONTEXT:  SQL statement "INSERT INTO public.merchant_daily_sales AS s (
+	    merchant_id, sales_date, order_count, revenue
+	  )
+	  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+	  ON CONFLICT (merchant_id, sales_date)
+	  DO UPDATE SET order_count = s.order_count + 1,
+	                revenue     = s.revenue + EXCLUDED.revenue"
+	PL/pgSQL function place_order(bigint,bigint,bigint,integer,bigint[],integer[],bigint[]) line 92 at SQL statement
+2026-10-13 00:00:14.786 +08 [3717056] STATEMENT:  SELECT public.place_order('65'::bigint, '914065'::bigint, '5037406'::bigint, 5, '{89065,111065,430065,364065,472065}'::bigint[], '{1,2,4,3,4}'::integer[], '{15112188,15112189,15112190,15112191,15112192}'::bigint[]) AS place_order
+2026-10-13 00:00:16.706 +08 [3717160] ERROR:  could not serialize access due to read/write dependencies among transactions
+2026-10-13 00:00:16.706 +08 [3717160] DETAIL:  Reason code: Canceled on identification as a pivot, during commit attempt.
+2026-10-13 00:00:16.706 +08 [3717160] HINT:  The transaction might succeed if retried.
+2026-10-13 00:00:16.706 +08 [3717160] STATEMENT:  PREPARE TRANSACTION 'citus_0_557198_149762_8313'
+2026-10-13 00:01:03.613 +08 [3716803] LOG:  received fast shutdown request
+2026-10-13 00:01:03.613 +08 [3716803] LOG:  aborting any active transactions
+2026-10-13 00:01:03.613 +08 [3717149] FATAL:  terminating connection due to administrator command
+2026-10-13 00:01:03.613 +08 [3717177] FATAL:  terminating connection due to administrator command
+2026-10-13 00:01:03.613 +08 [3717147] FATAL:  terminating connection due to administrator command
+2026-10-13 00:01:03.616 +08 [3716803] LOG:  background worker "logical replication launcher" (PID 3716813) exited with exit code 1
+2026-10-13 00:01:03.643 +08 [3717215] LOG:  PID 3717149 in cancel request did not match any process
+2026-10-13 00:01:03.652 +08 [3716808] LOG:  shutting down
+2026-10-13 00:01:03.653 +08 [3716808] LOG:  checkpoint starting: shutdown immediate
+2026-10-13 00:01:04.452 +08 [3716808] LOG:  checkpoint complete: wrote 112907 buffers (86.1%), wrote 108 SLRU buffers; 0 WAL file(s) added, 0 removed, 141 recycled; write=0.781 s, sync=0.001 s, total=0.801 s; sync files=55, longest=0.001 s, average=0.001 s; distance=2317419 kB, estimate=2317419 kB; lsn=3/D3EA4EB0, redo lsn=3/D3EA4EB0
+2026-10-13 00:01:04.749 +08 [3716803] LOG:  database system is shut down
