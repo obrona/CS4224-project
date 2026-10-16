@@ -94,19 +94,54 @@ changes, so it does not matter which copy answers. The transfer itself is
 - **Load time.** The map is written to 5 nodes on every reload, which adds
   a few seconds to each `reset_benchmark_database`.
 
-### What to look at when this is run
+### Results (job-951148)
 
-- **`schema-create.log`.** `pg_dist_node`, printed by T1's function block,
-  now also lists the coordinator.
-- **`explain.log`.** T7's lookup plan should show its task on the coordinator
-  itself (local execution), not on an `xcnf` worker. If it still goes to a
-  worker, the reference table is not being read locally and this experiment
-  saves nothing.
-- **T7 latency at 1 client**, 4.6 ms in `expt_b15`. Its two groups (same
-  worker and different workers) should both shift down by roughly the cost
-  of two network hops.
-- **Throughput at 32 and 64 clients**, 3792.3 and 3897.1 TPS in `expt_b15`.
-- **The other transactions** should be unchanged; only T7 reads the map.
-- **Comparability.** Run on the same nodes as `expt_b15` (`xcnf[17-21]`).
+This run replaces the first one, job-885153. In that run the transactions
+that never read the map (T2, T4, T8, T9) were about 20% faster than in
+`expt_b15` at 1 client and 15 to 27% slower at 64, so its conditions differed
+from `expt_b15`'s. This run is on the same nodes as `expt_b15`
+(`xcnf[17-21]`).
 
-### Note: this experiment has not been run yet
+`schema-create.log` lists the coordinator, xcnf17, in `pg_dist_node` with the
+four workers. In `explain.log` T7's lookup is one task on xcnf17, the
+coordinator's own copy of the map, and its index scan takes 0.04 ms. The log
+has no `executing the command locally` NOTICE, as this experiment's explain
+file does not turn on `citus.log_local_commands`, so it does not by itself
+prove that the lookup ran locally. The lookup is not run before the EXPLAIN,
+so its 4.5 ms total is the session's first read of the map.
+
+| Clients | `expt_b15` TPS | `expt_b17` TPS | Change | T7 avg, `expt_b15` | T7 avg, `expt_b17` |
+| ------- | -------------- | -------------- | ------ | ------------------ | ------------------ |
+| 1       | 263.1          | 272.8          | +3.7%  | 4.59 ms            | 4.03 ms            |
+| 4       | 1187.7         | 1286.1         | +8.3%  | 3.53 ms            | 2.79 ms            |
+| 8       | 2642.1         | 2728.9         | +3.3%  | 3.73 ms            | 3.21 ms            |
+| 16      | 3386.2         | 3493.6         | +3.2%  | 6.59 ms            | 5.82 ms            |
+| 32      | 3792.3         | 3864.3         | +1.9%  | 12.45 ms           | 11.35 ms           |
+| 64      | 3897.1         | 3931.0         | +0.9%  | 24.93 ms           | 23.14 ms           |
+
+- **Throughput is above `expt_b15` at every client count**, and the gain
+  shrinks as clients increase, from 3.7% at 1 client (8.3% at 4) to 0.9% at
+  64.
+- **T7 is 7 to 21% faster.** At 1 client it falls by 0.56 ms, from 4.59 to
+  4.03 ms (p50 4.78 to 4.15 ms, p95 5.33 to 4.67 ms). That is less than two
+  network hops: in `expt_b15` each of T7's statements takes 1.1 to 1.7 ms end
+  to end. The lookups are still two separate statements from pgbench to the
+  coordinator, so local execution likely saves only the coordinator-to-worker
+  part of each.
+- **The transactions that never read the map are slower than in
+  `expt_b15`.** T2, T4, T8 and T9 are 3 to 4% slower at 1 and 8 clients, 5 to
+  6% at 16, 6 to 8% at 32 and 7 to 9% at 64; only at 4 clients are they about
+  3% faster. That growth with client count fits the coordinator CPU cost
+  listed under "What could get worse". `expt_b19`, which also reads the map on
+  the coordinator, has the same transactions up to 6% slower than `expt_b15`,
+  and `expt_b18`, which does not, within 5%. But this run is 19 days after
+  `expt_b15` (2026-10-15 against 2026-09-26), and runs 11 days apart have
+  differed by up to 5.5% (`expt_b20`), so part or all of it may come from
+  running in a different period.
+- **Retries are about the same** at 64 clients: 6154 retried transactions
+  against 5996, and 68 serialization failures against 83.
+- **Against `expt_b18` and `expt_b19`**, this run is 0.3 to 3.2% above
+  `expt_b18` and 1.8 to 2.7% below `expt_b19` at every client count. Both ran
+  on 2026-09-28, so these gaps are within the variation between periods.
+
+`expt_b19` combines this reference table with `expt_b18`'s merged lookup.
