@@ -146,7 +146,7 @@ expt_b17 - expt_b15 with the product-to-merchant lookup table as a reference tab
 
 - Problem: Each of T7's two lookups in `product_merchant_map` is a round trip from the coordinator to a worker.
 - Optimisation: Make `product_merchant_map` a reference table and register the coordinator in Citus's metadata, thus making the lookups read a local copy on the coordinator.
-- Result: T7 falls from 4.6 to 3.0 ms and throughput rises to 321.4 TPS at 1 client, but from 8 clients up it is below `expt_b15` (3,820.1 against 3,897.1 at 64), likely because the lookups now use coordinator CPU.
+- Result: T7 falls from 4.6 to 4.0 ms at 1 client and throughput rises to 272.8 TPS at 1 client and 3,931.0 at 64, above `expt_b15` at every client count (0.9 to 8.3%), consistent with the fact that lookups now are on the coordinator.
 
 expt_b18 - expt_b15 with T7's two lookups merged into one statement
 

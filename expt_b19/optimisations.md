@@ -64,13 +64,19 @@ FROM product_merchant_map
 WHERE product_id IN (:source_product_id, :dest_product_id)
 ```
 
-The first run of this experiment (job-885153) kept `expt_b15`'s two lookup
-statements. T7 at 1 client fell from 4.6 to 3.0 ms, but throughput fell at
+`expt_b17` keeps `expt_b15`'s two lookup statements. Its first run
+(job-885153) cut T7 at 1 client from 4.6 to 3.0 ms, but throughput fell at
 8 clients and above (3897.1 to 3820.1 TPS at 64), and the single-shard
 transactions that never read the map (T2, T4, T5, T8, T9) got about 1 ms
-slower at 64 clients. The likely cause is coordinator CPU: each lookup is
-now planned and executed on the coordinator (the shard query's own planning
-alone took 0.46 ms in `explain.log`), which was already the bottleneck.
+slower at 64 clients. That run's conditions differed from `expt_b15`'s,
+though: the same transactions were about 20% faster at 1 client. In its
+rerun (job-951148) T7 falls from 4.6 to 4.0 ms at 1 client and throughput is
+above `expt_b15` at every client count (3931.0 TPS at 64), but T2, T4, T8
+and T9 are still 3 to 9% slower than in `expt_b15` at every client count
+except 4 (see `expt_b17/optimisations.md`). The likely cause is coordinator
+CPU: each lookup is now planned and executed on the coordinator (the shard
+query's own planning alone took 0.46 ms in job-885153's `explain.log` and
+0.35 ms in job-951148's), which was already the bottleneck.
 
 Merging the two lookups halves that work: pgbench sends one statement
 instead of two, and the coordinator plans and executes the shard query once,
@@ -129,7 +135,8 @@ changes, so it does not matter which copy answers. The transfer itself is
   the explain file turns on `citus.log_local_commands` around it: a NOTICE
   `executing the command locally` confirms local execution. The lookup runs
   once before the EXPLAIN, so its timing is not that of a cold session (in
-  job-885153 it was the session's first read of the map and took 5.1 ms).
+  `expt_b17` it was the session's first read of the map and took 5.1 ms in
+  job-885153 and 4.5 ms in job-951148).
 - **T7 latency at 1 client**, 4.6 ms in `expt_b15`. Its two groups (same
   worker and different workers) should both shift down by roughly the cost
   of two network hops.
