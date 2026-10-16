@@ -18,7 +18,8 @@ ablation. `cells.csv` and `manifest.csv` use the old cell names; in them,
 `midnight.csv` lists every client-count run, in any experiment, whose data was
 reset before midnight and measured after it. Three runs did: `expt_b13` at 8
 clients, `expt_b17` at 8 clients (from 3 min 46 s into the run), and the old
-`expt_b22` at 64 clients.
+`expt_b22` at 64 clients. The `expt_b17` row is its first run, job 885153,
+since replaced by a rerun (job 951148) that did not cross midnight.
 
 Each reset regenerates `orders` with `created_at = current_timestamp - k days`
 (k = 0 .. 364, `run.sh` line 644), so every initial order carries the clock
@@ -32,7 +33,7 @@ whole day's orders. T6's answer covers the same 30 days either way, but one day
 moves from about 1,000 rollup rows to about 13,700 orders scanned and
 aggregated.
 
-`expt_b17` at 8 clients shows the effect within one run: 2,625 TPS with T6 at
+`expt_b17`'s first run at 8 clients shows the effect within one run: 2,625 TPS with T6 at
 6.8 ms before midnight, 2,317 TPS with T6 at 9.8 ms after it, while T1, T2 and
 T7 barely change. The old `expt_b22` at 64 clients ran wholly after midnight,
 13.6% below its twin `expt_b21`; its T6 and T1 also slowed steadily during the

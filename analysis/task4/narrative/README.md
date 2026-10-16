@@ -156,11 +156,11 @@ windows.
 
 | | b15 | b16 | b17 | b18 | b19 | b20 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| T7 mean, 1 client (ms) | 4.59 | 8.09 | 2.96 | 4.06 | 3.68 | 3.56 |
-| T7 mean, 64 clients (ms) | 24.93 | 42.28 | 26.43 | 22.18 | 19.84 | 19.69 |
-| TPS vs b15, 1 client | 1 | 0.794 | 1.222 | 1.029 | 1.062 | 1.118 |
-| TPS vs b15, 4 clients | 1 | 0.844 | 1.115 | 1.049 | 1.102 | 1.182 |
-| TPS vs b15, 64 clients | 1 | 0.686 | 0.980 | 1.006 | 1.032 | 1.052 |
+| T7 mean, 1 client (ms) | 4.59 | 8.09 | 4.03 | 4.06 | 3.68 | 3.56 |
+| T7 mean, 64 clients (ms) | 24.93 | 42.28 | 23.14 | 22.18 | 19.84 | 19.69 |
+| TPS vs b15, 1 client | 1 | 0.794 | 1.037 | 1.029 | 1.062 | 1.118 |
+| TPS vs b15, 4 clients | 1 | 0.844 | 1.083 | 1.049 | 1.102 | 1.182 |
+| TPS vs b15, 64 clients | 1 | 0.686 | 1.009 | 1.006 | 1.032 | 1.052 |
 
 **Figure E, `fig:b-b16-hist`** (`t7_hist_c1.csv`): direct evidence for the b16 explanation (new).
 
@@ -179,7 +179,7 @@ at 64 clients is 16.4 ms.
 
 | 64 clients | T7 | T1 | T6 | others | net | TPS from T7 alone | TPS measured |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| b17 | +0.45 | -0.45 | -0.26 | +0.59 | +0.34 | -2.7% | -2.0% |
+| b17 | -0.54 | +0.11 | +0.06 | +0.23 | -0.14 | +3.4% | +0.9% |
 | b18 | -0.83 | +0.42 | +0.35 | -0.05 | -0.10 | +5.3% | +0.6% |
 | b19 | -1.53 | +0.59 | +0.39 | +0.02 | -0.53 | +10.3% | +3.2% |
 
@@ -189,20 +189,24 @@ at 64 clients is 16.4 ms.
   freed clients queue in the next transaction.
 - This is the same "fixing one exposes the next" pattern as Beats 1-2, on a small scale. It
   also explains why TPS changes of a few percent are all T7 work can buy at 64 clients.
+- In b17 it is the transactions that do not touch the map that give most of it back (+0.23 ms
+  of the 0.54 that T7 saves, against +0.17 for T1 and T6); see the b17 notes below.
 
-**b17 caveats.**
+**b17 notes.**
 
-1. Its conditions check fails: the untouched T2/T4/T8/T9 are 21% faster at 1 client
-   (`../control_check_c1.csv`, geometric mean 0.792). So the +22% at 1 client is mostly run
-   conditions.
-2. Its within-run noise is also larger at 8 clients (95% CI +-4.5%).
+1. Every b17 number here is from its rerun (job 951148, 2026-10-15). The first run (job
+   885153) failed the conditions check, with the untouched T2/T4/T8/T9 21% faster at 1 client,
+   and its 8-client run crossed midnight.
+2. In the rerun the untouched transactions are on the slow side instead: 3.3% slower at 1
+   client (`../control_check_c1.csv`, geometric mean 1.033) and 7-9% slower at 64. That fits
+   the coordinator CPU the local lookups use, but the rerun is 19 days after b15, so part of it
+   may be the period.
 3. A plan observation, single cold execution, not conclusive: the reference-table lookup's task
-   runs on `xcnf17`. It takes **4.3-5.1 ms** of coordinator time in b17, b19 and b20, against
+   runs on `xcnf17`. It takes **4.3-4.5 ms** of coordinator time in b17, b19 and b20, against
    1.3-1.7 ms for the sharded lookup in b12-b16, with 0.05-0.08 ms of actual work.
    `citus.log_local_commands = on` (b19, b20) printed no "executing the command locally"
    notice. It may be first-use connection setup. It does not explain the steady-state numbers
-   (T7 is faster in b17 at 1 client), so cite it, if at all, only as a lead for the 64-client
-   loss.
+   (T7 is faster in b17 at every client count), so cite it, if at all, only as a lead.
 
 **b20 (REPEATABLE READ): where its small gain comes from (new).** T6, the transaction with the
 largest read set, accounts for most of it (`tx_by_clients.csv`):
@@ -233,7 +237,7 @@ exceeds 0.03%; in b11 and b12, T6 is also retried (1.5% and 1.1%).
 ## Noise and stability
 
 - **Within-run noise** (`noise_batch_means.csv`): 95% CI half-width 0.5-1.5% of TPS for
-  b15-b20 at most client counts (b17 at 8 clients 4.5%, b20 at 16 clients 2.9%). It is 1-3% for
+  b15-b20 at most client counts (b20 at 16 clients 2.9%). It is 1-3% for
   b8, b9 and b12, up to 6-10% at some client counts for b10, b11, b13 and b14, and 7-16% for b0
   and b7.
 - It says nothing about run-to-run variation. That is about +-5% from the conditions check, so

@@ -240,8 +240,7 @@ def fig_t7_variants():
                 r"Left: \txn{7}'s own mean latency. Right: total throughput; error bars are 95\% "
                 r"intervals from ten 60\,s windows of the same run (within-run noise only), and the "
                 r"shaded band is $\pm$2\%, the largest spread between the three runs of the final design "
-                r"(\expt{b19}--\expt{b21}). The dip of \expt{b17} at 8 clients is a run that crossed "
-                r"midnight (see the evidence pack). Cutting "
+                r"(\expt{b19}--\expt{b21}). Cutting "
                 r"\txn{7}'s latency by a fifth (\expt{b19}) raises TPS by 6--10\% at 1--8 clients but "
                 r"only 3\% at 64.", body)
 

@@ -61,7 +61,7 @@ old `bN` is now `b(N+6)`; `b1`..`b6` now hold the baseline parameter study
 | b8 | `expt_b14` | b13 | 8 shards instead of 32 | 882974 | 2026-09-26 19:47 |
 | b9 | `expt_b15` | b14 | 4 shards, one per worker | 883179 | 2026-09-26 21:31 |
 | b10 | `expt_b16` | b15 | T7 as a delegated function (not carried forward) | 884062 | 2026-09-27 10:36 |
-| b11 | `expt_b17` | b15 | `product_merchant_map` as a reference table on the coordinator | 885153 | 2026-09-27 23:28 |
+| b11 | `expt_b17` | b15 | `product_merchant_map` as a reference table on the coordinator | 951148 | 2026-10-15 18:44 |
 | b12 | `expt_b18` | b15 | T7's two lookups merged into one statement | 886108 | 2026-09-28 13:17 |
 | b13 | `expt_b19` | b15 | reference table and merged lookup combined | 886110 | 2026-09-28 14:31 |
 | b14 | `expt_b20` | b19 | `REPEATABLE READ` instead of `SERIALIZABLE` (final design) | 887306 | 2026-09-28 21:05 |
@@ -92,7 +92,7 @@ b0 7.05, b7 10.99 (1.56x), b8 199.8 (18.2x), b9 198.1 (0.99x),
 b10 315.9 (1.59x), b11 337.0 (1.07x), b12 1,014.1 (3.01x), b13 1,124.5
 (1.11x), b14 2,103.1 (1.87x), b15 2,528.1 (1.20x), b19 2,657.6 (1.05x vs
 b15), b20 2,710.0 (1.02x). Side branches from b15: b16 1,796.9 (0.71x),
-b17 2,504.2 (0.99x), b18 2,567.6 (1.02x).
+b17 2,596.1 (1.03x), b18 2,567.6 (1.02x).
 
 ### Throughput at every client count
 
@@ -115,7 +115,7 @@ was reached at.
 | `expt_b14` | b8 | 250.2 | 1,127.0 | 2,507.9 | 3,188.6 | 3,110.7 | 2,434.3 | 2,103.1 | 3,188.6 (16) |
 | `expt_b15` | b9 | 263.1 | 1,187.7 | 2,642.1 | 3,386.2 | 3,792.3 | 3,897.1 | 2,528.1 | 3,897.1 (64) |
 | `expt_b16` | b10 | 208.9 | 1,003.1 | 1,864.3 | 2,398.7 | 2,633.8 | 2,672.9 | 1,796.9 | 2,672.9 (64) |
-| `expt_b17` | b11 | 321.4 | 1,324.8 | 2,432.6 | 3,349.9 | 3,776.4 | 3,820.1 | 2,504.2 | 3,820.1 (64) |
+| `expt_b17` | b11 | 272.8 | 1,286.1 | 2,728.9 | 3,493.6 | 3,864.3 | 3,931.0 | 2,596.1 | 3,931.0 (64) |
 | `expt_b18` | b12 | 270.9 | 1,245.9 | 2,699.8 | 3,430.6 | 3,838.0 | 3,920.0 | 2,567.5 | 3,920.0 (64) |
 | `expt_b19` | b13 | 279.5 | 1,309.5 | 2,803.7 | 3,573.1 | 3,958.7 | 4,020.7 | 2,657.5 | 4,020.7 (64) |
 | `expt_b20` | b14 | 294.2 | 1,403.8 | 2,930.2 | 3,537.9 | 3,995.6 | 4,098.5 | 2,710.0 | 4,098.5 (64) |
@@ -213,13 +213,15 @@ connection every call. Note: `expt_b16/optimisations.md` says the worker
 points valid.
 
 **`expt_b17`: reference table (b11).**
-T7 4.6 -> 3.0 ms at 1 client; TPS +22% at 1 client but -2% at 64 (mean
-0.99x). Caution: the conditions check fails for this run. T2, T4, T8 and T9,
-which the change does not touch, are 21% faster at 1 client than in b15
-(`control_check_c1.csv`, geometric mean 0.79; every other run is within
-+-5% of its parent). Most of the 1-client gain is therefore the run's
-conditions, not the reference table. The README's "coordinator CPU"
-explanation for the high-client loss is a hypothesis; no CPU was measured.
+Rerun on 2026-10-15 (job 951148). The first run (job 885153) failed the
+conditions check, with T2, T4, T8 and T9 21% faster at 1 client than in b15,
+and was replaced. T7 4.6 -> 4.0 ms at 1 client, 24.9 -> 23.1 ms at 64; TPS
++3.7% at 1 client and +0.9% at 64, above b15 at every client count (mean
+1.03x). The conditions check passes, on the slow side: T2, T4, T8 and T9 are
+3.3% slower at 1 client than in b15 (`control_check_c1.csv`, geometric mean
+1.033) and 7-9% slower at 64. That fits the coordinator CPU the local lookups
+use, but no CPU was measured and the rerun is 19 days after b15, so part of
+it may be the period. All points valid.
 
 **`expt_b18`: merged lookup (b12).**
 T7 9-13% faster at every client count; TPS +3% at 1 client, +0.6% at 64
@@ -229,9 +231,9 @@ T7 9-13% faster at every client count; TPS +3% at 1 client, +0.6% at 64
 **`expt_b19`: reference table + merged lookup (b13).**
 Mean TPS 1.05x b15, TPS 279.5 at 1 client (+6%) and 4,020.7 at 64 (+3%); T7
 24.9 -> 19.8 ms at 64. Controls 3.6% slower than b15, so the gain is not a
-conditions artefact. Together with b17 and b18 this is an interaction
-worth reporting: reference table alone 0.99x, merged lookup alone 1.02x,
-both 1.05x (mean TPS).
+conditions artefact. Together with b17 and b18, the two changes add up
+roughly: reference table alone 1.03x, merged lookup alone 1.02x, both 1.05x
+(mean TPS).
 
 **`expt_b20`: REPEATABLE READ (b14, final design).**
 Mean TPS 1.02x, 294.2 at 1 client (+5%), 4,098.5 at 64 (+2%); the best at 64
@@ -299,9 +301,9 @@ Ranked by strength of evidence:
 4. **Set-based T1 was slower than 18 round trips** (b9), and the
    running-totals idea for T6 that was dropped before it ran (b14 notes).
    Both are "the obvious optimisation did not help" results.
-5. **Reference table and merged lookup only helped together** (b17 0.99x, b18
-   1.02x, b19 1.05x mean TPS), but the effects are small and b17 ran under
-   different conditions; present with the noise caveat.
+5. **Reference table and merged lookup each helped a little, and roughly add
+   up** (b17 1.03x, b18 1.02x, b19 1.05x mean TPS), but the effects are small;
+   present with the noise caveat.
 6. **REPEATABLE READ barely helped and did not reduce retries** (b20), as its
    pre-run notes predicted: the retries are write-write conflicts on T1's
    hot rollup row, which snapshot isolation still detects.
@@ -314,14 +316,13 @@ Ranked by strength of evidence:
   pgbench does not retry. b13-b20 are valid everywhere. Plots should mark
   these points (`plot_results.py` draws them hollow).
 - **Noise floor.** No chain run has a replicate yet. The conditions check
-  puts run-to-run conditions within about +-5% at 1 client (b17 excepted at
-  -21%), so differences of a few percent (b18, b19, b20 against their
+  puts run-to-run conditions within about +-5% at 1 client, so differences of a few percent (b18, b19, b20 against their
   parents) are at the noise level. `expt_b21` and `expt_b22` (replicates of
   b20, see `ablation_b20/`) will measure it; until then, say so.
-- **Stale notes.** `expt_b16`, `b17`, `b19` and `b20`'s `optimisations.md`
-  end with "this experiment has not been run yet"; they were written before
-  the runs and contain predictions, not results (except b18, which has a
-  results section). b16's "opens and caches a connection" is wrong (section
+- **Stale notes.** `expt_b16`, `b19` and `b20`'s `optimisations.md` end with
+  "this experiment has not been run yet"; they were written before the runs
+  and contain predictions, not results (except b17 and b18, which have
+  results sections). b16's "opens and caches a connection" is wrong (section
   3, b16).
 - **b0 is valid at 1, 4 and 64 clients only**, so any b0 ratio at 8-32
   clients compares against a run with aborted clients.

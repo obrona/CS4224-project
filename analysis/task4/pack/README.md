@@ -48,8 +48,8 @@ other numbers (section 8).
   (section 2); compare ratios;
 - say `REPEATABLE READ` corrupts data. It never does here; it lets one
   read-only lookup see an inconsistent state (section 5);
-- attribute `expt_b17`'s 1-client gain to the reference table alone
-  (section 3.3).
+- cite `expt_b17`'s first run (job 885153, 321.4 TPS at 1 client); it was
+  replaced by a rerun (section 3.3).
 
 **Figures and tables, ready to paste** (all compile; each takes its numbers
 from the CSVs):
@@ -108,11 +108,12 @@ report's `pgfplots`, `xcolor`, `booktabs` and the macros `\expt`, `\txn`,
   `reset time - k days`, so the boundary day that the rollup version of T6
   scans live from `orders` is normally empty. When the reset is before midnight
   and the run after, that scan holds a whole day, about 13,700 orders, and T6
-  slows. Affected: `expt_b13` and `expt_b17` at 8 clients, `expt_b24` at 16,
-  `expt_b32` at 64 (last 59 s only). Within-run proof: `expt_b17` at 8 clients
-  ran 2,625 TPS with T6 at 6.8 ms before midnight and 2,317 TPS with T6 at
-  9.8 ms after; `expt_b24` at 16 clients ran 3,259 TPS (T6 8.5 ms) before and
-  2,944 (T6 13.0 ms) after. T1, T2 and T7 do not change.
+  slows. Affected: `expt_b13` at 8 clients, `expt_b24` at 16, `expt_b32` at 64
+  (last 59 s only). Within-run proof: `expt_b24` at 16 clients ran 3,259 TPS
+  (T6 8.5 ms) before and 2,944 (T6 13.0 ms) after, and the replaced first run
+  of `expt_b17` (job 885153) at 8 clients ran 2,625 TPS with T6 at 6.8 ms
+  before midnight and 2,317 TPS with T6 at 9.8 ms after. T1, T2 and T7 do not
+  change.
 
 ---
 
@@ -210,11 +211,11 @@ clients. Each variant changes how T7 finds the two merchants
 
 | | b15 | b16 | b17 | b18 | b19 |
 | - | ---: | ---: | ---: | ---: | ---: |
-| T7 mean, 1 client (ms) | 4.59 | 8.09 | 2.96 | 4.06 | 3.68 |
-| T7 mean, 64 clients (ms) | 24.93 | 42.28 | 26.43 | 22.18 | 19.84 |
-| TPS vs b15, 1 client | 1 | 0.794 | 1.222 | 1.029 | 1.062 |
-| TPS vs b15, 64 clients | 1 | 0.686 | 0.980 | 1.006 | 1.032 |
-| Mean TPS vs b15 | 1 | 0.711 | 0.991 | 1.016 | 1.051 |
+| T7 mean, 1 client (ms) | 4.59 | 8.09 | 4.03 | 4.06 | 3.68 |
+| T7 mean, 64 clients (ms) | 24.93 | 42.28 | 23.14 | 22.18 | 19.84 |
+| TPS vs b15, 1 client | 1 | 0.794 | 1.037 | 1.029 | 1.062 |
+| TPS vs b15, 64 clients | 1 | 0.686 | 1.009 | 1.006 | 1.032 |
+| Mean TPS vs b15 | 1 | 0.711 | 1.027 | 1.016 | 1.051 |
 
 `fig:b-t7-variants` plots all six client counts.
 
@@ -241,17 +242,24 @@ clients. Each variant changes how T7 finds the two merchants
 
 ### 3.3 b17: the reference-table map
 
-- T7 falls from 4.6 to 3.0 ms at 1 client, and TPS rises 22% there; at 64
-  clients T7 is 26.4 ms (24.9 in b15) and TPS 2% lower; mean 0.99x.
-- **Caveat 1, conditions.** T2, T4, T8 and T9, which b17 does not change, are
-  21% faster at 1 client than in b15 (geometric mean 0.792; every other run is
-  within 5% of its parent; `../control_check_c1.csv`). Most of the 1-client
-  gain is the run's conditions.
-- **Caveat 2, midnight.** The 8-client run crossed midnight 3 min 46 s in:
-  before midnight 2,625 TPS (b15: 2,642), after 2,317. The 0.921x dip at 8
-  clients in `fig:b-t7-variants` is the clock.
+- **Rerun.** Every number here is from the rerun, job 951148 on 2026-10-15.
+  The first run (job 885153) failed the conditions check, with T2, T4, T8 and
+  T9, which b17 does not change, 21% faster at 1 client than in b15, and its
+  8-client run crossed midnight (section 1).
+- T7 falls from 4.6 to 4.0 ms at 1 client and from 24.9 to 23.1 ms at 64. TPS
+  is above b15 at every client count: 3.7% at 1 client, 8.3% at 4 and 0.9% at
+  64; mean 1.03x, between b18 (1.02x) and b19 (1.05x).
+- **Caveat, the unchanged transactions are slower.** T2, T4, T8 and T9 are 3.3%
+  slower than in b15 at 1 client (geometric mean 1.033,
+  `../control_check_c1.csv`) and 7-9% slower at 64. At 64 clients the
+  transactions that do not touch the map give back 0.23 ms of the 0.54 ms of
+  mean response time that T7 saves (`fig:b-absorption`), so the +3.4% that T7
+  alone predicts becomes +0.9%. That fits the coordinator CPU the local
+  lookups use, but no CPU was measured and the rerun is 19 days after b15,
+  more than the final design's replicates span, so part of it may be the
+  period.
 - A one-off plan observation (`t7_plans.csv`), not a mechanism: the lookup's
-  task on the coordinator took 4.3-5.1 ms of coordinator time in b17, b19 and
+  task on the coordinator took 4.3-4.5 ms of coordinator time in b17, b19 and
   b20's plans against 1.3-1.7 ms for the sharded lookup, for 0.05-0.08 ms of
   work, and printed no local-execution notice with `citus.log_local_commands`
   on. It is a single cold execution; steady-state T7 is faster in b17.
@@ -552,8 +560,8 @@ Each cell changes only `CITUS_SHARD_COUNT` in `expt_b19`'s `run.sh`
   across workloads is not.
 - **Invalid points** in this pack: `expt_b30` (64), `expt_b33` (16), `expt_b35`
   (16-64), `expt_b38` and `expt_b41` (4-64).
-- **Midnight-affected points:** `expt_b13` and `expt_b17` at 8 clients,
-  `expt_b24` at 16, `expt_b32` at 64 (section 1).
+- **Midnight-affected points:** `expt_b13` at 8 clients, `expt_b24` at 16,
+  `expt_b32` at 64 (section 1).
 - **Corrections to the plan for this section.** The `REPEATABLE READ` anomaly
   involves T1, T9 and T4, not T7. The shard runs are `expt_b42` .. `expt_b46`;
   4 shards is the final design (`expt_b19` .. `b21`) and 8 shards is `expt_b44`.
