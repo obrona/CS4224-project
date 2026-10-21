@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=citus-project
-#SBATCH --nodes=5
+#SBATCH --nodes=9
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
 #SBATCH --output=citus-%j.out
@@ -13,10 +13,10 @@
 #SBATCH --exclude=xcng0,xcng1,xgpj0,xcnh[0-3],xcnc13
 
 # The baseline parameter study (expt_b0 to expt_b6) runs on xcnf[17-21],
-# the node set of expt_b12 onwards, instead of xcnf[16-20], where the
-# baseline first ran (job 873005). expt_b0 reruns it unchanged on these
-# nodes as the reference for the others.
-#SBATCH --nodelist=xcnf[17-21]
+# the node set of expt_b12 onwards. This run keeps that set's coordinator
+# (xcnf17) and its four workers, and adds xcnf22 to xcnf25, to measure the
+# effect of increasing the worker count from four to 8.
+#SBATCH --nodelist=xcnf[17-25]
 
 # IMPORTANT - replace this with your email
 #SBATCH --mail-user=e1334269@u.nus.edu
@@ -83,7 +83,7 @@ CITUS_LOCAL_SHARED_POOL_SIZE="${CITUS_LOCAL_SHARED_POOL_SIZE:-150}"
 SCALE="${SCALE:-1}"          # scaling factor
 DATA_SEED="${DATA_SEED:-42}" # seed for data generation
 HOT_MERCHANT_PERCENT="${HOT_MERCHANT_PERCENT:-10}"
-HOT_ORDER_PERCENT="${HOT_ORDER_PERCENT:-80}"
+HOT_ORDER_PERCENT="${HOT_ORDER_PERCENT:-50}"
 
 ################# Benchmarking configuration
 PGBENCH_SEED="${PGBENCH_SEED:-42}"

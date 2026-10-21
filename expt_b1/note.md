@@ -6,11 +6,11 @@ It is one of seven runs that vary one parameter of the workload-B baseline at a 
 
 | Parameter | Values (reference in bold) | Experiments |
 | --- | --- | --- |
-| Workers | 2, **4**, 8 | `expt_b1`, `expt_b0`, `expt_b4` |
-| `HOT_ORDER_PERCENT` | 10, **50**, 80 | `expt_b5`, `expt_b0`, `expt_b2` |
-| `SCALE` | 0.5, **1**, 2 | `expt_b6`, `expt_b0`, `expt_b3` |
+| Workers | 2, **4**, 8 | `expt_b1`, `expt_b0`, `expt_b2` |
+| `HOT_ORDER_PERCENT` | 10, **50**, 80 | `expt_b4`, `expt_b0`, `expt_b3` |
+| `SCALE` | 0.5, **1**, 2 | `expt_b6`, `expt_b0`, `expt_b5` |
 
-`expt_b1` to `expt_b3` make the same changes as `expt_a0_1` to `expt_a0_3` for workload A.
+`expt_b1` to `expt_b6` are the same parameter study as `expt_a1` to `expt_a6` for workload A, in the same order (workers, then skew, then scale), except that `expt_b4` lowers `HOT_ORDER_PERCENT` to 10 where `expt_a4` lowers it to 20.
 
 Run these one at a time: all seven share `xcnf17` to `xcnf19`, and none requests `--exclusive`. Run `expt_b0` first, since it is the reference for the other six.
 

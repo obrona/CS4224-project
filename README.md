@@ -212,21 +212,21 @@ expt_b1 - baseline design for workload B with 2 worker nodes instead of 4
 
 - Result: 4.7 TPS at 1 client and 3.7 at 64, 30% and 42% below `expt_b0`.
 
-expt_b2 - baseline design for workload B with stronger merchant skew: HOT_ORDER_PERCENT 80 instead of 50
-
-- Result: 6.7 TPS at 1 client and 6.0 at 64, at most 6% below `expt_b0` at any client count.
-
-expt_b3 - baseline design for workload B with twice the synthetic data: SCALE 2 instead of 1
-
-- Result: 2.0 TPS at 1 client and 3.4 at 64, 70% and 47% below `expt_b0`, and the 1-client run has T7 stalls of up to 78 s.
-
-expt_b4 - baseline design for workload B with 8 worker nodes instead of 4
+expt_b2 - baseline design for workload B with 8 worker nodes instead of 4 (run as expt_b4)
 
 - Result: 9.0 TPS at 1 client and 10.2 at 64, 35% and 59% above `expt_b0`.
 
-expt_b5 - baseline design for workload B with HOT_ORDER_PERCENT 10 instead of 50
+expt_b3 - baseline design for workload B with stronger merchant skew: HOT_ORDER_PERCENT 80 instead of 50 (run as expt_b2)
+
+- Result: 6.7 TPS at 1 client and 6.0 at 64, at most 6% below `expt_b0` at any client count.
+
+expt_b4 - baseline design for workload B with HOT_ORDER_PERCENT 10 instead of 50 (run as expt_b5)
 
 - Result: 6.7 TPS at 1 client and 6.3 at 64, within 6% of `expt_b0` at every client count.
+
+expt_b5 - baseline design for workload B with twice the synthetic data: SCALE 2 instead of 1 (run as expt_b3)
+
+- Result: 2.0 TPS at 1 client and 3.4 at 64, 70% and 47% below `expt_b0`, and the 1-client run has T7 stalls of up to 78 s.
 
 expt_b6 - baseline design for workload B with half the synthetic data: SCALE 0.5 instead of 1
 

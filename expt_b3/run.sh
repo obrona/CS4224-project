@@ -80,10 +80,10 @@ CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE="${CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE:-
 CITUS_LOCAL_SHARED_POOL_SIZE="${CITUS_LOCAL_SHARED_POOL_SIZE:-150}"
 
 ################# Data generation configuration
-SCALE="${SCALE:-2}"          # scaling factor
+SCALE="${SCALE:-1}"          # scaling factor
 DATA_SEED="${DATA_SEED:-42}" # seed for data generation
 HOT_MERCHANT_PERCENT="${HOT_MERCHANT_PERCENT:-10}"
-HOT_ORDER_PERCENT="${HOT_ORDER_PERCENT:-50}"
+HOT_ORDER_PERCENT="${HOT_ORDER_PERCENT:-80}"
 
 ################# Benchmarking configuration
 PGBENCH_SEED="${PGBENCH_SEED:-42}"
@@ -495,9 +495,6 @@ SELECT i::bigint,merchant_id,merchant_id+$NUM_MERCHANTS*((hashint8extended(i,$((
 SQL
 
 	psqlx <<SQL
--- Allow larger intermediate results for the SCALE=2 data load in this session.
-SET citus.max_intermediate_result_size = '4GB';
-
 WITH g AS (
  SELECT i order_item_id,1+((i::bigint - 1)%$NUM_ORDERS) order_id,(hashint8extended(i,$((DATA_SEED + 10)))&9223372036854775807) ph,
         1+((hashint8extended(i,$((DATA_SEED + 11)))&9223372036854775807)%5)::int qty FROM generate_series(1::bigint, $NUM_ORDER_ITEMS::bigint) g(i)
