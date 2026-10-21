@@ -1,0 +1,25 @@
+### Prev: expt_a17
+
+Cell of the 2^4 ablation around `expt_a17`, mirroring the workload-B ablation `expt_b27` .. `expt_b41` cell for cell: `expt_a17` with T5 routing and T1 delegation switched off. Generated from `expt_a17` (on levels) and `expt_a8` (off levels); do not edit by hand. Everything else is `expt_a17`'s, including `SERIALIZABLE`, 4 shards and `WORKLOAD=A`.
+
+| Factor | Level |
+| ------ | ----- |
+| T5 routing | off |
+| T6 rollup | on |
+| T7 routing | on |
+| T1 delegated | off (`expt_a8`'s T1) |
+
+### What is switched off
+
+- **T5 routing.** T5 is `expt_a8`'s: one `UPDATE orders` by `order_id`, sent to every `orders` shard. There is no `order_merchant_map` and no `next_colocated_order_id`: `run.sh` does not create, distribute, fill or truncate the map, T1 does not write it, and T1's order ids come from `benchmark_order_id_seq` directly.
+- **T1 delegated.** T1 is `expt_a8`'s multi-statement T1 inside `BEGIN`/`COMMIT`, sent statement by statement through the coordinator; each item's inventory `UPDATE` keeps its own `quantity >= qty` guard. `run.sh` does not create `place_order`.
+
+Because the T6 rollup is on, the original T1 also runs the `merchant_daily_sales` upsert (for `CURRENT_TIMESTAMP::date`, the order's day), after its final `UPDATE orders SET total_amount` and before `COMMIT`, using the same `(:order_total)::numeric(12,2)`. The original T1 never ran with this write in the chain; it mirrors step 6 of `place_order`.
+
+### What to look at when this is run
+
+- **Comparability.** Same nodes as `expt_a17` (`xcnf[0-2,4,5]`), run concurrently with the other cells of ablation batch 1 and its control `expt_a17_3`, a replicate of `expt_a17`; compare with that control.
+- **`schema-create.log` and `explain.log`.** No errors; switched-off tables and functions are absent.
+- **`pgbench_exit_code`, aborted clients, retries and serialization failures** at every client count.
+
+Run: job 979834, team id 704, on `xcnf[0-2,4,5]`, in ablation batch 1 (`expt_a17_3` and `expt_a27` to `expt_a34`, run concurrently).
