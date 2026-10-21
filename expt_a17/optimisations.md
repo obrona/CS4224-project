@@ -17,4 +17,4 @@ price is a few extra `nextval` and shard lookups on the coordinator per T1
 (about 4 draws on average with 4 workers) and gaps in new order ids, which
 nothing relies on (T5 draws only from the initial orders).
 
-Run: job 972056, team id 304, on `xcnf[0-2,4,5]`, at the same time as the other five jobs of this batch (972053 to 972058).
+Run: job 972056, team id 304, on `xcnf[0-2,4,5]`, in the same batch as `expt_a16`, `expt_a17`, `expt_a20` and `expt_a21` (jobs 972055 to 972058).

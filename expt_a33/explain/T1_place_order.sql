@@ -92,11 +92,4 @@ SET total_amount = (1.00)::numeric(12,2)
 WHERE merchant_id = (:merchant_id)::bigint
   AND order_id = (:new_order_id)::bigint;
 
-EXPLAIN (VERBOSE)
-INSERT INTO merchant_daily_sales AS s (merchant_id, sales_date, order_count, revenue)
-VALUES ((:merchant_id)::bigint, CURRENT_TIMESTAMP::date, 1, (1.00)::numeric(12,2))
-ON CONFLICT (merchant_id, sales_date)
-DO UPDATE SET order_count = s.order_count + 1,
-              revenue     = s.revenue + EXCLUDED.revenue;
-
 ROLLBACK;

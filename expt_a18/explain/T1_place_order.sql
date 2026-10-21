@@ -32,7 +32,7 @@ FROM (
 -- The id draw should run on the coordinator alone, with no Task.
 EXPLAIN (ANALYZE, VERBOSE, BUFFERS)
 SELECT
-  nextval('benchmark_order_id_seq') AS order_id,
+  public.next_colocated_order_id((:merchant_id)::bigint) AS order_id,
   CASE WHEN (:item_count)::integer >= 1 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_1,
   CASE WHEN (:item_count)::integer >= 2 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_2,
   CASE WHEN (:item_count)::integer >= 3 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_3,
@@ -40,7 +40,7 @@ SELECT
   CASE WHEN (:item_count)::integer >= 5 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_5;
 
 SELECT
-  nextval('benchmark_order_id_seq') AS order_id,
+  public.next_colocated_order_id((:merchant_id)::bigint) AS order_id,
   CASE WHEN (:item_count)::integer >= 1 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_1,
   CASE WHEN (:item_count)::integer >= 2 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_2,
   CASE WHEN (:item_count)::integer >= 3 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_3,

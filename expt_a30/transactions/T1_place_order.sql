@@ -438,16 +438,6 @@ WHERE merchant_id = (:merchant_id)::bigint
 -- the merchant's worker, with the order's other rows.
 INSERT INTO order_merchant_map (order_id, merchant_id)
 VALUES ((:new_order_id)::bigint, (:merchant_id)::bigint);
-
--- Keep the T6 rollup in step with orders. It runs last before COMMIT, so the
--- merchant's row for today stays locked as briefly as possible. The order's
--- created_at is this transaction's CURRENT_TIMESTAMP, so CURRENT_TIMESTAMP::date
--- is its day, and the revenue is the same total just written to orders.
-INSERT INTO merchant_daily_sales AS s (merchant_id, sales_date, order_count, revenue)
-VALUES ((:merchant_id)::bigint, CURRENT_TIMESTAMP::date, 1, (:order_total)::numeric(12,2))
-ON CONFLICT (merchant_id, sales_date)
-DO UPDATE SET order_count = s.order_count + 1,
-              revenue     = s.revenue + EXCLUDED.revenue;
 COMMIT;
 \else
 ROLLBACK;

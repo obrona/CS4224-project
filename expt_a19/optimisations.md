@@ -1,15 +1,8 @@
-### Prev: expt_a15
+### Prev: expt_a17
 
-Both `expt_a17`'s and `expt_a18`'s changes on `expt_a15`, and nothing else:
-order ids chosen by `public.next_colocated_order_id` so the
-`order_merchant_map` row (now colocated with `merchants`) lands on the
-merchant's worker, and `merchant_daily_sales` split into 4 slots by
-`order_id % 4`.
+Replicate 2 of `expt_a17` (run and logged as `expt_a17_2`): `run.sh`, `transactions/` and `explain/` are
+byte-identical to `expt_a17`'s. Nothing changes; the run measures run-to-run
+variance on the same node set, so a delta between later steps can be judged
+against it.
 
-Expected to remove: the two-phase commit on every T1 (`expt_a17`) and most
-write-write conflicts on the hot rollup row (`expt_a18`). Note the slot is
-`order_id % 4` and the order id is now chosen by shard placement; the two are
-not correlated through Citus's hash, so slots should still spread evenly, but
-this is not checked.
-
-Run: job 972058, team id 504, on `xcnf[0-2,4,5]`, at the same time as the other five jobs of this batch (972053 to 972058).
+Run: job 979012, team id 104, on `xcnf[0-2,4,5]`, in the same batch as `expt_a18` and `expt_a37` to `expt_a41`.

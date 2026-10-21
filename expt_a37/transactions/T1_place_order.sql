@@ -25,7 +25,7 @@
 
 -- No BEGIN/COMMIT as each statement below is its own transaction.
 SELECT
-  nextval('benchmark_order_id_seq') AS order_id,
+  public.next_colocated_order_id((:merchant_id)::bigint) AS order_id,
   CASE WHEN (:item_count)::integer >= 1 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_1,
   CASE WHEN (:item_count)::integer >= 2 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_2,
   CASE WHEN (:item_count)::integer >= 3 THEN nextval('benchmark_order_item_id_seq') ELSE 0 END AS item_id_3,
@@ -52,6 +52,41 @@ SELECT public.place_order(
 --with merchants, so SELECT public.place_order() is delegated whole to the
 -- worker that holds that merchant's shards, and runs as one transaction.
 \if 0
+-- next_colocated_order_id: order_merchant_map is sharded by order_id, so an
+-- order id from the plain sequence usually puts place_order's step-7 row on
+-- another worker and forces a two-phase commit. This draws ids until one
+-- hashes to an order_merchant_map shard placed on the same node as the
+-- merchant's shards. It is not distributed: it runs on the coordinator, which
+-- holds the sequence. Skipped ids are gaps that nothing relies on.
+CREATE OR REPLACE FUNCTION public.next_colocated_order_id(p_merchant_id bigint)
+RETURNS bigint
+LANGUAGE plpgsql
+AS $fn$
+DECLARE
+  v_group integer;   -- node group (one worker) holding the merchant's shard
+  v       bigint;
+BEGIN
+  -- STRICT: a missing placement, or more than one (replicated shards), raises.
+  SELECT pl.groupid INTO STRICT v_group
+  FROM pg_catalog.pg_dist_placement pl
+  WHERE pl.shardid = get_shard_id_for_distribution_column('public.merchants', p_merchant_id);
+
+  FOR attempt IN 1 .. 1000 LOOP
+    v := nextval('benchmark_order_id_seq');
+    PERFORM 1
+    FROM pg_catalog.pg_dist_placement pl
+    WHERE pl.shardid = get_shard_id_for_distribution_column('public.order_merchant_map', v)
+      AND pl.groupid = v_group;
+    IF FOUND THEN
+      RETURN v;
+    END IF;
+  END LOOP;
+
+  RAISE EXCEPTION 'next_colocated_order_id: no order id in 1000 draws lands on the node of merchant %',
+    p_merchant_id;
+END;
+$fn$;
+
 CREATE OR REPLACE FUNCTION public.place_order(
   p_merchant_id bigint,
   p_customer_id bigint,
@@ -152,6 +187,21 @@ BEGIN
       p_quantities[k], v_price
     );
   END LOOP;
+
+  -- 6. Keep the T6 rollup in step.
+  INSERT INTO public.merchant_daily_sales AS s (
+    merchant_id, sales_date, order_count, revenue
+  )
+  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+  ON CONFLICT (merchant_id, sales_date)
+  DO UPDATE SET order_count = s.order_count + 1,
+                revenue     = s.revenue + EXCLUDED.revenue;
+
+  -- 7. order_merchant_map is colocated with merchants, and
+  --    next_colocated_order_id chose p_order_id so that this row's shard is
+  --    on this worker. The write is local and the order commits on one node.
+  INSERT INTO public.order_merchant_map (order_id, merchant_id)
+  VALUES (p_order_id, p_merchant_id);
 
   RETURN true;
 END;

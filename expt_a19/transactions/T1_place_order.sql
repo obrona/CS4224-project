@@ -188,12 +188,12 @@ BEGIN
     );
   END LOOP;
 
-  -- 6. Keep the T6 rollup in step, in this order's slot of the merchant-day.
+  -- 6. Keep the T6 rollup in step.
   INSERT INTO public.merchant_daily_sales AS s (
-    merchant_id, sales_date, slot, order_count, revenue
+    merchant_id, sales_date, order_count, revenue
   )
-  VALUES (p_merchant_id, v_created_at::date, (p_order_id % 4)::smallint, 1, v_order_total)
-  ON CONFLICT (merchant_id, sales_date, slot)
+  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
+  ON CONFLICT (merchant_id, sales_date)
   DO UPDATE SET order_count = s.order_count + 1,
                 revenue     = s.revenue + EXCLUDED.revenue;
 

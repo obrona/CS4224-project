@@ -430,7 +430,6 @@ create_schema() {
 	if [[ "$DROP_EXISTING" == "1" ]]; then
 		psqlx <<'SQL'
 DROP TABLE IF EXISTS merchant_daily_sales CASCADE;
-DROP TABLE IF EXISTS product_merchant_map CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS inventory CASCADE;
@@ -495,14 +494,6 @@ CREATE TABLE IF NOT EXISTS order_items (
 	PRIMARY KEY (merchant_id, order_item_id)
 );
 
--- Routing table for T7, which is given only product ids. Sharded by
--- product_id, so a lookup by product_id is routed to a single shard.
-CREATE TABLE IF NOT EXISTS product_merchant_map (
-	product_id BIGINT NOT NULL,
-	merchant_id BIGINT NOT NULL,
-	PRIMARY KEY (product_id)
-);
-
 -- Per-merchant, per-day revenue rollup for T6. Distributed by merchant_id and
 -- colocated with orders.
 CREATE TABLE IF NOT EXISTS merchant_daily_sales (
@@ -558,10 +549,6 @@ BEGIN
 			PERFORM create_distributed_table('order_items', 'merchant_id', colocate_with => 'merchants');
 		END IF;
 
-		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'product_merchant_map'::regclass) THEN
-			PERFORM create_distributed_table('product_merchant_map', 'product_id', colocate_with => 'none');
-		END IF;
-
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'merchant_daily_sales'::regclass) THEN
 			PERFORM create_distributed_table('merchant_daily_sales', 'merchant_id', colocate_with => 'merchants');
 		END IF;
@@ -595,7 +582,7 @@ generate_data() {
 	COLD_MERCHANTS=$((NUM_MERCHANTS - HOT_MERCHANTS))
 	((COLD_MERCHANTS >= 1)) || COLD_MERCHANTS=1
 
-	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE merchant_daily_sales,product_merchant_map,order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
+	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE merchant_daily_sales,order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
 
 	psqlx <<SQL
 INSERT INTO merchants SELECT i,'Merchant-'||i,(ARRAY['North','South','East','West','Central'])[1+(i%5)] FROM generate_series(1::bigint, $NUM_MERCHANTS::bigint) g(i);
@@ -605,14 +592,6 @@ INSERT INTO customers SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Customer-'||i
 INSERT INTO products SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Product-'||i,'Category-'||(i%10),(1+(((i::bigint * 7919))%100000)/100.0)::numeric(12,2) FROM generate_series(1::bigint, $NUM_PRODUCTS::bigint) g(i);
 
 INSERT INTO inventory SELECT product_id,merchant_id,product_id,10+((hashint8extended(product_id,$DATA_SEED)&9223372036854775807)%991)::int,current_timestamp FROM products;
-SQL
-
-	# Built by reading products, not by assuming how the generator assigned
-	# products to merchants. No transaction inserts products or changes a
-	# product's merchant, so the map stays exact for the whole run.
-	psqlx <<'SQL'
-INSERT INTO product_merchant_map (product_id, merchant_id)
-SELECT product_id, merchant_id FROM products;
 SQL
 
 	psqlx <<SQL

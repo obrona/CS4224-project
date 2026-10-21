@@ -188,15 +188,6 @@ BEGIN
     );
   END LOOP;
 
-  -- 6. Keep the T6 rollup in step.
-  INSERT INTO public.merchant_daily_sales AS s (
-    merchant_id, sales_date, order_count, revenue
-  )
-  VALUES (p_merchant_id, v_created_at::date, 1, v_order_total)
-  ON CONFLICT (merchant_id, sales_date)
-  DO UPDATE SET order_count = s.order_count + 1,
-                revenue     = s.revenue + EXCLUDED.revenue;
-
   -- 7. order_merchant_map is colocated with merchants, and
   --    next_colocated_order_id chose p_order_id so that this row's shard is
   --    on this worker. The write is local and the order commits on one node.

@@ -11,4 +11,4 @@ places T1 on the merchant's worker, step 7 is T1's only write off that worker,
 so routing T5 costs every T1 a two-phase commit; this run measures what T5
 routing is worth once that cost is counted.
 
-Run: job 972055, team id 204, on `xcnf[0-2,4,5]`, at the same time as the other five jobs of this batch (972053 to 972058).
+Run: job 972055, team id 204, on `xcnf[0-2,4,5]`, in the same batch as `expt_a16`, `expt_a17`, `expt_a20` and `expt_a21` (jobs 972055 to 972058).

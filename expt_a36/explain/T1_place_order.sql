@@ -24,7 +24,7 @@ SELECT CASE WHEN EXISTS (
     AND customer_id = (:customer_id)::bigint
 ) THEN 1 ELSE 0 END AS customer_ok;
 
-SELECT public.next_colocated_order_id((:merchant_id)::bigint) AS new_order_id
+SELECT nextval('benchmark_order_id_seq') AS new_order_id
 \gset
 
 EXPLAIN (VERBOSE)
@@ -91,16 +91,5 @@ UPDATE orders
 SET total_amount = (1.00)::numeric(12,2)
 WHERE merchant_id = (:merchant_id)::bigint
   AND order_id = (:new_order_id)::bigint;
-
-EXPLAIN (VERBOSE)
-INSERT INTO order_merchant_map (order_id, merchant_id)
-VALUES ((:new_order_id)::bigint, (:merchant_id)::bigint);
-
-EXPLAIN (VERBOSE)
-INSERT INTO merchant_daily_sales AS s (merchant_id, sales_date, order_count, revenue)
-VALUES ((:merchant_id)::bigint, CURRENT_TIMESTAMP::date, 1, (1.00)::numeric(12,2))
-ON CONFLICT (merchant_id, sales_date)
-DO UPDATE SET order_count = s.order_count + 1,
-              revenue     = s.revenue + EXCLUDED.revenue;
 
 ROLLBACK;

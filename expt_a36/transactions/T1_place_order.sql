@@ -28,7 +28,7 @@ SELECT CASE WHEN EXISTS (
 \gset t1_
 
 \if :t1_customer_ok
-SELECT public.next_colocated_order_id((:merchant_id)::bigint) AS new_order_id
+SELECT nextval('benchmark_order_id_seq') AS new_order_id
 \gset
 \else
 \set order_ok 0
@@ -432,64 +432,7 @@ UPDATE orders
 SET total_amount = (:order_total)::numeric(12,2)
 WHERE merchant_id = (:merchant_id)::bigint
   AND order_id = (:new_order_id)::bigint;
-
--- Keep order_merchant_map in step with orders, for T5's routed lookup.
--- next_colocated_order_id chose new_order_id so that this row's shard is on
--- the merchant's worker, with the order's other rows.
-INSERT INTO order_merchant_map (order_id, merchant_id)
-VALUES ((:new_order_id)::bigint, (:merchant_id)::bigint);
-
--- Keep the T6 rollup in step with orders. It runs last before COMMIT, so the
--- merchant's row for today stays locked as briefly as possible. The order's
--- created_at is this transaction's CURRENT_TIMESTAMP, so CURRENT_TIMESTAMP::date
--- is its day, and the revenue is the same total just written to orders.
-INSERT INTO merchant_daily_sales AS s (merchant_id, sales_date, order_count, revenue)
-VALUES ((:merchant_id)::bigint, CURRENT_TIMESTAMP::date, 1, (:order_total)::numeric(12,2))
-ON CONFLICT (merchant_id, sales_date)
-DO UPDATE SET order_count = s.order_count + 1,
-              revenue     = s.revenue + EXCLUDED.revenue;
 COMMIT;
 \else
 ROLLBACK;
-\endif
-
--- next_colocated_order_id draws new_order_id above. run.sh creates it from the
--- \if 0 ... \endif block below, which pgbench skips; only the lines between
--- the two markers go to psql. The definition is expt_a17's verbatim: its
--- "step-7 row" is the order_merchant_map insert before COMMIT here.
-\if 0
--- next_colocated_order_id: order_merchant_map is sharded by order_id, so an
--- order id from the plain sequence usually puts place_order's step-7 row on
--- another worker and forces a two-phase commit. This draws ids until one
--- hashes to an order_merchant_map shard placed on the same node as the
--- merchant's shards. It is not distributed: it runs on the coordinator, which
--- holds the sequence. Skipped ids are gaps that nothing relies on.
-CREATE OR REPLACE FUNCTION public.next_colocated_order_id(p_merchant_id bigint)
-RETURNS bigint
-LANGUAGE plpgsql
-AS $fn$
-DECLARE
-  v_group integer;   -- node group (one worker) holding the merchant's shard
-  v       bigint;
-BEGIN
-  -- STRICT: a missing placement, or more than one (replicated shards), raises.
-  SELECT pl.groupid INTO STRICT v_group
-  FROM pg_catalog.pg_dist_placement pl
-  WHERE pl.shardid = get_shard_id_for_distribution_column('public.merchants', p_merchant_id);
-
-  FOR attempt IN 1 .. 1000 LOOP
-    v := nextval('benchmark_order_id_seq');
-    PERFORM 1
-    FROM pg_catalog.pg_dist_placement pl
-    WHERE pl.shardid = get_shard_id_for_distribution_column('public.order_merchant_map', v)
-      AND pl.groupid = v_group;
-    IF FOUND THEN
-      RETURN v;
-    END IF;
-  END LOOP;
-
-  RAISE EXCEPTION 'next_colocated_order_id: no order id in 1000 draws lands on the node of merchant %',
-    p_merchant_id;
-END;
-$fn$;
 \endif

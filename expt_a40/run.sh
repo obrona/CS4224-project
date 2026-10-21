@@ -82,7 +82,7 @@ CITUS_ENABLE_REPARTITION_JOINS="${CITUS_ENABLE_REPARTITION_JOINS:-on}"
 CITUS_MAX_SHARED_POOL_SIZE="${CITUS_MAX_SHARED_POOL_SIZE:-300}"
 CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE="${CITUS_MAX_ADAPTIVE_EXECUTOR_POOL_SIZE:-4}"
 CITUS_LOCAL_SHARED_POOL_SIZE="${CITUS_LOCAL_SHARED_POOL_SIZE:-150}"
-CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT:-4}"
+CITUS_SHARD_COUNT="${CITUS_SHARD_COUNT:-16}"
 
 ################# Data generation configuration
 SCALE="${SCALE:-1}"          # scaling factor
@@ -429,6 +429,8 @@ create_schema() {
 
 	if [[ "$DROP_EXISTING" == "1" ]]; then
 		psqlx <<'SQL'
+DROP TABLE IF EXISTS merchant_daily_sales CASCADE;
+DROP TABLE IF EXISTS product_merchant_map CASCADE;
 DROP TABLE IF EXISTS order_merchant_map CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;
 DROP TABLE IF EXISTS orders CASCADE;
@@ -494,12 +496,30 @@ CREATE TABLE IF NOT EXISTS order_items (
 	PRIMARY KEY (merchant_id, order_item_id)
 );
 
+-- Routing table for T7, which is given only product ids. Sharded by
+-- product_id, so a lookup by product_id is routed to a single shard.
+CREATE TABLE IF NOT EXISTS product_merchant_map (
+	product_id BIGINT NOT NULL,
+	merchant_id BIGINT NOT NULL,
+	PRIMARY KEY (product_id)
+);
+
 -- Routing table for T5, which is given only an order id. Sharded by order_id,
 -- so a lookup by order_id is routed to a single shard.
 CREATE TABLE IF NOT EXISTS order_merchant_map (
 	order_id BIGINT NOT NULL,
 	merchant_id BIGINT NOT NULL,
 	PRIMARY KEY (order_id)
+);
+
+-- Per-merchant, per-day revenue rollup for T6. Distributed by merchant_id and
+-- colocated with orders.
+CREATE TABLE IF NOT EXISTS merchant_daily_sales (
+	merchant_id BIGINT NOT NULL,
+	sales_date DATE NOT NULL,
+	order_count BIGINT NOT NULL,
+	revenue NUMERIC(14, 2) NOT NULL,
+	PRIMARY KEY (merchant_id, sales_date)
 );
 
 CREATE INDEX IF NOT EXISTS idx_orders_customer_recent
@@ -511,6 +531,10 @@ CREATE INDEX IF NOT EXISTS idx_order_items_order
 CREATE INDEX IF NOT EXISTS idx_orders_sales_period
 	ON orders (created_at)
 	INCLUDE (merchant_id, total_amount);
+
+CREATE INDEX IF NOT EXISTS idx_mds_period
+	ON merchant_daily_sales (sales_date)
+	INCLUDE (merchant_id, order_count, revenue);
 SQL
 
 	# Apply the count in the session that distributes every table.
@@ -543,20 +567,28 @@ BEGIN
 			PERFORM create_distributed_table('order_items', 'merchant_id', colocate_with => 'merchants');
 		END IF;
 
+		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'product_merchant_map'::regclass) THEN
+			PERFORM create_distributed_table('product_merchant_map', 'product_id', colocate_with => 'none');
+		END IF;
+
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_merchant_map'::regclass) THEN
 			PERFORM create_distributed_table('order_merchant_map', 'order_id', colocate_with => 'merchants');
+		END IF;
+
+		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'merchant_daily_sales'::regclass) THEN
+			PERFORM create_distributed_table('merchant_daily_sales', 'merchant_id', colocate_with => 'merchants');
 		END IF;
 	END IF;
 END
 $$;
 SQL
 
-	# T1 draws its order ids from public.next_colocated_order_id. Its definition
-	# is the \if 0 ... \endif block in T1_place_order.sql, which pgbench skips;
-	# only the lines between the two markers go to psql.
+	# T1 runs as one distributed function, delegated to its merchant's worker.
+	# Its definition is the \if 0 ... \endif block in T1_place_order.sql, which
+	# pgbench skips; only the lines between the two markers go to psql.
 	local t1_function
 	t1_function=$(sed -n '/^\\if 0/,/^\\endif/p' "$TX_DIR/T1_place_order.sql" | sed '1d;$d')
-	[[ -n "$t1_function" ]] || fail "No \\if 0 block with next_colocated_order_id in $TX_DIR/T1_place_order.sql"
+	[[ -n "$t1_function" ]] || fail "No \\if 0 block with place_order in $TX_DIR/T1_place_order.sql"
 	psqlx <<<"$t1_function"
 }
 
@@ -576,7 +608,7 @@ generate_data() {
 	COLD_MERCHANTS=$((NUM_MERCHANTS - HOT_MERCHANTS))
 	((COLD_MERCHANTS >= 1)) || COLD_MERCHANTS=1
 
-	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE order_merchant_map,order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
+	if [[ "$TRUNCATE_FIRST" == "1" ]]; then psqlx -c "TRUNCATE TABLE merchant_daily_sales,product_merchant_map,order_merchant_map,order_items,orders,inventory,products,customers,merchants CASCADE;"; fi
 
 	psqlx <<SQL
 INSERT INTO merchants SELECT i,'Merchant-'||i,(ARRAY['North','South','East','West','Central'])[1+(i%5)] FROM generate_series(1::bigint, $NUM_MERCHANTS::bigint) g(i);
@@ -586,6 +618,14 @@ INSERT INTO customers SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Customer-'||i
 INSERT INTO products SELECT i,1+((i::bigint - 1)%$NUM_MERCHANTS),'Product-'||i,'Category-'||(i%10),(1+(((i::bigint * 7919))%100000)/100.0)::numeric(12,2) FROM generate_series(1::bigint, $NUM_PRODUCTS::bigint) g(i);
 
 INSERT INTO inventory SELECT product_id,merchant_id,product_id,10+((hashint8extended(product_id,$DATA_SEED)&9223372036854775807)%991)::int,current_timestamp FROM products;
+SQL
+
+	# Built by reading products, not by assuming how the generator assigned
+	# products to merchants. No transaction inserts products or changes a
+	# product's merchant, so the map stays exact for the whole run.
+	psqlx <<'SQL'
+INSERT INTO product_merchant_map (product_id, merchant_id)
+SELECT product_id, merchant_id FROM products;
 SQL
 
 	psqlx <<SQL
@@ -626,6 +666,13 @@ FROM (
 ) x
 WHERE o.merchant_id=x.merchant_id
   AND o.order_id=x.order_id;
+SQL
+
+	psqlx <<'SQL'
+INSERT INTO merchant_daily_sales (merchant_id, sales_date, order_count, revenue)
+SELECT merchant_id, created_at::date, COUNT(*), SUM(total_amount)
+FROM orders
+GROUP BY merchant_id, created_at::date;
 SQL
 
 	[[ "$RUN_ANALYZE" == "1" ]] && psqlx -c "ANALYZE;"

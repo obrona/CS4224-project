@@ -513,16 +513,13 @@ CREATE TABLE IF NOT EXISTS order_merchant_map (
 );
 
 -- Per-merchant, per-day revenue rollup for T6. Distributed by merchant_id and
--- colocated with orders. Each merchant-day is split into 4 slots by
--- order_id % 4, so concurrent orders for one hot merchant usually upsert
--- different rows; T6 sums all slots.
+-- colocated with orders.
 CREATE TABLE IF NOT EXISTS merchant_daily_sales (
 	merchant_id BIGINT NOT NULL,
 	sales_date DATE NOT NULL,
-	slot SMALLINT NOT NULL,
 	order_count BIGINT NOT NULL,
 	revenue NUMERIC(14, 2) NOT NULL,
-	PRIMARY KEY (merchant_id, sales_date, slot)
+	PRIMARY KEY (merchant_id, sales_date)
 );
 
 CREATE INDEX IF NOT EXISTS idx_orders_customer_recent
@@ -575,7 +572,7 @@ BEGIN
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'order_merchant_map'::regclass) THEN
-			PERFORM create_distributed_table('order_merchant_map', 'order_id', colocate_with => 'none');
+			PERFORM create_distributed_table('order_merchant_map', 'order_id', colocate_with => 'merchants');
 		END IF;
 
 		IF NOT EXISTS (SELECT 1 FROM pg_dist_partition WHERE logicalrelid = 'merchant_daily_sales'::regclass) THEN
@@ -672,10 +669,10 @@ WHERE o.merchant_id=x.merchant_id
 SQL
 
 	psqlx <<'SQL'
-INSERT INTO merchant_daily_sales (merchant_id, sales_date, slot, order_count, revenue)
-SELECT merchant_id, created_at::date, (order_id % 4)::smallint, COUNT(*), SUM(total_amount)
+INSERT INTO merchant_daily_sales (merchant_id, sales_date, order_count, revenue)
+SELECT merchant_id, created_at::date, COUNT(*), SUM(total_amount)
 FROM orders
-GROUP BY merchant_id, created_at::date, order_id % 4;
+GROUP BY merchant_id, created_at::date;
 SQL
 
 	[[ "$RUN_ANALYZE" == "1" ]] && psqlx -c "ANALYZE;"

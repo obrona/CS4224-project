@@ -1,5 +1,29 @@
 expt_a0 - performance of baseline design as a function of number of clients for workload A
 
+expt_a1 - baseline design for workload A with 2 worker nodes instead of 4
+
+- Result: 2.2 TPS at 1 client and 2.1 at 64, 32% and 34% below `expt_a0`.
+
+expt_a2 - baseline design for workload A with 8 worker nodes instead of 4
+
+- Result: 4.6 TPS at 1 client and 3.9 at 64, 43% and 23% above `expt_a0`.
+
+expt_a3 - baseline design for workload A with stronger merchant skew: HOT_ORDER_PERCENT 80 instead of 50
+
+- Result: 3.1 TPS at 1 client and 3.1 at 64, at most 6% below `expt_a0` at any client count.
+
+expt_a4 - baseline design for workload A with weaker merchant skew: HOT_ORDER_PERCENT 20 instead of 50
+
+- Result: 4.0 TPS at 1 client and 4.2 at 64, 25% and 32% above `expt_a0`.
+
+expt_a5 - baseline design for workload A with twice the synthetic data: SCALE 2 instead of 1
+
+- Result: 2.0 TPS at 1 client and 2.1 at 64, 37% and 35% below `expt_a0`.
+
+expt_a6 - baseline design for workload A with half the synthetic data: SCALE 0.5 instead of 1
+
+- Result: 6.0 TPS at 1 client and 6.0 at 64, 85% and 88% above `expt_a0`.
+
 expt_a7 - workload A with all tenant tables colocated by merchant_id, query-matched indexes and fill factors
 
 - Problem: The baseline distributes each table by its own id, so a merchant's customers, products, inventory, orders and items sit on unrelated shards and merchant-scoped transactions span workers; at 1 client T3 averages 2.6 s and T4 479 ms, together 94% of latency.
@@ -56,19 +80,11 @@ expt_a15 - expt_a14 with 4 shards per table, one per worker
 
 -- Workload A: optimisations specific to A (all branch from expt_a15) --
 
-expt_a15_1 - replicate of expt_a15
-
-- Result: 199.9 TPS at 1 client and 1,730.7 at 64, mean 1,287.6, with every point valid; 5.7% above `expt_a15`, which ran in an earlier batch.
-
-expt_a15_2 - replicate of expt_a15
-
-- Result: 198.0 TPS at 1 client and 1,755.3 at 64, mean 1,286.7: within 0.07% of `expt_a15_1` in mean TPS and 1.4% at any client count. `expt_a16` to `expt_a19` are compared with the mean of the two, 1,287.2.
-
 expt_a16 - expt_a15 without T5 routing, so T1 writes no order-map row
 
 - Problem: T1 is 73 to 75% of latency in `expt_a15`, and its row in `order_merchant_map` lies on another worker three times in four, so most orders commit on two nodes.
 - Optimisation: Drop `order_merchant_map`: T1 no longer inserts a map row, and T5 returns to `expt_a10`'s all-shard update, now over 4 shards.
-- Result: T1 falls from 10.3 to 4.1 ms and throughput rises to 342.3 TPS at 1 client, but T5 takes 280.6 ms at 64 clients (90% of latency) and caps throughput at 2,059 to 2,135 TPS from 8 clients; mean 1,662.0, 1.29x the replicates.
+- Result: T1 falls from 10.1 to 4.1 ms and throughput rises to 342.3 TPS at 1 client, but T5 takes 280.6 ms at 64 clients (90% of latency) and caps throughput at 2,059 to 2,135 TPS from 8 clients; mean 1,662.0, 1.37x `expt_a15`, which ran in an earlier batch and has an invalid point at 64 clients, so ratios to it may overstate the gain.
 
 -- Final Design (workload A) --
 
@@ -76,123 +92,117 @@ expt_a17 - expt_a15 with order IDs chosen so that T1's map row lies on the merch
 
 - Problem: As for `expt_a16`: T1's map row usually forces a two-phase commit, but T5 still needs the map.
 - Optimisation: Colocate `order_merchant_map` with the tenant tables and draw order IDs in a coordinator function, `next_colocated_order_id`, until the map row's shard is on the merchant's worker (four draws on average), so the delegated T1 commits on one node while T5 stays routed.
-- Result: T1 falls from 10.3 to 4.6 ms at 1 client and from 73.2 to 31.5 ms at 64 while T5 is unchanged; 333.5 TPS at 1 client, a peak of 3,315.7 at 16 and 2,683.4 at 64, mean 2,256.5 (1.75x the replicates of `expt_a15`).
+- Result: T1 falls from 10.1 to 4.6 ms at 1 client and from 77.7 to 31.5 ms at 64 while T5 is unchanged; 333.5 TPS at 1 client, a peak of 3,315.7 at 16 and 2,683.4 at 64, mean 2,256.5 (1.85x `expt_a15`).
 
-expt_a17_1 - replicate of expt_a17
+expt_a18 - replicate of expt_a17 (run as expt_a17_1)
 
 - Result: 341.2 TPS at 1 client and 2,652.3 at 64, mean 2,195.5.
 
-expt_a17_2 - replicate of expt_a17
+expt_a19 - replicate of expt_a17 (run as expt_a17_2)
 
-- Result: 342.6 TPS at 1 client and 2,663.1 at 64, mean 2,197.5. The three runs of the final design (`expt_a17`, `expt_a17_1`, `expt_a17_2`) average 2,216.5 TPS and differ from that mean by at most 1.8% (5.7% at any client count, `expt_a17` at 8 clients).
-
-expt_a15_3 - replicate of expt_a15, control for the batch of expt_a17_1, expt_a17_2 and expt_a42 to expt_a46
-
-- Result: 188.0 TPS at 1 client and 1,737.7 at 64, mean 1,281.9: 0.4% below `expt_a15_1` and `expt_a15_2`, so the two batches agree.
+- Result: 342.6 TPS at 1 client and 2,663.1 at 64, mean 2,197.5. The three runs of the final design (`expt_a17`, `expt_a18`, `expt_a19`) average 2,216.5 TPS and differ from that mean by at most 1.8% (5.7% at any client count, `expt_a17` at 8 clients).
 
 -- Rejected optimisations for workload A --
 
-expt_a18 - expt_a15 with each merchant-day rollup row split into 4 slots
+expt_a20 - expt_a15 with each merchant-day rollup row split into 4 slots (run as expt_a18)
 
-- Problem: Concurrent T1s for a hot merchant upsert the same `merchant_daily_sales` row; about 31,000 transactions are retried at 64 clients in the replicates of `expt_a15`.
+- Problem: Concurrent T1s for a hot merchant upsert the same `merchant_daily_sales` row; 26,461 transactions are retried at 64 clients in `expt_a15`.
 - Optimisation: Add `slot = order_id % 4` to the rollup's primary key, so concurrent orders for one merchant usually upsert different rows; T6 sums all slots and is unchanged.
-- Result: Retries fall to 7,340 and serialization failures to 65 at 64 clients (from about 31,000 and 2,600), but T1 is no faster (76.2 against 73.2 ms) and T6 slows from 8.3 to 21.7 ms at 1 client and from 72.9 to 212.4 ms at 64; mean 1,068.1 TPS, 0.83x the replicates.
+- Result: Retries fall to 7,340 and serialization failures to 65 at 64 clients (from 26,461 and 2,384 in `expt_a15`), but T1 is barely faster (76.2 against 77.7 ms) and T6 slows from 8.0 to 21.7 ms at 1 client and from 75.7 to 212.4 ms at 64; mean 1,068.1 TPS, 0.88x `expt_a15`.
 
-expt_a19 - expt_a15 with the changes of both expt_a17 and expt_a18
+expt_a21 - expt_a15 with the changes of both expt_a17 and expt_a20 (run as expt_a19)
 
 - Result: Mean 1,661.4 TPS, 0.74x `expt_a17`: the slots cut retries at 64 clients (6,129 against 24,049) without speeding up T1 (33.7 against 31.5 ms), and T6 takes 218.7 ms.
 
+-- 2^4 ablation around expt_a17 (workload A) --
+
+`expt_a22` to `expt_a36` are the cells of `expt_b27` to `expt_b41`, in the same order.
+
+Every cell is compared with the final design, the mean of `expt_a17`, `expt_a18` and `expt_a19` (2,216.5 TPS; 339.1 at 1 client and 2,666.3 at 64).
+
+expt_a22 - expt_a17 with T5 routing off
+
+- Result: 335.3 TPS at 1 client and 2,038.0 at 64 (99% and 76% of the final design), mean 1,620.2 (73%). At 64 clients T5 holds 90% of summed latency (283.9 ms per call). Every point is valid.
+
+expt_a23 - expt_a17 with the T6 rollup off
+
+- Result: 218.7 TPS at 1 client and 647.0 at 64 (64% and 24% of the final design), mean 520.9 (23%). At 64 clients T6 holds 71% of summed latency (1,406.0 ms per call). Every point is valid.
+
+expt_a24 - expt_a17 with T7 routing off
+
+- Result: 286.1 TPS at 1 client and 1,890.3 at 64 (84% and 71% of the final design), mean 1,466.9 (66%). At 64 clients T7 holds 90% of summed latency (603.8 ms per call). Every point is valid.
+
+expt_a25 - expt_a17 with T1 delegation off
+
+- Result: 186.3 TPS at 1 client and 1,183.0 at 64 (55% and 44% of the final design), mean 1,026.8 (46%). At 64 clients T1 holds 82% of summed latency (109.9 ms per call). Clients abort (pgbench exit 2) at 32 and 64 clients, so those points are invalid.
+
+expt_a26 - expt_a17 with T5 routing and the T6 rollup off
+
+- Result: 219.1 TPS at 1 client and 454.3 at 64 (65% and 17% of the final design), mean 414.7 (19%). At 64 clients T5 holds 91% of summed latency (1,269.8 ms per call). Every point is valid.
+
+expt_a27 - expt_a17 with T5 routing and T7 routing off
+
+- Result: 276.1 TPS at 1 client and 1,694.3 at 64 (81% and 64% of the final design), mean 1,310.6 (59%). At 64 clients T5 holds 86% of summed latency (324.1 ms per call). Every point is valid.
+
+expt_a28 - expt_a17 with T5 routing and T1 delegation off
+
+- Result: 185.6 TPS at 1 client and 1,344.2 at 64 (55% and 50% of the final design), mean 1,030.8 (47%). At 64 clients T5 holds 73% of summed latency (343.2 ms per call). Clients abort (pgbench exit 2) at 8, 16, 32 and 64 clients, so those points are invalid.
+
+expt_a29 - expt_a17 with the T6 rollup and T7 routing off
+
+- Result: 191.8 TPS at 1 client and 528.8 at 64 (57% and 20% of the final design), mean 450.5 (20%). At 64 clients T7 holds 84% of summed latency (2,030.8 ms per call). Every point is valid.
+
+expt_a30 - expt_a17 with the T6 rollup and T1 delegation off
+
+- Result: 142.6 TPS at 1 client and 394.9 at 64 (42% and 15% of the final design), mean 322.8 (15%). At 64 clients T6 holds 56% of summed latency (206.2 ms per call). Clients abort (pgbench exit 2) at 4, 8, 16, 32 and 64 clients, so those points are invalid.
+
+expt_a31 - expt_a17 with T7 routing and T1 delegation off
+
+- Result: 164.1 TPS at 1 client and 1,157.7 at 64 (48% and 43% of the final design), mean 914.4 (41%). At 64 clients T7 holds 77% of summed latency (830.8 ms per call). Clients abort (pgbench exit 2) at 16, 32 and 64 clients, so those points are invalid.
+
+expt_a32 - expt_a17 with T5 routing, the T6 rollup and T7 routing off
+
+- Result: 190.8 TPS at 1 client and 421.6 at 64 (56% and 16% of the final design), mean 383.6 (17%). At 64 clients T5 holds 89% of summed latency (1,348.2 ms per call). Every point is valid.
+
+expt_a33 - expt_a17 with T5 routing, the T6 rollup and T1 delegation off
+
+- Result: 149.7 TPS at 1 client and 276.6 at 64 (44% and 10% of the final design), mean 223.5 (10%). At 64 clients T5 holds 33% of summed latency (36.0 ms per call). Clients abort (pgbench exit 2) at 4, 8, 16, 32 and 64 clients, so those points are invalid.
+
+expt_a34 - expt_a17 with T5 routing, T7 routing and T1 delegation off
+
+- Result: 165.2 TPS at 1 client and 1,145.3 at 64 (49% and 43% of the final design), mean 908.4 (41%). At 64 clients T5 holds 61% of summed latency (337.3 ms per call). Clients abort (pgbench exit 2) at 16 and 64 clients, so those points are invalid.
+
+expt_a35 - expt_a17 with the T6 rollup, T7 routing and T1 delegation off
+
+- Result: 128.8 TPS at 1 client and 514.1 at 64 (38% and 19% of the final design), mean 345.0 (16%). At 64 clients T7 holds 74% of summed latency (1,189.4 ms per call). Clients abort (pgbench exit 2) at 4, 8, 16, 32 and 64 clients, so those points are invalid.
+
+expt_a36 - expt_a17 with T5 routing, the T6 rollup, T7 routing and T1 delegation off
+
+- Result: 129.7 TPS at 1 client and 198.3 at 64 (38% and 7% of the final design), mean 214.3 (10%). At 64 clients T5 holds 41% of summed latency (55.5 ms per call). Clients abort (pgbench exit 2) at 4, 8, 16, 32 and 64 clients, so those points are invalid.
+
 -- Shard count around the final design (workload A) --
 
-expt_a42 - expt_a17 with 1 shard per table
+`expt_a37` to `expt_a41` correspond to `expt_b42` to `expt_b46`, in the same order.
+
+expt_a37 - expt_a17 with 1 shard per table
 
 - Result: Killed during the 1-client run when the PostgreSQL server on xcnf1, the only worker holding data, exceeded the job step's memory limit (Slurm oom_kill). The 1-client point is not valid (pgbench exit 2, 177.8 TPS) and no other client count ran.
 
-expt_a43 - expt_a17 with 2 shards per table
+expt_a38 - expt_a17 with 2 shards per table
 
 - Result: 312.5 TPS at 1 client and 1,603.6 at 64 (8% and 40% below the final design), with a peak of 2,069.4 at 16: two of the four workers hold all the data. Mean 0.67x.
 
-expt_a44 - expt_a17 with 8 shards per table
+expt_a39 - expt_a17 with 8 shards per table
 
 - Result: 311.6 TPS at 1 client and 1,608.2 at 64 (8% and 40% below), with a peak of 2,946.7 at 16; T6 takes 211.5 ms at 64 against 91.7. Mean 0.79x.
 
-expt_a45 - expt_a17 with 16 shards per table
+expt_a40 - expt_a17 with 16 shards per table
 
 - Result: 271.4 TPS at 1 client and 1,279.7 at 64 (20% and 52% below), with a peak of 2,196.5 at 8; T6 takes 325.9 ms at 64. Mean 0.65x.
 
-expt_a46 - expt_a17 with 32 shards per table
+expt_a41 - expt_a17 with 32 shards per table
 
 - Result: 244.0 TPS at 1 client and 967.5 at 64 (28% and 64% below), with a peak of 1,683.4 at 8; T6 takes 479.7 ms at 64. Mean 0.47x. Four shards, one per worker, remain the best count for the final design, as on workload B.
-
--- 2^4 ablation around expt_a17 (workload A) --
-
-expt_a17_3 - replicate of expt_a17, control of ablation batch 1
-
-- Result: 342.6 TPS at 1 client and 2,674.1 at 64, mean 2,219.7, with every point valid; the cells of batch 1 are compared with it.
-
-expt_a17_4 - replicate of expt_a17, control of ablation batch 2
-
-- Result: 338.1 TPS at 1 client and 2,648.7 at 64, mean 2,184.4, with every point valid; the cells of batch 2 are compared with it.
-
-expt_a27 - expt_a17 with T5 routing off
-
-- Result: 335.3 TPS at 1 client and 2,038.0 at 64 (98% and 76% of `expt_a17_3`), mean 1,620.2 (73%). At 64 clients T5 holds 90% of summed latency (283.9 ms per call). Every point is valid.
-
-expt_a28 - expt_a17 with the T6 rollup off
-
-- Result: 218.7 TPS at 1 client and 647.0 at 64 (64% and 24% of `expt_a17_3`), mean 520.9 (23%). At 64 clients T6 holds 71% of summed latency (1,406.0 ms per call). Every point is valid.
-
-expt_a29 - expt_a17 with T7 routing off
-
-- Result: 286.1 TPS at 1 client and 1,890.3 at 64 (84% and 71% of `expt_a17_3`), mean 1,466.9 (66%). At 64 clients T7 holds 90% of summed latency (603.8 ms per call). Every point is valid.
-
-expt_a30 - expt_a17 with T1 delegation off
-
-- Result: 186.3 TPS at 1 client and 1,183.0 at 64 (54% and 44% of `expt_a17_3`), mean 1,026.8 (46%). At 64 clients T1 holds 82% of summed latency (109.9 ms per call). Clients abort (pgbench exit 2) at 32 and 64 clients, so those points are invalid.
-
-expt_a31 - expt_a17 with T5 routing and the T6 rollup off
-
-- Result: 219.1 TPS at 1 client and 454.3 at 64 (64% and 17% of `expt_a17_3`), mean 414.7 (19%). At 64 clients T5 holds 91% of summed latency (1,269.8 ms per call). Every point is valid.
-
-expt_a32 - expt_a17 with T5 routing and T7 routing off
-
-- Result: 276.1 TPS at 1 client and 1,694.3 at 64 (81% and 63% of `expt_a17_3`), mean 1,310.6 (59%). At 64 clients T5 holds 86% of summed latency (324.1 ms per call). Every point is valid.
-
-expt_a33 - expt_a17 with T5 routing and T1 delegation off
-
-- Result: 185.6 TPS at 1 client and 1,344.2 at 64 (54% and 50% of `expt_a17_3`), mean 1,030.8 (46%). At 64 clients T5 holds 73% of summed latency (343.2 ms per call). Clients abort (pgbench exit 2) at 8, 16, 32 and 64 clients, so those points are invalid.
-
-expt_a34 - expt_a17 with the T6 rollup and T7 routing off
-
-- Result: 191.8 TPS at 1 client and 528.8 at 64 (56% and 20% of `expt_a17_3`), mean 450.5 (20%). At 64 clients T7 holds 84% of summed latency (2,030.8 ms per call). Every point is valid.
-
-expt_a35 - expt_a17 with the T6 rollup and T1 delegation off
-
-- Result: 142.6 TPS at 1 client and 394.9 at 64 (42% and 15% of `expt_a17_4`), mean 322.8 (15%). At 64 clients T6 holds 56% of summed latency (206.2 ms per call). Clients abort (pgbench exit 2) at 4, 8, 16, 32 and 64 clients, so those points are invalid.
-
-expt_a36 - expt_a17 with T7 routing and T1 delegation off
-
-- Result: 164.1 TPS at 1 client and 1,157.7 at 64 (49% and 44% of `expt_a17_4`), mean 914.4 (42%). At 64 clients T7 holds 77% of summed latency (830.8 ms per call). Clients abort (pgbench exit 2) at 16, 32 and 64 clients, so those points are invalid.
-
-expt_a37 - expt_a17 with T5 routing, the T6 rollup and T7 routing off
-
-- Result: 190.8 TPS at 1 client and 421.6 at 64 (56% and 16% of `expt_a17_4`), mean 383.6 (18%). At 64 clients T5 holds 89% of summed latency (1,348.2 ms per call). Every point is valid.
-
-expt_a38 - expt_a17 with T5 routing, the T6 rollup and T1 delegation off
-
-- Result: 149.7 TPS at 1 client and 276.6 at 64 (44% and 10% of `expt_a17_4`), mean 223.5 (10%). At 64 clients T5 holds 33% of summed latency (36.0 ms per call). Clients abort (pgbench exit 2) at 4, 8, 16, 32 and 64 clients, so those points are invalid.
-
-expt_a39 - expt_a17 with T5 routing, T7 routing and T1 delegation off
-
-- Result: 165.2 TPS at 1 client and 1,145.3 at 64 (49% and 43% of `expt_a17_4`), mean 908.4 (42%). At 64 clients T5 holds 61% of summed latency (337.3 ms per call). Clients abort (pgbench exit 2) at 16 and 64 clients, so those points are invalid.
-
-expt_a40 - expt_a17 with the T6 rollup, T7 routing and T1 delegation off
-
-- Result: 128.8 TPS at 1 client and 514.1 at 64 (38% and 19% of `expt_a17_4`), mean 345.0 (16%). At 64 clients T7 holds 74% of summed latency (1,189.4 ms per call). Clients abort (pgbench exit 2) at 4, 8, 16, 32 and 64 clients, so those points are invalid.
-
-expt_a41 - expt_a17 with T5 routing, the T6 rollup, T7 routing and T1 delegation off
-
-- Result: 129.7 TPS at 1 client and 198.3 at 64 (38% and 7% of `expt_a17_4`), mean 214.3 (10%). At 64 clients T5 holds 41% of summed latency (55.5 ms per call). Clients abort (pgbench exit 2) at 4, 8, 16, 32 and 64 clients, so those points are invalid.
 
 expt_b0 - performance of baseline design as a function of number of clients for workload B
 
