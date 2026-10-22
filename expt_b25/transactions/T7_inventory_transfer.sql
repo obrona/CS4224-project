@@ -16,7 +16,7 @@
 
 BEGIN;
 
--- In this layout inventory is placed by product (see optimisations.md), so
+-- In this layout inventory is placed by product (see README.md), so
 -- each UPDATE is routed by product_id alone and T7 needs no lookup table. A
 -- product has one inventory row; UNIQUE (product_id, merchant_id) leads with
 -- product_id, so each UPDATE is one index probe.
