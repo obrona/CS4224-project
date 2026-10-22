@@ -94,23 +94,23 @@ expt_a17 - expt_a15 with order IDs chosen so that T1's map row lies on the merch
 - Optimisation: Colocate `order_merchant_map` with the tenant tables and draw order IDs in a coordinator function, `next_colocated_order_id`, until the map row's shard is on the merchant's worker (four draws on average), so the delegated T1 commits on one node while T5 stays routed.
 - Result: T1 falls from 10.1 to 4.6 ms at 1 client and from 77.7 to 31.5 ms at 64 while T5 is unchanged; 333.5 TPS at 1 client, a peak of 3,315.7 at 16 and 2,683.4 at 64, mean 2,256.5 (1.85x `expt_a15`).
 
-expt_a18 - replicate of expt_a17 (run as expt_a17_1)
+expt_a18 - replicate of expt_a17
 
 - Result: 341.2 TPS at 1 client and 2,652.3 at 64, mean 2,195.5.
 
-expt_a19 - replicate of expt_a17 (run as expt_a17_2)
+expt_a19 - replicate of expt_a17
 
 - Result: 342.6 TPS at 1 client and 2,663.1 at 64, mean 2,197.5. The three runs of the final design (`expt_a17`, `expt_a18`, `expt_a19`) average 2,216.5 TPS and differ from that mean by at most 1.8% (5.7% at any client count, `expt_a17` at 8 clients).
 
 -- Rejected optimisations for workload A --
 
-expt_a20 - expt_a15 with each merchant-day rollup row split into 4 slots (run as expt_a18)
+expt_a20 - expt_a15 with each merchant-day rollup row split into 4 slots
 
 - Problem: Concurrent T1s for a hot merchant upsert the same `merchant_daily_sales` row; 26,461 transactions are retried at 64 clients in `expt_a15`.
 - Optimisation: Add `slot = order_id % 4` to the rollup's primary key, so concurrent orders for one merchant usually upsert different rows; T6 sums all slots and is unchanged.
 - Result: Retries fall to 7,340 and serialization failures to 65 at 64 clients (from 26,461 and 2,384 in `expt_a15`), but T1 is barely faster (76.2 against 77.7 ms) and T6 slows from 8.0 to 21.7 ms at 1 client and from 75.7 to 212.4 ms at 64; mean 1,068.1 TPS, 0.88x `expt_a15`.
 
-expt_a21 - expt_a15 with the changes of both expt_a17 and expt_a20 (run as expt_a19)
+expt_a21 - expt_a15 with the changes of both expt_a17 and expt_a20
 
 - Result: Mean 1,661.4 TPS, 0.74x `expt_a17`: the slots cut retries at 64 clients (6,129 against 24,049) without speeding up T1 (33.7 against 31.5 ms), and T6 takes 218.7 ms.
 
@@ -212,19 +212,19 @@ expt_b1 - baseline design for workload B with 2 worker nodes instead of 4
 
 - Result: 4.7 TPS at 1 client and 3.7 at 64, 30% and 42% below `expt_b0`.
 
-expt_b2 - baseline design for workload B with 8 worker nodes instead of 4 (run as expt_b4)
+expt_b2 - baseline design for workload B with 8 worker nodes instead of 4
 
 - Result: 9.0 TPS at 1 client and 10.2 at 64, 35% and 59% above `expt_b0`.
 
-expt_b3 - baseline design for workload B with stronger merchant skew: HOT_ORDER_PERCENT 80 instead of 50 (run as expt_b2)
+expt_b3 - baseline design for workload B with stronger merchant skew: HOT_ORDER_PERCENT 80 instead of 50
 
 - Result: 6.7 TPS at 1 client and 6.0 at 64, at most 6% below `expt_b0` at any client count.
 
-expt_b4 - baseline design for workload B with HOT_ORDER_PERCENT 10 instead of 50 (run as expt_b5)
+expt_b4 - baseline design for workload B with HOT_ORDER_PERCENT 10 instead of 50
 
 - Result: 6.7 TPS at 1 client and 6.3 at 64, within 6% of `expt_b0` at every client count.
 
-expt_b5 - baseline design for workload B with twice the synthetic data: SCALE 2 instead of 1 (run as expt_b3)
+expt_b5 - baseline design for workload B with twice the synthetic data: SCALE 2 instead of 1
 
 - Result: 2.0 TPS at 1 client and 3.4 at 64, 70% and 47% below `expt_b0`, and the 1-client run has T7 stalls of up to 78 s.
 
